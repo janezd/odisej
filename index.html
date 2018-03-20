@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Odisej</title>
+    <script src="../blockly/blockly_compressed.js"></script>
+    <script src="../blockly/blocks_compressed.js"></script>
+    <script src="../blockly/msg/js/en.js"></script>
+    <script src="../jquery/jquery-3.3.1.min.js"></script>
+    <script src="../jquery/jquery-ui.js"></script>
+    <script src="./gameData.js"></script>
+
+    <xml id="blocks" src="./lokacije.xml"></xml>
+
+    <xml id="toolbox" style="display: none">
+        <category name="Akcije" id="actions" colour="36" expanded="true"></category>
+        <category name="Pogoji" id="conditions" colour="246"></category>
+        <category name="Ukazi" id="statements" colour="186"></category>
+        <category name="Stvari" id="items" colour="186" custom="ITEMS"></category>
+        <category name="Spremenljivke" colour="330" custom="VARIABLES"></category>
+  </xml>
+  <script src="./createBlocks.js"></script>
+
+  <style>
+    body {
+      background-color: #fff;
+      font-family: sans-serif;
+    }
+    .blocklyTreeRow {
+        text-orientation: sideways;
+        writing-mode: vertical-rl;
+        padding-bottom: 16px;
+        height: auto;
+    }
+
+    #locations .ui-selecting { background: #FECA40; }
+    #locations .ui-selected { background: #F39814; color: white; }
+    ol#locations { margin: 0; padding: 0; }
+    #locations li { list-style-type: none; margin: 3px; padding: 0.4em; font-size: 1.1em; height: 18px; }
+
+    #loc-desc-div, #locs-div { border: 3px solid #a4865d; border-radius: 3px; }
+    #loc-desc { font-size: 12pt; border: thin solid #a4865d; width: 100%; }
+    #locs-div { float: left; position: relative; width: 20%; white-space: nowrap; overflow-x: scroll; height: 100%; margin-right: 16px; }
+    #loc-desc-div { float: left; width: 75%; padding: 8px;  text-align: center;  }
+  </style>
+
+
+  <script>
+      let startLocation = new LocDef("Začetek", "Opis začetne lokacije")
+      let locationExample = new LocDef("Primer", "Opis še ene lokacije")
+      let locations = [startLocation, locationExample]
+      let currentLocation = startLocation
+
+      let items = []
+
+      const allLocations = () => locations.map(location => [location.title, location.title])
+      const allItems = () => [...items.map(it => [it, it]), ["Dodaj stvar...", "ADD"]]
+
+      function updateLocationList() {
+          const locList = $("#locations")
+          locList.html('')
+          locations.forEach(location => {
+              const newItem = $(`<li>${location.title}</li>`)
+              newItem.data("desc", location)
+              locList.append(newItem)
+          })
+          locList.append('<li id="add-loc">Nova lokacija</li>')
+          const  firstloc = $("#locations li:first")
+          firstloc.addClass("selectee selected ui-selectee ui-selected")
+          currentLocation = locations[0]
+      }
+
+      function storeLocationData() {
+          currentLocation.description = $("#loc-desc").val()
+          currentLocation.workspaceXml = Blockly.Xml.workspaceToDom(locationWorkspace)
+      }
+
+      function updateLocationData() {
+          $("#loc-desc").val(currentLocation.description)
+
+          locationWorkspace.clear()
+          if (currentLocation.workspaceXml) {
+              Blockly.Xml.domToWorkspace(currentLocation.workspaceXml, locationWorkspace)
+          }
+      }
+
+      function renameLocation(element) {
+          function endEdit() {
+              element.attr("contentEditable", "false")
+              element.data("desc").title = element.children[0].textContent
+          }
+          element.attr("contentEditable", "true")
+          element.focus()
+          element.on("focusout", endEdit)
+          element.on("keypress", ev => { if (ev.key == "Enter") endEdit() } )
+      }
+
+      function locationSelected(event, ui) {
+          storeLocationData()
+
+          const element = $(ui.selected)
+          if (element[0].id == "add-loc") {
+              const newloc = new LocDef("Nova")
+              locations.push(newloc)
+              updateLocationList()
+              return
+          }
+          const selectedLocation = element.data("desc")
+          if (selectedLocation == currentLocation) {
+              renameLocation(element)
+          }
+          else {
+              currentLocation = selectedLocation
+              updateLocationData()
+          }
+      }
+
+      function toXml() {
+          storeLocationData()
+          doc = document.implementation.createDocument(null, "odisej", null)
+          root = doc.getElementsByTagName("odisej")[0]
+          locations.forEach(location => {
+              loc = doc.createElement("location")
+
+              loc.setAttribute("name", location.title)
+
+              desc = doc.createElement("description")
+              desc.appendChild(doc.createTextNode(location.description))
+              loc.appendChild(desc)
+
+              blocks = doc.createElement("blocks")
+              location.workspaceXml.childNodes.forEach(node => blocks.appendChild(node.cloneNode(true)))
+              loc.appendChild(blocks)
+
+              root.appendChild(loc)
+          })
+          return doc
+      }
+
+      function download(data, filename, type) {
+          const file = new Blob([data], {type: type})
+          const url=URL.createObjectURL(file)
+          const a = document.createElement("a")
+          a.href = url
+          a.download = filename
+          document.body.appendChild(a)
+          a.click()
+          setTimeout(function() {
+              document.body.removeChild(a)
+              window.URL.revokeObjectURL(url)
+          }, 0)
+      }
+
+      function downloadDefinitions() {
+          const xml = toXml()
+          download(xml.getElementsByTagName("odisej")[0].outerHTML, 'lokacije.txt', 'text/xml')
+      }
+
+      function locationsFromXml(xml) {
+          console.log(xml)
+          locations = []
+          const root = xml.getElementsByTagName("odisej")[0]
+          doc = document.implementation.createDocument(null, "odisej", null)
+          root.childNodes.forEach(node => {
+              locdef = new LocDef(
+                  node.getAttribute("name"),
+                  node.getElementsByTagName("description")[0].childNodes[0].textContent)
+              locdef.workspaceXml = doc.createElement("xml")
+              node.getElementsByTagName("blocks")[0].childNodes.forEach(block => locdef.workspaceXml.appendChild(block.cloneNode(true)))
+              locations.push(locdef)
+          })
+          updateLocationList()
+          updateLocationData()
+      }
+  </script>
+
+<script>
+$( function() {
+    $("#locations").selectable().on("selectableselected", locationSelected)
+} )
+
+function addLocation() {
+    $("#dodaj-novo").before("<li>Nova lokacija</li>")
+}
+
+$( function() {
+    $.ajax({
+        type: "GET",
+        url: "locations0.xml",
+        dataType: "xml",
+        success: locationsFromXml
+    })
+})
+</script>
+
+</head>
+<body onload="updateLocationList()">
+    <div id="header">
+        <button onclick="downloadDefinitions()">Download</button>
+        <label for="upload">Upload</label>
+        <input type="file" id="upload" name="upload" accept=".txt" onchange="uploadDefinitions()"/>
+    </div>
+    <div id="locs-div">
+        <ol id="locations">
+                <li id="dodaj-novo" onclick="addLocation()">Dodaj novo...</li>
+        </ol>
+
+    </div>
+    <div id="loc-desc-div">
+        <div>
+            <textarea  id="loc-desc" rows="8" placeholder="Opis lokacije ..."></textarea>
+        </div>
+        <div id="blocklyDiv" style="height: 480px; width: 100%;"></div>
+    </div>
+
+  <script>
+    locationWorkspace = Blockly.inject('blocklyDiv',
+        {media: '../blockly/media/',
+         toolbox: document.getElementById('toolbox'),
+         toolboxPosition: 'end'})
+  </script>
+
+</body>
+</html>
