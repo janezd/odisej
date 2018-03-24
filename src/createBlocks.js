@@ -1,8 +1,13 @@
-Blockly.BlockSvg.START_HAT = true
-Blockly.Flyout.prototype.autoClose = false
+import Blockly from 'node-blockly/browser'
 
-function appendBlock(category, block_name) {
-    document.getElementById(category).innerHTML += `<block type="${block_name}"></block>`
+import { allItems, locations } from './quill'
+
+
+const blocks = []
+
+function appendBlock(category, block_name, block) {
+    //Blockly.Blocks[block_name] = block
+    blocks.push({category: category, name: block_name, block: block})
 }
 
 function cleanUp(block, namePrefix, firstLine, beforeInput=null) {
@@ -36,13 +41,13 @@ function cleanUp(block, namePrefix, firstLine, beforeInput=null) {
 }
 
 function createField(fieldName) {
-    if (fieldName == "LOCATION") return new Blockly.FieldDropdown(() => allLocations())
+    if (fieldName == "LOCATION") return new Blockly.FieldDropdown(() => [...locations.getNames().map(it => [it, it]), ["Dodaj lokacijo...", "ADD"]])
     if (fieldName == "ITEM") return new Blockly.FieldDropdown(() => allItems())
     if (fieldName == "VARIABLE") return new Blockly.FieldVariable()
     return new Blockly.FieldTextInput("besedilo")
 }
 
-Blockly.Blocks['command'] = {
+appendBlock('Akcije', 'command', {
     init: function() {
         this.appendDummyInput()
             .appendField("Ukaz")
@@ -55,11 +60,10 @@ Blockly.Blocks['command'] = {
         this.setNextStatement(true, 'Akcija')
         this.setOnChange(() => cleanUp(this, "SHOW", "pokaži, če"))
     }
-}
-appendBlock("actions", "command")
+})
 
 function createTopBlock(block_name, name, other=null) {
-    const block = Blockly.Blocks[block_name] = {
+    appendBlock("Akcije", block_name, {
         init: function() {
           this.appendDummyInput()
               .appendField(name)
@@ -69,16 +73,14 @@ function createTopBlock(block_name, name, other=null) {
           this.setColour(36)
           this.setNextStatement(true, 'Akcija')
         }
-    }
-    appendBlock("actions", block_name)
-    return block
+    })
 }
 
 createTopBlock('on_entry', 'Ob vstopu')
 createTopBlock('on_exit', 'Ob izstopu')
 createTopBlock('after_command', 'Po ukazu')
 
-Blockly.Blocks['action'] = {
+appendBlock('Akcije', 'action', {
     init: function() {
 
         const condition = this.appendValueInput('ALLOW0')
@@ -101,11 +103,10 @@ Blockly.Blocks['action'] = {
                 ? "sicer če" : "če",
                 "STATEMENTS"))
     }
-}
-appendBlock("actions", "action")
+})
 
 function createCondition(block_name, condField, fieldName, other=null) {
-    const block = Blockly.Blocks[block_name] = {
+    appendBlock('Pogoji', block_name, {
       init: function() {
           this.setInputsInline(false)
           this.appendDummyInput()
@@ -140,12 +141,10 @@ function createCondition(block_name, condField, fieldName, other=null) {
               this.addMsgInput()
           }
       }
-    }
-    appendBlock("conditions", block_name)
-    return block
+    })
 }
 
-Blockly.Blocks['not'] = {
+appendBlock("Pogoji", "not", {
     init: function() {
         this.appendValueInput("NOT")
             .appendField("ni res, da")
@@ -153,8 +152,7 @@ Blockly.Blocks['not'] = {
         this.setOutput(true, "Boolean")
         this.setColour(246)
     }
-}
-appendBlock("conditions", "not")
+})
 
 createCondition('does_have', "ima igralec", "ITEM")
 createCondition('has_visited', "je igralec obiskal", "LOCATION")
@@ -176,7 +174,7 @@ createCondition('compare_var', "", "VARIABLE",
 
 
 function createStatement(block_name, statement, fieldName, other=null) {
-    const block = Blockly.Blocks[block_name] = {
+    appendBlock("Ukazi", block_name, {
       init: function() {
           this.setInputsInline(false)
           this.appendDummyInput()
@@ -189,9 +187,7 @@ function createStatement(block_name, statement, fieldName, other=null) {
           this.setNextStatement(true)
           this.setColour(186)
       }
-    }
-    appendBlock("statements", block_name)
-    return block
+    })
 }
 
 
@@ -202,3 +198,5 @@ createStatement("item_at", "postavi", "ITEM",
     obj => obj.inputList[0].appendField("na").appendField(createField("LOCATION")))
 createStatement("destroy", "uniči", "ITEM")
 createStatement("print", "izpiši", "MSG")
+
+export default blocks

@@ -1,9 +1,9 @@
-class Condition {
+export class Condition {
     constructor(msg=null, negate=false) {
         this.msg_on_fail = msg; this.negate = negate;
     }
     _check() {
-        return true;
+        return true;3
     }
     isProhibited() {
         return this._check() === this.negate ? this.msg_on_fail : false;
@@ -147,7 +147,7 @@ class Flag {
     }
 }
 
-class LocDef {
+export class LocDef {
     constructor(title, description) {
         this.title = title;
         this.description = description;

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Odisej</title>
+
+  <style>
+    body {
+      background-color: #fff;
+      font-family: sans-serif;
+    }
+    .blocklyTreeRow {
+        text-orientation: sideways;
+        writing-mode: vertical-rl;
+        padding-bottom: 16px;
+        height: auto;
+    }
+
+    #locations .ui-selecting { background: #FECA40; }
+    #locations .ui-selected { background: #F39814; color: white; }
+    #locations li:last-child { margin-left: 6px; border-top: 1px solid #a4865d;  }
+    #locations li .name { margin-left: 6px; }
+    #locations li .button { visibility: hidden; height: 1em}
+    #locations li:hover .button { visibility: visible;}
+    ol#locations { margin: 0; padding: 0; }
+    #locations li { list-style-type: none; margin: 3px; padding: 0.4em; font-size: 1.1em; height: 18px; position: relative; }
+
+    #loc-desc-div, #locs-div { border: 3px solid #a4865d; border-radius: 3px; }
+    #loc-desc { font-size: 12pt; border: thin solid #a4865d; width: 100%; }
+    #locs-div { float: left; position: relative; width: 20%; white-space: nowrap; overflow-x: scroll; height: 100%; margin-right: 16px; }
+    #loc-desc-div { float: left; width: 75%; padding: 8px;  text-align: center;  }
+
+      #blockly-div { height: 480px; width: 100%; }
+  </style>
+
+
+</head>
+<body>
+    <div id="react-container"></div>
+    <script src="../dist/bundle.js"></script>
+</body>
+</html>
