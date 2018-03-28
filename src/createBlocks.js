@@ -1,12 +1,11 @@
 import Blockly from 'node-blockly/browser'
 
-import { allItems, locations } from './quill'
+import { locations, items, variables, flags } from './quill'
 
 
 const blocks = []
 
 function appendBlock(category, block_name, block) {
-    //Blockly.Blocks[block_name] = block
     blocks.push({category: category, name: block_name, block: block})
 }
 
@@ -40,11 +39,64 @@ function cleanUp(block, namePrefix, firstLine, beforeInput=null) {
     conditions[0].setAlign(Blockly.ALIGN_LEFT)
 }
 
-function createField(fieldName) {
-    if (fieldName == "LOCATION") return new Blockly.FieldDropdown(() => [...locations.getNames().map(it => [it, it]), ["Dodaj lokacijo...", "ADD"]])
-    if (fieldName == "ITEM") return new Blockly.FieldDropdown(() => allItems())
-    if (fieldName == "VARIABLE") return new Blockly.FieldVariable()
-    return new Blockly.FieldTextInput("besedilo")
+
+class FieldItems extends Blockly.FieldDropdown {
+    constructor(nameModel, addMsg) {
+
+        function createList() {
+            const options = [...nameModel.getNamesIds(), [addMsg, "ADD"]]
+            if (options.length > 1) {
+                options.push(["Preimenuj...", "RENAME"], ["Odstrani...", "REMOVE"])
+            }
+            return options
+        }
+
+        super(createList)
+        this.nameModel = nameModel
+    }
+
+    onItemSelected(menu, menuItem) {
+        var id = menuItem.getValue()
+        const model = this.nameModel
+        const self = this
+        if (id == "ADD") {
+            Blockly.prompt("Ime:", "", (name) => {
+                const newItemId = model.add(name)
+                self.setValue(`${newItemId}`)
+            })
+        }
+        else if (id == "RENAME") {
+            const curId = this.getValue()
+            const curName = this.getText()
+            Blockly.prompt(`Novo ime za ${curName}:`, curName, (newName) => {
+                model.rename(curId, newName)
+                this.setValue(curId)
+                this.setText(newName)
+            })
+        }
+        else if (id == "REMOVE") {
+            model.remove(this.getValue())
+            this.setValue("ADD")
+        }
+        else {
+            this.setValue(id)
+        }
+    }
+
+    fixMissingName() {
+        if (this.nameModel.getNameById(this.getValue()) == null) {
+            this.setValue("ADD")
+        }
+    }
+}
+
+
+function createField(fieldName, placeholder=null) {
+    if (fieldName.startsWith("LOCATION")) return new Blockly.FieldDropdown(locations.getNamesIds.bind(locations))
+    if (fieldName.startsWith("ITEM")) return new FieldItems(items, "Stvar ...")
+    if (fieldName.startsWith("VARIABLE")) return new FieldItems(variables, "Spremenljivka ...")
+    if (fieldName.startsWith("FLAG")) return new FieldItems(flags, "Zastavica ...")
+    return new Blockly.FieldTextInput(placeholder || "besedilo")
 }
 
 appendBlock('Akcije', 'command', {
@@ -65,11 +117,7 @@ appendBlock('Akcije', 'command', {
 function createTopBlock(block_name, name, other=null) {
     appendBlock("Akcije", block_name, {
         init: function() {
-          this.appendDummyInput()
-              .appendField(name)
-          if (other != null) {
-              other(this)
-          }
+          this.appendDummyInput().appendField(name)
           this.setColour(36)
           this.setNextStatement(true, 'Akcija')
         }
@@ -105,15 +153,39 @@ appendBlock('Akcije', 'action', {
     }
 })
 
-function createCondition(block_name, condField, fieldName, other=null) {
-    appendBlock('Pogoji', block_name, {
+
+appendBlock('Akcije', 'else_action', {
+    init: function() {
+        this.appendStatementInput('STATEMENTS')
+            .appendField('sicer izvedi')
+        this.setColour(36)
+        this.setPreviousStatement(true, 'Akcija')
+    }
+})
+
+
+appendBlock("Akcije", 'exits', {
+    init: function() {
+        this.appendDummyInput().appendField("Izhodi")
+        for(let direction of ["S", "SV", "V", "JV", "J", "JZ", "Z", "SZ"]) {
+            this.appendDummyInput()
+                .setAlign(Blockly.ALIGN_RIGHT)
+                .appendField(direction)
+                .appendField(new Blockly.FieldDropdown(() => [["", ""], ...locations.getNamesIds()]), `EXIT_${direction}`)
+        }
+        this.setColour(36)
+    }
+})
+
+function createCondition(block_name, condField, fieldName, other=null, toolbox="Pogoji") {
+    appendBlock(toolbox, block_name, {
       init: function() {
           this.setInputsInline(false)
-          this.appendDummyInput()
+          const row = this.appendDummyInput()
             .appendField(condField)
             .appendField(createField(fieldName), fieldName)
           if (other != null) {
-              other(this)
+              other(row, this)
           }
           this.setMsgInput()
           this.setOutput(true, "Boolean")
@@ -157,31 +229,22 @@ appendBlock("Pogoji", "not", {
 createCondition('does_have', "ima igralec", "ITEM")
 createCondition('has_visited', "je igralec obiskal", "LOCATION")
 createCondition('is_at', "je igralec na", "LOCATION")
-createCondition('item_is_at', "je", "ITEM",
-    obj => obj.inputList[0]
-              .appendField("na")
-              .appendField(createField('LOCATION')))
-createCondition('item_exists', "", "ITEM",
-    obj => obj.inputList[0].appendField("obstaja"))
-createCondition('item_is_here', "je", "ITEM",
-    obj => obj.inputList[0].appendField("tukaj"))
-
-
-createCondition('compare_var', "", "VARIABLE",
-    obj => obj.inputList[0]
-        .appendField(new Blockly.FieldDropdown([["=", "EQ"], ["<", "LE"], [">", "GE"]]), "OPERATOR")
-        .appendField(new Blockly.FieldTextInput(''), "REFERENCE"))
+createCondition('item_is_at', "je", "ITEM", row => row.appendField("na").appendField(createField('LOCATION'), "LOCATION"))
+createCondition('item_exists', "", "ITEM", row => row.appendField("obstaja"))
+createCondition('item_is_here', "je", "ITEM", row => row.appendField("tukaj"))
+createCondition('flag_set', "", "FLAG", row => row.appendField("je postavljena"))
+createCondition('flag_clear', "", "FLAG", row => row.appendField("ni postavljena"))
 
 
 function createStatement(block_name, statement, fieldName, other=null) {
     appendBlock("Ukazi", block_name, {
       init: function() {
           this.setInputsInline(false)
-          this.appendDummyInput()
+          const row = this.appendDummyInput()
             .appendField(statement)
             .appendField(createField(fieldName), fieldName)
           if (other != null) {
-              other(this)
+              other(row, this)
           }
           this.setPreviousStatement(true)
           this.setNextStatement(true)
@@ -195,8 +258,63 @@ createStatement("go", "pojdi na", "LOCATION")
 createStatement("pick", "vzemi", "ITEM")
 createStatement("drop", "spusti", "ITEM")
 createStatement("item_at", "postavi", "ITEM",
-    obj => obj.inputList[0].appendField("na").appendField(createField("LOCATION")))
+    row => row.appendField("na").appendField(createField("LOCATION"), "LOCATION"))
 createStatement("destroy", "uniči", "ITEM")
+createStatement("set_flag", "postavi", "FLAG")
+createStatement("clear_flag", "pobriši", "FLAG")
 createStatement("print", "izpiši", "MSG")
+
+
+function createVarStatement(block_name, statement, fieldName, relation=null, fieldName2=null, other=null) {
+    appendBlock("Spremenljivke", block_name, {
+        init: function() {
+            this.setInputsInline(false)
+            var t = this.appendDummyInput()
+                .setAlign(Blockly.ALIGN_RIGHT)
+                .appendField(statement)
+                .appendField(createField(fieldName), fieldName)
+            if (fieldName2 != null) {
+                t = this.appendDummyInput()
+                    .setAlign(Blockly.ALIGN_RIGHT)
+            }
+            if (relation != null) {
+                t.appendField(relation)
+            }
+            if (fieldName2 != null) {
+                t.appendField(createField(fieldName2, "vrednost"), fieldName2)
+            }
+            if (other != null) {
+                other(this)
+            }
+            this.setPreviousStatement(true)
+            this.setNextStatement(true)
+            this.setColour(186)
+        }
+    })
+}
+
+createVarStatement("set_const", "postavi", "VARIABLE", "na", "CONSTANT")
+createVarStatement("increase", "povečaj", "VARIABLE")
+createVarStatement("decrease", "zmanjšaj", "VARIABLE")
+createVarStatement("add_const", "povečaj", "VARIABLE", "za", "CONSTANT")
+createVarStatement("sub_const", "zmanjšaj", "VARIABLE", "za", "CONSTANT")
+createVarStatement("set_var", "postavi", "VARIABLE", "na", "VARIABLE2")
+createVarStatement("add_var", "povečaj", "VARIABLE", "za", "VARIABLE2")
+createVarStatement("sub_var", "zmanjšaj", "VARIABLE", "za", "VARIABLE2")
+
+createCondition('compare_const', "", "VARIABLE",
+    (_, block) => block.appendDummyInput().setAlign(Blockly.ALIGN_RIGHT)
+        .appendField(new Blockly.FieldDropdown([["=", "EQ"], ["<", "LE"], [">", "GE"]]), "OPERATOR")
+        .appendField(new Blockly.FieldTextInput('vrednost'), "CONSTANT"),
+    "Spremenljivke")
+
+
+createCondition('compare_var', "", "VARIABLE",
+    (_, block) => block.appendDummyInput()
+        .appendField(new Blockly.FieldDropdown([["=", "EQ"], ["<", "LE"], [">", "GE"]]), "OPERATOR")
+        .appendField(createField("VARIABLE2"), "VARIABLE2"),
+    "Spremenljivke")
+
+
 
 export default blocks

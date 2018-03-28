@@ -3,14 +3,14 @@ import { render } from 'react-dom'
 import Blockly from 'node-blockly/browser'
 import BlocklyDrawer, { Category } from 'react-blockly-drawer';
 
-import { locations } from './quill'
-import blocks from './createBlocks'
+import { locations, storeLocally, restoreLocally } from './quill'
+import blocks, { exitBlock } from './createBlocks'
 
 import pen_image from './pen-15.svg'
 import cross_image from './cross.svg'
 
 Blockly.BlockSvg.START_HAT = true
-Blockly.Flyout.prototype.autoClose = false
+// Blockly.Flyout.prototype.autoClose = false
 
 window.React = React
 
@@ -57,6 +57,31 @@ class Location extends React.Component {
 }
 
 
+function fixWorkspaceNames(workspace) {
+    workspace.getAllBlocks().forEach(block => {
+        block.inputList.forEach(input => {
+            input.fieldRow
+                .filter(field => field.fixMissingName)
+                .forEach(field => field.fixMissingName())
+        })
+    })
+}
+
+
+class BlocklyDrawerWithNameCheck extends BlocklyDrawer {
+    componentDidUpdate() {
+        // BlocklyDrawer.prototype.componentDidUpdate.apply(this)
+        const workspace = this.workspacePlayground
+        fixWorkspaceNames(workspace)
+        if (!workspace.getAllBlocks().length) {
+            var block = workspace.newBlock('exits')
+            block.initSvg()
+            block.render()
+        }
+    }
+}
+
+
 const Locations = ({currentLocation, onSelect, onRename, onRemove, onAddNew}) =>
     <ol id="locations">
         {locations.getNames().map((loc, i) =>
@@ -82,7 +107,9 @@ class App extends React.Component {
         this.addLocation = this.addLocation.bind(this)
     }
 
-    get curLoc() { return locations.getLocation(this.state.currentLocation) }
+    get curLoc() {
+        return locations.getLocation(this.state.currentLocation)
+    }
 
     changeLocation(newLocation) {
         this.setState({currentLocation: newLocation})
@@ -90,6 +117,7 @@ class App extends React.Component {
 
     changeWorkspace(xml) {
         this.curLoc.workspace = xml
+        storeLocally()
     }
 
     changeDescription(event) {
@@ -134,13 +162,11 @@ class App extends React.Component {
                                   ref={node => { this.locDescArea = node } }/>
                     </div>
                     <div id="blockly-div">
-                        <BlocklyDrawer tools={blocks}
+                        <BlocklyDrawerWithNameCheck tools={blocks}
                                        workspaceXML={this.curLoc.workspace || ""}
                                        injectOptions={{toolboxPosition: 'end'}}
                                        onChange={this.changeWorkspace.bind(this)}>
-                            <Category name="Stvari" id="items" colour="186" custom="ITEMS"></Category>
-                            <Category name="Spremenljivke" colour="330" custom="VARIABLES"></Category>
-                        </BlocklyDrawer>,
+                        </BlocklyDrawerWithNameCheck>
                     </div>
                 </div>
             </div>
@@ -148,4 +174,6 @@ class App extends React.Component {
     }
 }
 
+
+restoreLocally()
 render(<App/>, document.getElementById('react-container'))
