@@ -1,12 +1,13 @@
 export class Condition {
     constructor(msg=null, negate=false) {
-        this.msg_on_fail = msg; this.negate = negate;
+        this.msg_on_fail = msg
+        this.negate = negate
     }
     _check() {
-        return true;3
+        return true
     }
     isProhibited() {
-        return this._check() === this.negate ? this.msg_on_fail : false;
+        return this._check() === this.negate ? this.msg_on_fail : false
     }
 }
 
