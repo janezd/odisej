@@ -1,7 +1,8 @@
 import React from 'react'
 import { render } from 'react-dom'
 import Blockly from 'node-blockly/browser'
-import BlocklyDrawer, { Category } from 'react-blockly-drawer';
+import BlocklyDrawer from 'react-blockly-drawer'
+import { ListGroup, ListGroupItem, Navbar, Nav, Button, ButtonToolbar } from 'react-bootstrap'
 
 import { locations, storeLocally, restoreLocally } from './quill'
 import blocks, { exitBlock } from './createBlocks'
@@ -14,47 +15,6 @@ Blockly.BlockSvg.START_HAT = true
 
 window.React = React
 
-
-
-class Location extends React.Component {
-    constructor(props) {
-        super(props)
-
-        this.renaming = false
-        this.startRename = this.startRename.bind(this)
-        this.endRename = this.endRename.bind(this)
-    }
-    startRename() {
-        this.renaming = true
-        this.locname.setAttribute("contentEditable", "true")
-        this.locname.focus()
-    }
-
-    endRename() {
-        if (!this.renaming) return;
-        this.renaming = false
-        this.locname.setAttribute("contentEditable", "false")
-        this.props.onRename(this.locname.innerText)
-    }
-
-    render() {
-        var { location, onSelect, onRename, onRemove, isSelected, noButtons } = this.props
-
-        return (
-            <li className={isSelected ? "ui-selected" : ""}>
-                <img className="button" onClick={onRemove} src={cross_image}/>
-                <img className="button" onClick={this.startRename} src={pen_image}/>
-                <span className="name"
-                      onClick={this.props.isSelected ? this.startRename : onSelect}
-                      onBlur={this.endRename}
-                      onKeyPress={ev => { if (ev.key == "Enter") this.endRename() } }
-                      ref={node => { this.locname = node }}>
-                    {location}
-                </span>
-            </li>
-        )
-    }
-}
 
 
 function fixWorkspaceNames(workspace) {
@@ -82,8 +42,49 @@ class BlocklyDrawerWithNameCheck extends BlocklyDrawer {
 }
 
 
+class Location extends React.Component {
+    constructor(props) {
+        super(props)
+
+        this.renaming = false
+        this.startRename = this.startRename.bind(this)
+        this.endRename = this.endRename.bind(this)
+    }
+    startRename() {
+        this.renaming = true
+        this.locname.setAttribute("contentEditable", "true")
+        this.locname.focus()
+    }
+
+    endRename() {
+        if (!this.renaming) return;
+        this.renaming = false
+        this.locname.setAttribute("contentEditable", "false")
+        this.props.onRename(this.locname.innerText)
+    }
+
+    render() {
+        var { location, onSelect, onRename, onRemove, isSelected, noButtons } = this.props
+
+        return (
+            <ListGroupItem active={isSelected}>
+                <img className="button" onClick={onRemove} src={cross_image}/>
+                <img className="button" onClick={this.startRename} src={pen_image}/>
+                <span className="name"
+                      onClick={this.props.isSelected ? this.startRename : onSelect}
+                      onBlur={this.endRename}
+                      onKeyPress={ev => { if (ev.key == "Enter") this.endRename() } }
+                      ref={node => { this.locname = node }}>
+                    {location}
+                </span>
+            </ListGroupItem>
+        )
+    }
+}
+
+
 const Locations = ({currentLocation, onSelect, onRename, onRemove, onAddNew}) =>
-    <ol id="locations">
+    <ListGroup id="locations">
         {locations.getNames().map((loc, i) =>
             <Location key={i}
                       onSelect={() => onSelect(i)}
@@ -91,15 +92,17 @@ const Locations = ({currentLocation, onSelect, onRename, onRemove, onAddNew}) =>
                       onRemove={() => onRemove(i)}
                       location={loc}
                       isSelected={i==currentLocation}/>)}
-        <li onClick={onAddNew}>Dodaj novo lokacijo</li>
-    </ol>
+        <ListGroupItem onClick={onAddNew}>Dodaj novo lokacijo</ListGroupItem>
+    </ListGroup>
+
 
 
 class App extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            currentLocation: 0
+            currentLocation: 0,
+            state: 'create'
         }
         this.changeLocation = this.changeLocation.bind(this)
         this.removeLocation = this.removeLocation.bind(this)
@@ -143,34 +146,68 @@ class App extends React.Component {
         this.setState({currentLocation})  // reset list of locations
     }
 
+    switchToCreate() {
+        this.setState({state: 'create'})
+    }
+
+    switchToTry() {
+        Blockly.getMainWorkspace().getTopBlocks().forEach(block => console.log(packBlockArgs(block)))
+        this.setState({state: 'try'})
+    }
+
     render() {
         const currentLocation = this.state.currentLocation
-        return (
-            <div>
-                <div id="locs-div">
-                    <Locations currentLocation={currentLocation}
-                               onSelect={this.changeLocation}
-                               onRename={this.renameLocation}
-                               onRemove={this.removeLocation}
-                               onAddNew={this.addLocation} />
-                </div>
-                <div id="loc-desc-div">
-                    <div>
-                        <textarea id="loc-desc" rows="8" placeholder="Opis lokacije ..."
-                                  value={this.curLoc.description}
-                                  onChange={this.changeDescription.bind(this)}
-                                  ref={node => { this.locDescArea = node } }/>
-                    </div>
-                    <div id="blockly-div">
-                        <BlocklyDrawerWithNameCheck tools={blocks}
-                                       workspaceXML={this.curLoc.workspace || ""}
-                                       injectOptions={{toolboxPosition: 'end'}}
-                                       onChange={this.changeWorkspace.bind(this)}>
-                        </BlocklyDrawerWithNameCheck>
-                    </div>
-                </div>
-            </div>
+        const navbar = (
+            <Navbar>
+                <Navbar.Header>
+                    <Navbar.Brand>
+                        Odis1ej
+                    </Navbar.Brand>
+                </Navbar.Header>
+                <Navbar.Form pullRight>
+                    <ButtonToolbar>
+                        <Button active={this.state.state == 'create'} onClick={this.switchToCreate.bind(this)}>Ustvari</Button>
+                        <Button active={this.state.state == 'try'} onClick={this.switchToTry.bind(this)}>Preskusi</Button>
+                        <Button active={this.state.state == 'projects'} onClick={this.switchToTry.bind(this)}>Moji projekti</Button>
+                    </ButtonToolbar>
+                </Navbar.Form>
+            </Navbar>
         )
+
+        if (this.state.state == 'create') {
+            return (
+                <div>
+                    {navbar}
+                    <div id="locs-div">
+                        <Locations currentLocation={currentLocation}
+                                   onSelect={this.changeLocation}
+                                   onRename={this.renameLocation}
+                                   onRemove={this.removeLocation}
+                                   onAddNew={this.addLocation}/>
+                    </div>
+                    <div id="loc-desc-div">
+                        <div>
+                            <textarea id="loc-desc" rows="8" placeholder="Opis lokacije ..."
+                                      value={this.curLoc.description}
+                                      onChange={this.changeDescription.bind(this)}
+                                      ref={node => {
+                                          this.locDescArea = node
+                                      }}/>
+                        </div>
+                        <div id="blockly-div">
+                            <BlocklyDrawerWithNameCheck tools={blocks}
+                                                        workspaceXML={this.curLoc.workspace || ""}
+                                                        injectOptions={{toolboxPosition: 'end'}}
+                                                        onChange={this.changeWorkspace.bind(this)}>
+                            </BlocklyDrawerWithNameCheck>
+                        </div>
+                    </div>
+                </div>
+            )
+        }
+        else {
+            return navbar
+        }
     }
 }
 
