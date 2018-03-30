@@ -1,3 +1,5 @@
+import Blockly from "node-blockly/browser"
+
 function getUniqueName(name, names) {
     name = name.trim()
     if (names.indexOf(name) == -1) {
@@ -200,4 +202,51 @@ export function restoreLocally() {
         fromXml(xmlDoc)
     }
     catch(err) {}
+}
+
+
+export function packBlockArgs(block, noNext=false) {
+    function getChain(next) {
+        const chain = []
+        for(; next; next = next.nextConnection && next.nextConnection.targetBlock()) {
+            chain.push(packBlockArgs(next, true))
+        }
+        return chain
+    }
+
+    if (!block) return null;
+    const args = {'block': block.type}
+    block.inputList.forEach(input => {
+        switch (input.type) {
+            case Blockly.DUMMY_INPUT:
+                input.fieldRow.forEach(field => {
+                    if (field.name) {
+                        args[field.name] = field.getValue()
+                    }
+                })
+                break
+            case Blockly.INPUT_VALUE:
+                const value = packBlockArgs(input.connection.targetBlock())
+                const seq = input.name.match(/^(.*?)(\d+)$/)
+                if (seq) {
+                    if (seq[2] == "0") {
+                        args[seq[1]] = []
+                    }
+                    if (value) {
+                        args[seq[1]].push(value)
+                    }
+                }
+                else {
+                    args[input.name] = value
+                }
+                break
+            case Blockly.NEXT_STATEMENT:
+                args[input.name] = getChain(input.connection.targetBlock())
+        }
+    })
+    let next = block.nextConnection && block.nextConnection.targetBlock()
+    if (!noNext && next) {
+        args.next = getChain(next)
+    }
+    return args
 }

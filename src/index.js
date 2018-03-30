@@ -4,7 +4,7 @@ import Blockly from 'node-blockly/browser'
 import BlocklyDrawer from 'react-blockly-drawer'
 import { ListGroup, ListGroupItem, Navbar, Nav, Button, ButtonToolbar } from 'react-bootstrap'
 
-import { locations, storeLocally, restoreLocally } from './quill'
+import { locations, storeLocally, restoreLocally, packBlockArgs } from './quill'
 import blocks, { exitBlock } from './createBlocks'
 
 import pen_image from './pen-15.svg'
