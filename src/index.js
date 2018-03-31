@@ -4,7 +4,7 @@ import Blockly from 'node-blockly/browser'
 import BlocklyDrawer from 'react-blockly-drawer'
 import { ListGroup, ListGroupItem, Navbar, Nav, Button, ButtonToolbar } from 'react-bootstrap'
 
-import { locations, storeLocally, restoreLocally, packBlockArgs } from './quill'
+import { locations, items, storeLocally, restoreLocally, packBlockArgs } from './quill'
 import blocks, { exitBlock } from './createBlocks'
 
 import pen_image from './pen-15.svg'
@@ -104,6 +104,8 @@ class App extends React.Component {
             currentLocation: 0,
             state: 'create'
         }
+        this.gameData = null
+
         this.changeLocation = this.changeLocation.bind(this)
         this.removeLocation = this.removeLocation.bind(this)
         this.renameLocation = this.renameLocation.bind(this)
@@ -146,12 +148,27 @@ class App extends React.Component {
         this.setState({currentLocation})  // reset list of locations
     }
 
+    packData() {
+        const locData = []
+        for(let loci = 0; loci < locations.length; loci++) {
+            const location = locations.getLocation(loci)
+
+            const workspace = new Blockly.Workspace()
+            const xml = Blockly.Xml.textToDom(location.workspace)
+            Blockly.Xml.domToWorkspace(xml, workspace)
+            const locBlocks = workspace.getTopBlocks().map(block => packBlockArgs(block))
+
+            locData.push({name: location.title, description: location.description, commands: locBlocks})
+        }
+        return {locations: locData, items: items.getNames()}
+    }
+
     switchToCreate() {
         this.setState({state: 'create'})
     }
 
     switchToTry() {
-        Blockly.getMainWorkspace().getTopBlocks().forEach(block => console.log(packBlockArgs(block)))
+        this.gameData = this.packData()
         this.setState({state: 'try'})
     }
 
@@ -161,7 +178,7 @@ class App extends React.Component {
             <Navbar>
                 <Navbar.Header>
                     <Navbar.Brand>
-                        Odis1ej
+                        Odisej
                     </Navbar.Brand>
                 </Navbar.Header>
                 <Navbar.Form pullRight>
