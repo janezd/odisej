@@ -39,6 +39,29 @@ function cleanUp(block, namePrefix, firstLine, beforeInput=null) {
     conditions[0].setAlign(Blockly.ALIGN_LEFT)
 }
 
+function mutate(block, xml, namePrefix, firstLine, beforeInput=null) {
+    const numVals = parseInt(xml.getAttribute("nconditions"))
+    if (numVals < block.conditions.length) {
+        for(let i = numVals; i < block.conditions.length; i++) {
+            block.removeInput(`${namePrefix}${i}`)
+        }
+        block.conditions.splice(numVals)
+    }
+    else {
+        for(let i = block.conditions.length; i < numVals; i++) {
+            const name = `${namePrefix}${i}`
+            const newInput = block.appendValueInput(name)
+                .appendField(!i ? firstLine : 'in hkrati')
+                .setAlign(!i ? Blockly.ALIGN_LEFT : Blockly.ALIGN_RIGHT)
+                .setCheck(['Boolean'])
+            block.conditions.push(newInput)
+            if (beforeInput != null) {
+                block.moveInputBefore(name, beforeInput)
+            }
+        }
+    }
+}
+
 
 class FieldItems extends Blockly.FieldDropdown {
     constructor(nameModel, flyOutMsg, addMsg) {
@@ -116,6 +139,16 @@ appendBlock('Akcije', 'command', {
         this.setColour(36)
         this.setNextStatement(true, 'Akcija')
         this.setOnChange(() => cleanUp(this, "SHOW", "pokaži, če"))
+    },
+
+    mutationToDom() {
+        const container = document.createElement('mutation')
+        container.setAttribute('nconditions', this.conditions.length)
+        return container
+    },
+
+    domToMutation(xml) {
+        mutate(this, xml, "SHOW", "pokaži, če")
     }
 })
 
@@ -155,6 +188,24 @@ appendBlock('Akcije', 'action', {
                 && this.previousConnection.targetConnection.getSourceBlock().type == this.type
                 ? "sicer če" : "če",
                 "STATEMENTS"))
+    },
+
+    mutationToDom() {
+        const container = document.createElement('mutation')
+        container.setAttribute('nconditions', this.conditions.length)
+        return container
+    },
+
+    domToMutation(xml) {
+        mutate(
+            this,
+            xml,
+            "ALLOW",
+            this.previousConnection
+            && this.previousConnection.isConnected()
+            && this.previousConnection.targetConnection.getSourceBlock().type == this.type
+            ? "sicer če" : "če",
+            "STATEMENTS")
     }
 })
 
