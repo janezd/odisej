@@ -100,7 +100,7 @@ function createField(fieldName, placeholder=null) {
 }
 
 appendBlock('Akcije', 'command', {
-    init: function() {
+    init() {
         this.appendDummyInput()
             .appendField("Ukaz")
             .appendField(new Blockly.FieldTextInput("ime"), "NAME")
@@ -116,7 +116,7 @@ appendBlock('Akcije', 'command', {
 
 function createTopBlock(block_name, name, other=null) {
     appendBlock("Akcije", block_name, {
-        init: function() {
+        init() {
           this.appendDummyInput().appendField(name)
           this.setColour(36)
           this.setNextStatement(true, 'Akcija')
@@ -129,7 +129,7 @@ createTopBlock('on_exit', 'Ob izstopu')
 createTopBlock('after_command', 'Po ukazu')
 
 appendBlock('Akcije', 'action', {
-    init: function() {
+    init() {
 
         const condition = this.appendValueInput('ALLOW0')
             .appendField('če')
@@ -155,7 +155,7 @@ appendBlock('Akcije', 'action', {
 
 
 appendBlock('Akcije', 'else_action', {
-    init: function() {
+    init() {
         this.appendStatementInput('STATEMENTS')
             .appendField('sicer izvedi')
         this.setColour(36)
@@ -165,7 +165,7 @@ appendBlock('Akcije', 'else_action', {
 
 
 appendBlock("Akcije", 'exits', {
-    init: function() {
+    init() {
         this.appendDummyInput().appendField("Izhodi")
         for(let direction of ["S", "SV", "V", "JV", "J", "JZ", "Z", "SZ"]) {
             this.appendDummyInput()
@@ -179,7 +179,7 @@ appendBlock("Akcije", 'exits', {
 
 function createCondition(block_name, condField, fieldName, other=null, toolbox="Pogoji") {
     appendBlock(toolbox, block_name, {
-      init: function() {
+      init() {
           this.setInputsInline(false)
           const row = this.appendDummyInput()
             .appendField(condField)
@@ -193,12 +193,14 @@ function createCondition(block_name, condField, fieldName, other=null, toolbox="
           this.addMsgInput()
           this.setOnChange(this.setMsgInput)
       },
-      addMsgInput: function() {
+
+      addMsgInput() {
         this.appendDummyInput("MSGDUMMY")
                   .appendField("Ugovor:")
                   .appendField(new Blockly.FieldTextInput('Ne moreš, ker ...'), 'MSG')
       },
-      setMsgInput: function() {
+
+      setMsgInput() {
           if (!this.outputConnection) return  // not initialized yet?
           let block = this
           while(block.outputConnection && block.outputConnection.isConnected()) {
@@ -217,7 +219,7 @@ function createCondition(block_name, condField, fieldName, other=null, toolbox="
 }
 
 appendBlock("Pogoji", "not", {
-    init: function() {
+    init() {
         this.appendValueInput("NOT")
             .appendField("ni res, da")
             .setCheck("Boolean")
@@ -238,7 +240,7 @@ createCondition('flag_clear', "", "FLAG", row => row.appendField("ni postavljena
 
 function createStatement(block_name, statement, fieldName, other=null) {
     appendBlock("Ukazi", block_name, {
-      init: function() {
+      init() {
           this.setInputsInline(false)
           const row = this.appendDummyInput()
             .appendField(statement)
@@ -267,7 +269,7 @@ createStatement("print", "izpiši", "MSG")
 
 function createVarStatement(block_name, statement, fieldName, relation=null, fieldName2=null, other=null) {
     appendBlock("Spremenljivke", block_name, {
-        init: function() {
+        init() {
             this.setInputsInline(false)
             var t = this.appendDummyInput()
                 .setAlign(Blockly.ALIGN_RIGHT)
