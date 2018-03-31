@@ -41,18 +41,18 @@ function cleanUp(block, namePrefix, firstLine, beforeInput=null) {
 
 
 class FieldItems extends Blockly.FieldDropdown {
-    constructor(nameModel, addMsg) {
-
-        function createList() {
+    constructor(nameModel, flyOutMsg, addMsg) {
+        super(() => {
+            if (!this || this.inFlyout)
+                return [[flyOutMsg, "ADD"]]
             const options = [...nameModel.getNamesIds(), [addMsg, "ADD"]]
             if (options.length > 1) {
                 options.push(["Preimenuj...", "RENAME"], ["Odstrani...", "REMOVE"])
             }
             return options
-        }
-
-        super(createList)
+        })
         this.nameModel = nameModel
+        this.inFlyOut = false
     }
 
     onItemSelected(menu, menuItem) {
@@ -88,14 +88,19 @@ class FieldItems extends Blockly.FieldDropdown {
             this.setValue("ADD")
         }
     }
+
+    setSourceBlock(block) {
+        super.setSourceBlock(block)
+        this.inFlyOut = block.isInFlyout
+    }
 }
 
 
 function createField(fieldName, placeholder=null) {
     if (fieldName.startsWith("LOCATION")) return new Blockly.FieldDropdown(locations.getNamesIds.bind(locations))
-    if (fieldName.startsWith("ITEM")) return new FieldItems(items, "Stvar ...")
-    if (fieldName.startsWith("VARIABLE")) return new FieldItems(variables, "Spremenljivka ...")
-    if (fieldName.startsWith("FLAG")) return new FieldItems(flags, "Zastavica ...")
+    if (fieldName.startsWith("ITEM")) return new FieldItems(items, "Stvar ...", "Nova stvar ...")
+    if (fieldName.startsWith("VARIABLE")) return new FieldItems(variables, "Spremenljivka ...", "Nova spremenljivka ...")
+    if (fieldName.startsWith("FLAG")) return new FieldItems(flags, "Zastavica ...", "Nova zastavica ...")
     return new Blockly.FieldTextInput(placeholder || "besedilo")
 }
 
