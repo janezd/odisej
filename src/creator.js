@@ -174,7 +174,7 @@ export default class Creator extends React.Component {
                 </div>
                 <div id="loc-desc-div">
                     <div>
-                        <textarea class="form-control" id="loc-desc" rows="8" placeholder="Opis lokacije ..."
+                        <textarea className="form-control" id="loc-desc" rows="8" placeholder="Opis lokacije ..."
                                   value={this.curLoc.description}
                                   onChange={this.changeDescription.bind(this)}
                                   ref={node => {

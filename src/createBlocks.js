@@ -252,17 +252,28 @@ function createCondition(block_name, condField, fieldName, other=null, toolbox="
 
       addMsgInput() {
         this.appendDummyInput("MSGDUMMY")
-                  .appendField("Ugovor:")
-                  .appendField(new Blockly.FieldTextInput('Ne moreš, ker ...'), 'MSG')
+                  .appendField("sicer izpiši:")
+                  .appendField(new Blockly.FieldTextInput(''), 'MSG')
       },
 
       setMsgInput() {
+          function needsHiding() {
+              if (block.type == 'command')
+                  return true
+              if ((block.type == 'action') && block.nextConnection.isConnected()) {
+                  const nextType = block.nextConnection.targetConnection.getSourceBlock().type
+                  if ((nextType == 'action') || (nextType == 'else_action'))
+                      return true
+              }
+              return false
+          }
+
           if (!this.outputConnection) return  // not initialized yet?
           let block = this
           while(block.outputConnection && block.outputConnection.isConnected()) {
               block = block.outputConnection.targetConnection.getSourceBlock()
           }
-          if (block.type == 'command') {
+          if (needsHiding()) {
               if (this.getInput("MSGDUMMY") != null) {
                   this.removeInput("MSGDUMMY")
               }
@@ -285,7 +296,7 @@ appendBlock("Pogoji", "not", {
 })
 
 createCondition('does_have', "ima igralec", "ITEM")
-createCondition('has_visited', "je igralec obiskal", "LOCATION")
+// createCondition('has_visited', "je igralec obiskal", "LOCATION")
 createCondition('is_at', "je igralec na", "LOCATION")
 createCondition('item_is_at', "je", "ITEM", row => row.appendField("na").appendField(createField('LOCATION'), "LOCATION"))
 createCondition('item_exists', "", "ITEM", row => row.appendField("obstaja"))
@@ -360,16 +371,18 @@ createVarStatement("set_var", "postavi", "VARIABLE", "na", "VARIABLE2")
 createVarStatement("add_var", "povečaj", "VARIABLE", "za", "VARIABLE2")
 createVarStatement("sub_var", "zmanjšaj", "VARIABLE", "za", "VARIABLE2")
 
+const _operators = [["=", "EQ"], ["≠", "NE"], ["<", "LT"], [">", "GT"], ["≤", "LE"], ["≥", "GE"]]
+
 createCondition('compare_const', "", "VARIABLE",
     (_, block) => block.appendDummyInput().setAlign(Blockly.ALIGN_RIGHT)
-        .appendField(new Blockly.FieldDropdown([["=", "EQ"], ["<", "LE"], [">", "GE"]]), "OPERATOR")
+        .appendField(new Blockly.FieldDropdown(_operators), "OPERATOR")
         .appendField(new Blockly.FieldTextInput('vrednost'), "CONSTANT"),
     "Spremenljivke")
 
 
 createCondition('compare_var', "", "VARIABLE",
     (_, block) => block.appendDummyInput()
-        .appendField(new Blockly.FieldDropdown([["=", "EQ"], ["<", "LE"], [">", "GE"]]), "OPERATOR")
+        .appendField(new Blockly.FieldDropdown(_operators), "OPERATOR")
         .appendField(createField("VARIABLE2"), "VARIABLE2"),
     "Spremenljivke")
 

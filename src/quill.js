@@ -215,13 +215,13 @@ export function packBlockArgs(block, noNext=false) {
     }
 
     if (!block) return null;
-    const args = {'block': block.type}
+    const args = {'block': block.type.toLowerCase()}
     block.inputList.forEach(input => {
         switch (input.type) {
             case Blockly.DUMMY_INPUT:
                 input.fieldRow.forEach(field => {
                     if (field.name) {
-                        args[field.name] = field.getValue()
+                        args[field.name.toLowerCase()] = field.getValue()
                     }
                 })
                 break
@@ -237,11 +237,11 @@ export function packBlockArgs(block, noNext=false) {
                     }
                 }
                 else {
-                    args[input.name] = value
+                    args[input.name.toLowerCase()] = value
                 }
                 break
             case Blockly.NEXT_STATEMENT:
-                args[input.name] = getChain(input.connection.targetBlock())
+                args[input.name.toLowerCase()] = getChain(input.connection.targetBlock())
         }
     })
     let next = block.nextConnection && block.nextConnection.targetBlock()
