@@ -4,6 +4,7 @@ import { Navbar, Nav, Button, ButtonToolbar } from 'react-bootstrap'
 
 import Creator from './creator'
 import Game from './game'
+import GameMap from './map'
 
 
 class App extends React.Component {
@@ -23,6 +24,10 @@ class App extends React.Component {
             this.gameData = this.subpage.packData()
             this.setState({mode: 'game'})
         }
+    }
+
+    switchToProjects() {
+        this.setState({mode: 'projects'})
     }
 
     setPage(page) {
@@ -49,16 +54,20 @@ class App extends React.Component {
                                 Preskusi
                             </Button>
                             <Button active={this.state.mode == 'projects'}
-                                    onClick={this.switchToTry.bind(this)}>
+                                    onClick={this.switchToProjects.bind(this)}>
                                 Moji projekti
                             </Button>
                         </ButtonToolbar>
                     </Navbar.Form>
                 </Navbar>
-                {(this.state.mode == 'create')
+                { (this.state.mode == 'create')
                     ? <Creator
                         ref={this.setPage.bind(this)}/>
-                    : <Game
+                    : (this.state.mode == 'game')
+                    ? <Game
+                        data={this.gameData}
+                        ref={this.setPage.bind(this)}/>
+                    : <GameMap
                         data={this.gameData}
                         ref={this.setPage.bind(this)}/>
                 }

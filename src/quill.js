@@ -14,21 +14,25 @@ function getUniqueName(name, names) {
 
 
 class LocData {
-    constructor(title, description, locId, workspace=null) {
+    constructor(title, description, x=0, y=0, workspace=null, locId=null) {
+        this.locId = locId || Array.from({length: 5},
+            () => Math.round(Math.random() * 2**32).toString(16)).join("-")
+
         this.title = title
         this.description = description
-        this.locId = locId
         this.workspace = workspace
+
+        this.x = x
+        this.y = y
+        this.directions = {}
     }
 }
 
-var locationCount = 0
-
 class Locations {
     constructor() {
-        this._locations = []
-        this.addLocation("Začetek", "Opis začetne lokacije")
-        this.addLocation("Primer", "Opis še ene lokacije")
+        this._locations = {}
+        this.addLocation("Začetek", "Opis začetne lokacije", 100, 100)
+        this.addLocation("Primer", "Opis še ene lokacije", 200, 150)
     }
 
     get length() {
@@ -36,11 +40,15 @@ class Locations {
     }
 
     getNames() {
-        return this._locations.map(it => it.title)
+        return Object.values(this._locations).map(it => it.title)
+    }
+
+    getIds() {
+        return Object.keys(this._locations)
     }
 
     getNamesIds() {
-        return this._locations.map(it => [it.title, `${it.locId}`])
+        return Object.values(this._locations).map(it => [it.title, it.locId])
     }
 
     getLocation(i) {
@@ -48,14 +56,14 @@ class Locations {
     }
 
     removeLocation(i) {
-        this._locations.splice(i, 1)
+        delete this._locations[i]
     }
 
     addLocation(name=null, description="") {
         name = getUniqueName(name || "Nova lokacija", this.getNames())
-        const newLoc = new LocData(name, description, ++locationCount)
-        this._locations.push(newLoc)
-        return name
+        const newLoc = new LocData(name, description)
+        this._locations[newLoc.locId] = newLoc
+        return newLoc
     }
 
     renameLocation(location, newName) {
@@ -89,13 +97,19 @@ class Locations {
             return childNodes.length ? childNodes[0].textContent : ""
         }
 
-        this._locations = Array.from(base.childNodes).map(node =>
-            new LocData(node.getAttribute("name"),
+        this._locations = {}
+
+        Array.from(base.childNodes).forEach(node => {
+            const locId = node.getAttribute("locId")
+
+            this._locations[locId] =
+                new LocData(node.getAttribute("name"),
                         readTextChildXml(node, "description"),
-                        parseInt(node.getAttribute("locId")),
-                        readTextChildXml(node, "blocks"))
-        )
-        locationCount = Math.max(locationCount, ...this._locations.map(it => it.locId))
+                        0, 0,
+                        readTextChildXml(node, "blocks"),
+                        locId
+                    )
+        })
     }
 }
 

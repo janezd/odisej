@@ -220,19 +220,6 @@ appendBlock('Akcije', 'else_action', {
 })
 
 
-appendBlock("Akcije", 'exits', {
-    init() {
-        this.appendDummyInput().appendField("Izhodi")
-        for(let direction of ["S", "SV", "V", "JV", "J", "JZ", "Z", "SZ"]) {
-            this.appendDummyInput()
-                .setAlign(Blockly.ALIGN_RIGHT)
-                .appendField(direction)
-                .appendField(new Blockly.FieldDropdown(() => [["", ""], ...locations.getNamesIds()]), `EXIT_${direction}`)
-        }
-        this.setColour(36)
-    }
-})
-
 function createCondition(block_name, condField, fieldName, other=null, toolbox="Pogoji") {
     appendBlock(toolbox, block_name, {
       init() {

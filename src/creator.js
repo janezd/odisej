@@ -17,31 +17,6 @@ window.React = React
 
 
 
-function fixWorkspaceNames(workspace) {
-    workspace.getAllBlocks().forEach(block => {
-        block.inputList.forEach(input => {
-            input.fieldRow
-                .filter(field => field.fixMissingName)
-                .forEach(field => field.fixMissingName())
-        })
-    })
-}
-
-
-class BlocklyDrawerWithNameCheck extends BlocklyDrawer {
-    componentDidUpdate() {
-        // BlocklyDrawer.prototype.componentDidUpdate.apply(this)
-        const workspace = this.workspacePlayground
-        fixWorkspaceNames(workspace)
-        if (!workspace.getAllBlocks().length) {
-            var block = workspace.newBlock('exits')
-            block.initSvg()
-            block.render()
-        }
-    }
-}
-
-
 class Location extends React.Component {
     constructor(props) {
         super(props)
@@ -162,6 +137,7 @@ export default class Creator extends React.Component {
     }
 
     render() {
+        return "<div/>"
         const currentLocation = this.state.currentLocation
         return (
             <div>
