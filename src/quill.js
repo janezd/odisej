@@ -74,7 +74,7 @@ class Locations {
     }
 
     toXml(doc, base) {
-        this._locations.forEach(location => {
+        Object.values(this._locations).forEach(location => {
             const loc = doc.createElement("location")
             loc.setAttribute("name", location.title)
             loc.setAttribute("locId", location.locId)

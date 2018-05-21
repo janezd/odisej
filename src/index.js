@@ -2,7 +2,6 @@ import React from 'react'
 import { render } from 'react-dom'
 import { Navbar, Nav, Button, ButtonToolbar } from 'react-bootstrap'
 
-import Creator from './creator'
 import Game from './game'
 import GameMap from './map'
 
@@ -61,13 +60,13 @@ class App extends React.Component {
                     </Navbar.Form>
                 </Navbar>
                 { (this.state.mode == 'create')
-                    ? <Creator
+                    ? <GameMap
                         ref={this.setPage.bind(this)}/>
                     : (this.state.mode == 'game')
                     ? <Game
                         data={this.gameData}
                         ref={this.setPage.bind(this)}/>
-                    : <GameMap
+                    : <Game
                         data={this.gameData}
                         ref={this.setPage.bind(this)}/>
                 }

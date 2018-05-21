@@ -1,11 +1,17 @@
 import React from "react"
 import ReactSVG from 'react-svg'
-import { Modal } from 'react-bootstrap'
+import { Modal, FormGroup, FormControl, ControlLabel } from 'react-bootstrap'
 
+import Blockly from 'node-blockly/browser'
 import BlocklyDrawer from 'react-blockly-drawer'
 
 import blocks, { exitBlock } from './createBlocks'
-import { locations } from './quill'
+import { locations, items, restoreLocally, storeLocally } from './quill'
+
+Blockly.BlockSvg.START_HAT = true
+// Blockly.Flyout.prototype.autoClose = false
+
+window.React = React
 
 
 function fixWorkspaceNames(workspace) {
@@ -43,10 +49,6 @@ class BlocklyDrawerWithNameCheck extends BlocklyDrawer {
 const D=30
 
 class Node extends React.Component {
-    constructor(props) {
-        super(props)
-    }
-
     polyMouseDown = (e) => {
       this.coords = {
         x: e.pageX,
@@ -77,8 +79,9 @@ class Node extends React.Component {
         const loc = locations.getLocation(this.props.locId)
         return (
         <g transform={`translate(${loc.x} ${loc.y})`}>
-        <text x="52" y="115" textAnchor="middle" fontFamily="sans-serif" style={{'user-select': 'none'}}
-              onClick={this.props}>{loc.title}</text>
+        <text x="52" y="115" textAnchor="middle" fontFamily="sans-serif" style={{'user-select': 'none'}}>
+            {loc.title}
+        </text>
 <g>
 	<polygon fill="#FFFFFF" points="36.761,89.896 14.751,67.887 14.751,36.761 36.761,14.751 67.887,14.751 89.896,36.761
         89.896,67.887 67.887,89.896"
@@ -197,24 +200,31 @@ const CONN_COORDS = {
 const CENTER = 104.647 / 2
 
 class LocationEditor extends ReactSVG {
-    changeDescription() {}
+    changeWorkspace(xml) {
+        this.props.location.workspace = xml
+    }
 
-    changeWorkspace() {}
+    handleClose() {
+        const loc = this.props.location
+        loc.title = this.loctitle.innerText
+        loc.description = this.locDescArea.value
+        storeLocally()
+
+        this.props.handleClose()
+    }
 
     render() {
-        const loc = locations.getLocation(this.props.locId)
-        return <Modal dialogClassName="location-editor" show={true} onHide={this.props.handleClose}>
+        const loc = this.props.location
+        return <Modal dialogClassName="location-editor" show={true} onHide={this.handleClose.bind(this)}>
                 <Modal.Header closeButton>
-                    <Modal.Title>{loc.title}</Modal.Title>
+                    <Modal.Title><span ref={node => { this.loctitle = node; if (node) { node.setAttribute("contentEditable", true) }}}>{loc.title}</span></Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <div>
-                        <textarea className="form-control" id="loc-desc" rows="8" placeholder="Opis lokacije ..."
-                                value={loc.description}
-                                onChange={this.changeDescription.bind(this)}
-                                ref={node => { this.locDescArea = node }}
-                        />
-                    </div>
+                    <FormControl componentClass="textarea"
+                                 placeholder="Opis lokacije ..."
+                                 defaultValue={loc.description}
+                                 inputRef={node => { this.locDescArea = node }}
+                    />
                     <div id="blockly-div">
                         <BlocklyDrawerWithNameCheck tools={blocks}
                                                     workspaceXML={loc.workspace || ""}
@@ -349,7 +359,7 @@ export default class GameMap extends ReactSVG {
     }
 
     editLocation(locId) {
-        this.setState({editing: locId})
+        this.setState({editing: locations.getLocation(locId)})
     }
 
     closeEditor() {
@@ -382,7 +392,7 @@ export default class GameMap extends ReactSVG {
             tempConnection = <path pointerEvents="none" stroke="#000000" strokeWidth="3" fill="transparent" d={`M${x},${y} C ${x+dx},${y+dy} ${mx},${my} ${mx},${my}`}/>
         }
 
-        const toEdit = this.state.editing ? <LocationEditor locId={this.state.editing} handleClose={this.closeEditor.bind(this)} /> : ""
+        const toEdit = this.state.editing ? <LocationEditor location={this.state.editing} handleClose={this.closeEditor.bind(this)} /> : ""
 
         return <div>
           {toEdit}
@@ -419,9 +429,27 @@ export default class GameMap extends ReactSVG {
                                                  newLineCallback={this.dirMouseDown}
                                                  insideCallback={this.setHovered}
                                                  moveByCallback={this.moveNodeBy}
-                                                 onDoubleClick={e => { this.editLocation(it); e.preventDefault();e.stopPropagation() } } />) }
+                                                 onDoubleClick={e => { this.editLocation(it); e.preventDefault();e.stopPropagation() } }
+                                    />) }
             {tempConnection}
           </svg>
           </div>
       }
 }
+
+function packData() {
+    const locData = []
+    for(let loci = 0; loci < locations.length; loci++) {
+        const location = locations.getLocation(loci)
+
+        const workspace = new Blockly.Workspace()
+        const xml = Blockly.Xml.textToDom(location.workspace)
+        Blockly.Xml.domToWorkspace(xml, workspace)
+        const locBlocks = workspace.getTopBlocks().map(block => packBlockArgs(block))
+
+        locData.push({name: location.title, description: location.description, commands: locBlocks})
+    }
+    return {locations: locData, items: items.getNames()}
+}
+
+restoreLocally()
