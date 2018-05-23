@@ -6,7 +6,7 @@ import Blockly from 'node-blockly/browser'
 import BlocklyDrawer from 'react-blockly-drawer'
 
 import blocks, { exitBlock } from './createBlocks'
-import { locations, items, restoreLocally, storeLocally } from './quill'
+import { locations, items, restoreLocally, storeLocally, packBlockArgs } from './quill'
 
 Blockly.BlockSvg.START_HAT = true
 // Blockly.Flyout.prototype.autoClose = false
@@ -50,142 +50,84 @@ const D=30
 
 class Node extends React.Component {
     polyMouseDown = (e) => {
-      this.coords = {
-        x: e.pageX,
-        y: e.pageY
-      }
-      document.addEventListener('mousemove', this.polyMouseMove)
-    };
+        this.coords = { x: e.pageX, y: e.pageY }
+        document.addEventListener('mousemove', this.polyMouseMove)
+    }
 
     polyMouseUp = () => {
         document.removeEventListener('mousemove', this.polyMouseMove)
-      this.coords = {};
     }
 
     polyMouseMove = (e) => {
-      const xDiff = this.coords.x - e.pageX;
-      const yDiff = this.coords.y - e.pageY;
-      this.coords.x = e.pageX;
-      this.coords.y = e.pageY;
-      this.props.moveByCallback(this, -xDiff, -yDiff)
+        const xDiff = this.coords.x - e.pageX
+        const yDiff = this.coords.y - e.pageY
+        this.coords.x = e.pageX
+        this.coords.y = e.pageY
+        this.props.moveByCallback(this, -xDiff, -yDiff)
     }
-
-    polyMouseEnter = () => { insidethis.mouseInside = true; console.log("in") }
-
-    polyMouseLeave = () => { this.mouseInside = false; console.log("out") }
 
     render() {
-        const ncb = this.props.newLineCallback
         const loc = locations.getLocation(this.props.locId)
-        return (
-        <g transform={`translate(${loc.x} ${loc.y})`}>
-        <text x="52" y="115" textAnchor="middle" fontFamily="sans-serif" style={{'user-select': 'none'}}>
-            {loc.title}
-        </text>
-<g>
-	<polygon fill="#FFFFFF" points="36.761,89.896 14.751,67.887 14.751,36.761 36.761,14.751 67.887,14.751 89.896,36.761
-        89.896,67.887 67.887,89.896"
-        style={{cursor: 'move'}}
-        onDoubleClick={this.props.onDoubleClick}
-        onMouseDown={this.polyMouseDown}
-        onMouseUp={this.polyMouseUp}
-        onMouseEnter={() => this.props.insideCallback(this) }
-        onMouseLeave={() => this.props.insideCallback(null) } />
-	<path d="M67.887,90.896H36.761c-0.265,0-0.52-0.105-0.707-0.293l-22.01-22.01c-0.188-0.188-0.293-0.442-0.293-0.707V36.761
-		c0-0.265,0.105-0.52,0.293-0.707l22.01-22.01c0.188-0.188,0.442-0.293,0.707-0.293h31.126c0.265,0,0.52,0.105,0.707,0.293
-		l22.01,22.01c0.188,0.188,0.293,0.442,0.293,0.707v31.126c0,0.265-0.105,0.52-0.293,0.707l-22.01,22.01
-		C68.406,90.791,68.152,90.896,67.887,90.896z M37.175,88.896h30.298l21.424-21.424V37.175L67.473,15.751H37.175L15.751,37.175
-		v30.298L37.175,88.896z"/>
-</g>
-<g pointerEvents="none">
-	<path d="M9.778,34.186c-0.512,0-1.023-0.195-1.414-0.586c-0.781-0.781-0.781-2.047,0-2.828L30.771,8.364
-		c0.78-0.781,2.047-0.781,2.828,0c0.781,0.781,0.781,2.047,0,2.828L11.192,33.6C10.802,33.991,10.29,34.186,9.778,34.186z"/>
-	<path d="M8,70.168c-1.104,0-2-0.896-2-2V36.479c0-1.104,0.896-2,2-2s2,0.896,2,2v31.688C10,69.272,9.104,70.168,8,70.168z"/>
-	<path d="M32.186,96.869c-0.512,0-1.023-0.195-1.414-0.586L8.364,73.875c-0.781-0.781-0.781-2.047,0-2.828
-		c0.78-0.781,2.047-0.781,2.828,0L33.6,93.455c0.781,0.781,0.781,2.047,0,2.828C33.209,96.674,32.697,96.869,32.186,96.869z"/>
-	<path d="M68.168,98.647H36.479c-1.104,0-2-0.896-2-2s0.896-2,2-2h31.688c1.104,0,2,0.896,2,2S69.272,98.647,68.168,98.647z"/>
-	<path d="M72.462,96.869c-0.512,0-1.023-0.195-1.414-0.586c-0.781-0.781-0.781-2.047,0-2.828l22.407-22.408
-		c0.78-0.781,2.047-0.781,2.828,0c0.781,0.781,0.781,2.047,0,2.828L73.876,96.283C73.486,96.674,72.974,96.869,72.462,96.869z"/>
-	<path d="M96.647,70.168c-1.104,0-2-0.896-2-2V36.479c0-1.104,0.896-2,2-2s2,0.896,2,2v31.688
-		C98.647,69.272,97.752,70.168,96.647,70.168z"/>
-	<path d="M94.869,34.186c-0.512,0-1.023-0.195-1.414-0.586L71.048,11.192c-0.781-0.781-0.781-2.047,0-2.828
-		c0.78-0.781,2.047-0.781,2.828,0l22.407,22.408c0.781,0.781,0.781,2.047,0,2.828C95.893,33.991,95.381,34.186,94.869,34.186z"/>
-	<path d="M68.177,10H36.471c-1.104,0-2-0.896-2-2s0.896-2,2-2h31.706c1.104,0,2,0.896,2,2S69.281,10,68.177,10z"/>
-</g>
-<g pointerEvents="all">
-    <g id="dragNW"
-       onMouseDown={(e) => {ncb(this, 'nw', e)}}
-       onMouseEnter={() => this.props.insideCallback(this, 'nw') }
-       onMouseLeave={() => this.props.insideCallback(null) }
-       style={{cursor: 'nw-resize'}}>
-		<line fill="none" x1="9.778" y1="32.186" x2="32.186" y2="9.778"/>
-        <rect x="12.982" y="5.138" transform="matrix(0.7071 0.7071 -0.7071 0.7071 20.9821 -8.6909)" fill="none" width="16" height="31.689"/>
-	</g>
-    <g id="dragW"
-       onMouseDown={(e) => {ncb(this, 'w', e)}}
-       onMouseEnter={() => this.props.insideCallback(this, 'w') }
-       onMouseLeave={() => this.props.insideCallback(null) }
-       style={{cursor: 'w-resize'}}>
-		<line fill="none" x1="8" y1="68.168" x2="8" y2="36.479"/>
-		<rect y="36.479" fill="none" width="16" height="31.688"/>
-	</g>
-    <g id="dragSW"
-       onMouseDown={(e) => {ncb(this, 'sw', e)}}
-       onMouseEnter={() => this.props.insideCallback(this, 'sw') }
-       onMouseLeave={() => this.props.insideCallback(null) }
-       style={{cursor: 'sw-resize'}}>
-		<line fill="none" x1="32.186" y1="94.869" x2="9.778" y2="72.461"/>
-    	<rect x="5.137" y="75.665" transform="matrix(0.7071 0.7071 -0.7071 0.7071 65.3066 9.669)" fill="none" width="31.689" height="16"/>
-	</g>
-    <g id="dragS"
-       onMouseDown={(e) => {ncb(this, 's', e)}}
-       onMouseEnter={() => this.props.insideCallback(this, 's') }
-       onMouseLeave={() => this.props.insideCallback(null) }
-       style={{cursor: 's-resize'}}>
-		<line fill="none" x1="68.168" y1="96.647" x2="36.479" y2="96.647"/>
-		<rect x="36.479" y="88.647" fill="none" width="31.688" height="16"/>
-	</g>
-    <g id="dragSE"
-       onMouseDown={(e) => {ncb(this, 'se', e)}}
-       onMouseEnter={() => this.props.insideCallback(this, 'se') }
-       onMouseLeave={() => this.props.insideCallback(null) }
-       style={{cursor: 'se-resize'}}>
-		<line fill="none" x1="94.869" y1="72.461" x2="72.462" y2="94.869"/>
+        const insideCb = this.props.insideCallback
 
-			<rect x="75.666" y="67.821" transform="matrix(0.7071 0.7071 -0.7071 0.7071 83.6654 -34.6555)" fill="none" width="16" height="31.689"/>
-	</g>
-    <g id="dragE"
-       onMouseDown={(e) => {ncb(this, 'e', e)}}
-       onMouseEnter={() => this.props.insideCallback(this, 'e') }
-       onMouseLeave={() => this.props.insideCallback(null) }
-       style={{cursor: 'e-resize'}}>
-       <line fill="none" x1="96.647" y1="36.479" x2="96.647" y2="68.168"/>
-		<rect x="88.647" y="36.479" fill="none" width="16" height="31.688"/>
-	</g>
-    <g id="dragNE"
-       onMouseDown={(e) => {ncb(this, 'ne', e)}}
-       onMouseEnter={() => this.props.insideCallback(this, 'ne') }
-       onMouseLeave={() => this.props.insideCallback(null) }
-       style={{cursor: 'ne-resize'}}>
-		<line fill="none" x1="72.462" y1="9.778" x2="94.869" y2="32.186"/>
-		<rect x="67.821" y="12.982" transform="matrix(0.7071 0.7071 -0.7071 0.7071 39.3425 -53.0154)" fill="none" width="31.689" height="16"/>
-	</g>
-    <g id="dragN"
-       onMouseDown={(e) => {ncb(this, 'n', e)}}
-       onMouseEnter={() => this.props.insideCallback(this, 'n') }
-       onMouseLeave={() => this.props.insideCallback(null) }
-       style={{cursor: 'n-resize'}}>
-		<line fill="none" x1="36.471" y1="8" x2="68.177" y2="8"/>
-		<rect x="36.471" fill="none" width="31.706" height="16"/>
-	</g>
-</g>
-        </g>
-      )
+        return <g transform={`translate(${loc.x} ${loc.y})`}>
+                    <text x="52" y="115" textAnchor="middle" fontFamily="sans-serif" style={{userSelect: 'none'}}>
+                        {loc.title}
+                    </text>
+                    <g pointerEvents="all">
+                        <polygon
+                            fill="#FFFFFF"
+                            points="36.761,89.896 14.751,67.887 14.751,36.761 36.761,14.751 67.887,14.751 89.896,36.761 89.896,67.887 67.887,89.896"
+                            style={{cursor: 'move'}}
+                            onDoubleClick={this.props.onDoubleClick}
+                            onMouseDown={this.polyMouseDown}
+                            onMouseUp={this.polyMouseUp}
+                            onMouseEnter={() => insideCb(this) }
+                            onMouseLeave={() => insideCb(null) }
+                        />
+                        <path d="M67.887,90.896H36.761c-0.265,0-0.52-0.105-0.707-0.293l-22.01-22.01c-0.188-0.188-0.293-0.442-0.293-0.707V36.761
+                            c0-0.265,0.105-0.52,0.293-0.707l22.01-22.01c0.188-0.188,0.442-0.293,0.707-0.293h31.126c0.265,0,0.52,0.105,0.707,0.293
+                            l22.01,22.01c0.188,0.188,0.293,0.442,0.293,0.707v31.126c0,0.265-0.105,0.52-0.293,0.707l-22.01,22.01
+                            C68.406,90.791,68.152,90.896,67.887,90.896z M37.175,88.896h30.298l21.424-21.424V37.175L67.473,15.751H37.175L15.751,37.175
+                            v30.298L37.175,88.896z"/>
+                    </g>
+                    <g pointerEvents="none">
+                        <path d="M9.778,34.186c-0.512,0-1.023-0.195-1.414-0.586c-0.781-0.781-0.781-2.047,0-2.828L30.771,8.364
+                            c0.78-0.781,2.047-0.781,2.828,0c0.781,0.781,0.781,2.047,0,2.828L11.192,33.6C10.802,33.991,10.29,34.186,9.778,34.186z"/>
+                        <path d="M8,70.168c-1.104,0-2-0.896-2-2V36.479c0-1.104,0.896-2,2-2s2,0.896,2,2v31.688C10,69.272,9.104,70.168,8,70.168z"/>
+                        <path d="M32.186,96.869c-0.512,0-1.023-0.195-1.414-0.586L8.364,73.875c-0.781-0.781-0.781-2.047,0-2.828
+                            c0.78-0.781,2.047-0.781,2.828,0L33.6,93.455c0.781,0.781,0.781,2.047,0,2.828C33.209,96.674,32.697,96.869,32.186,96.869z"/>
+                        <path d="M68.168,98.647H36.479c-1.104,0-2-0.896-2-2s0.896-2,2-2h31.688c1.104,0,2,0.896,2,2S69.272,98.647,68.168,98.647z"/>
+                        <path d="M72.462,96.869c-0.512,0-1.023-0.195-1.414-0.586c-0.781-0.781-0.781-2.047,0-2.828l22.407-22.408
+                            c0.78-0.781,2.047-0.781,2.828,0c0.781,0.781,0.781,2.047,0,2.828L73.876,96.283C73.486,96.674,72.974,96.869,72.462,96.869z"/>
+                        <path d="M96.647,70.168c-1.104,0-2-0.896-2-2V36.479c0-1.104,0.896-2,2-2s2,0.896,2,2v31.688
+                            C98.647,69.272,97.752,70.168,96.647,70.168z"/>
+                        <path d="M94.869,34.186c-0.512,0-1.023-0.195-1.414-0.586L71.048,11.192c-0.781-0.781-0.781-2.047,0-2.828
+                            c0.78-0.781,2.047-0.781,2.828,0l22.407,22.408c0.781,0.781,0.781,2.047,0,2.828C95.893,33.991,95.381,34.186,94.869,34.186z"/>
+                        <path d="M68.177,10H36.471c-1.104,0-2-0.896-2-2s0.896-2,2-2h31.706c1.104,0,2,0.896,2,2S69.281,10,68.177,10z"/>
+                    </g>
+                    <g pointerEvents="all">{
+                        [{direction: "nw", x: 12.982, y:5.138,   width: 16, height:31.689, transform:"matrix(0.7071 0.7071 -0.7071 0.7071 20.9821 -8.6909)"},
+                         {direction: "w",             y: 36.479, width: 16, height: 31.688},
+                         {direction: "sw", x:  5.137, y: 75.665, width: 31.689, height: 16, transform: "matrix(0.7071 0.7071 -0.7071 0.7071 65.3066 9.669)"},
+                         {direction: "s",  x: 36.479, y: 88.647, width: 31.688, height: 16},
+                         {direction: "se", x: 75.666, y: 67.821, width: 16, height: 31.689, transform: "matrix(0.7071 0.7071 -0.7071 0.7071 83.6654 -34.6555)"},
+                         {direction: "e",  x: 88.647, y: 36.479, width: 16, height: 31.688},
+                         {direction: "ne", x: 67.821, y: 12.982, width: 31.689, height: 16, transform: "matrix(0.7071 0.7071 -0.7071 0.7071 39.3425 -53.0154)"},
+                         {direction: "n",  x: 36.471,            width: 31.706, height: 16}
+                        ].map(({direction, x, y, width, height, transform}) =>
+                            <rect x={x} y={y} width={width} height={height} transform={transform} fill="none"
+                                  onMouseDown={(e) => {this.props.newLineCallback(this, direction, e)}}
+                                  onMouseEnter={() => insideCb(this, direction) }
+                                  onMouseLeave={() => insideCb(null) }
+                                  style={{cursor: direction + '-resize'}} />)}
+                    </g>
+                </g>
     }
-  }
+}
 
 
-const S2=Math.sqrt(2) / 2
+const S2 = Math.sqrt(2) / 2
 
 const CONN_COORDS = {
     'nw': {dx: -S2, dy: -S2, x: 20.982, y: 20.982},
@@ -199,7 +141,7 @@ const CONN_COORDS = {
 
 const CENTER = 104.647 / 2
 
-class LocationEditor extends ReactSVG {
+class LocationEditor extends React.Component {
     changeWorkspace(xml) {
         this.props.location.workspace = xml
     }
@@ -214,6 +156,8 @@ class LocationEditor extends ReactSVG {
     }
 
     render() {
+        if (!this.props.location) return null;
+
         const loc = this.props.location
         return <Modal dialogClassName="location-editor" show={true} onHide={this.handleClose.bind(this)}>
                 <Modal.Header closeButton>
@@ -237,7 +181,7 @@ class LocationEditor extends ReactSVG {
     }
 }
 
-class Connection extends ReactSVG {
+class Connection extends React.Component {
     shouldComponentUpdate(nextProps, nextState) {
         return true
     }
@@ -281,7 +225,13 @@ class Connection extends ReactSVG {
     }
 }
 
-export default class GameMap extends ReactSVG {
+const TempConnection = (props) => {
+    if (!props.line) return null;
+    let { x, y, dx, dy, mx, my} = props.line
+    return <path pointerEvents="none" stroke="#000000" strokeWidth="3" fill="transparent" d={`M${x},${y} C ${x + dx * D},${y + dy * D} ${mx},${my} ${mx},${my}`}/>
+}
+
+export default class GameMap extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
@@ -315,7 +265,7 @@ export default class GameMap extends ReactSVG {
         const loc = locations.getLocation(node.props.locId)
         x += loc.x
         y += loc.y
-        this.setState({newLine: {node, dir, x, y, dx, dy, mx: e.clientX, my: e.clientY}})
+        this.setState({newLine: {node, dir, x, y, dx, dy, mx: e.clientX - this.offsetX, my: e.clientY - this.offsetY}})
         document.addEventListener('mousemove', this.dirMouseMove);
         document.addEventListener('mouseup', this.dirMouseUp);
     }
@@ -344,8 +294,8 @@ export default class GameMap extends ReactSVG {
 
     dirMouseMove(e) {
         const newLine = this.state.newLine
-        newLine.mx = e.clientX
-        newLine.my = e.clientY
+        newLine.mx = e.clientX - this.offsetX
+        newLine.my = e.clientY - this.offsetY
         this.setState({newLine})
     }
 
@@ -382,20 +332,8 @@ export default class GameMap extends ReactSVG {
     get offsetY() { return document.getElementById("gamemap").getBoundingClientRect().y }
 
     render() {
-        let tempConnection = <g/>
-        if (this.state.newLine) {
-            let { x, y, dx, dy, mx, my} = this.state.newLine
-            dx *= D
-            dy *= D
-            mx -= this.offsetX
-            my -= this.offsetY
-            tempConnection = <path pointerEvents="none" stroke="#000000" strokeWidth="3" fill="transparent" d={`M${x},${y} C ${x+dx},${y+dy} ${mx},${my} ${mx},${my}`}/>
-        }
-
-        const toEdit = this.state.editing ? <LocationEditor location={this.state.editing} handleClose={this.closeEditor.bind(this)} /> : ""
-
         return <div>
-          {toEdit}
+          <LocationEditor location={this.state.editing} handleClose={this.closeEditor.bind(this)} />
           <svg width="100%" height="600" id="gamemap" onDoubleClick={e => { this.newLocation(e); e.preventDefault();e.stopPropagation() } }>
             { Array.prototype.concat(
                 ...locations
@@ -431,25 +369,25 @@ export default class GameMap extends ReactSVG {
                                                  moveByCallback={this.moveNodeBy}
                                                  onDoubleClick={e => { this.editLocation(it); e.preventDefault();e.stopPropagation() } }
                                     />) }
-            {tempConnection}
+            <TempConnection line={this.state.newLine} />
           </svg>
           </div>
       }
-}
 
-function packData() {
-    const locData = []
-    for(let loci = 0; loci < locations.length; loci++) {
-        const location = locations.getLocation(loci)
-
-        const workspace = new Blockly.Workspace()
-        const xml = Blockly.Xml.textToDom(location.workspace)
-        Blockly.Xml.domToWorkspace(xml, workspace)
-        const locBlocks = workspace.getTopBlocks().map(block => packBlockArgs(block))
-
-        locData.push({name: location.title, description: location.description, commands: locBlocks})
+    packData() {
+        const locData = locations.getIds().map(it => {
+            const location = locations.getLocation(it)
+            let locBlocks = []
+            if (location.workspace) {
+                const workspace = new Blockly.Workspace()
+                const xml = Blockly.Xml.textToDom(location.workspace)
+                Blockly.Xml.domToWorkspace(xml, workspace)
+                locBlocks = workspace.getTopBlocks().map(block => packBlockArgs(block))
+            }
+            return {name: location.title, description: location.description, directions: location.directions, commands: locBlocks}
+        })
+        return {locations: locData, items: items.getNames()}
     }
-    return {locations: locData, items: items.getNames()}
 }
 
 restoreLocally()

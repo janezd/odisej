@@ -39,7 +39,7 @@ export default class Game extends React.Component {
 
 
     executeCommand(block) {
-        
+
         const comp = (op, op1, op2) => {
             switch (op) {
                 case 'EQ': return op1 == op2
@@ -130,6 +130,8 @@ export default class Game extends React.Component {
     }
 
     render() {
+        const dirmap = {"S": "n", "SV": "ne", "V": "e",
+                        "JV": "se", "J": "s", "JZ": "sw", "Z": "w", "SZ": "nw"}
         const location = this.locations[this.state.location]
 
         const exits = location.commands.find(command => command.block == 'exits')
@@ -140,8 +142,8 @@ export default class Game extends React.Component {
                 { this.state.printed.map(it => <p>{it}</p>) }
                 <div>
                     { ["S", "SV", "V", "JV", "J", "JZ", "Z", "SZ"].map(dir => {
-                            const where = exits['exit_' + dir.toLowerCase()]
-                            if (where != '') return (
+                            const where = location.directions[dirmap[dir]]
+                            if (where) return (
                                 <Button key={dir} onClick={() => this.moveTo(where)}>
                                     {dir}
                                 </Button>
