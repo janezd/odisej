@@ -30,11 +30,6 @@ class BlocklyDrawerWithNameCheck extends BlocklyDrawer {
         // BlocklyDrawer.prototype.componentDidUpdate.apply(this)
         const workspace = this.workspacePlayground
         fixWorkspaceNames(workspace)
-        if (!workspace.getAllBlocks().length) {
-            var block = workspace.newBlock('exits')
-            block.initSvg()
-            block.render()
-        }
     }
 
     onResize() {
