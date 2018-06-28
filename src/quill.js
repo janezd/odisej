@@ -20,6 +20,7 @@ class LocData {
 
         this.title = title
         this.description = description
+        this.image = null
         this.workspace = workspace
 
         this.x = x
@@ -55,8 +56,16 @@ class Locations {
         return this._locations[i]
     }
 
-    removeLocation(i) {
-        delete this._locations[i]
+    removeLocation(location) {
+        // TODO: check references in blocks and warn?
+        const thisId = location.locId
+        Object.values(this._locations).forEach( loc =>  {
+            Object.entries(loc.directions)
+                .filter( ([dir, where]) => where == thisId )
+                .forEach( ([dir, where]) => delete loc.directions[dir] )
+            }
+        )
+        delete this._locations[location.locId]
     }
 
     addLocation(name=null, description="") {
@@ -73,11 +82,21 @@ class Locations {
         return name
     }
 
+    toJson() {
+        return JSON.stringify(this._locations)
+    }
+
+    setFromJson(obj) {
+        this._locations = obj
+    }
+
     toXml(doc, base) {
         Object.values(this._locations).forEach(location => {
             const loc = doc.createElement("location")
             loc.setAttribute("name", location.title)
             loc.setAttribute("locId", location.locId)
+            loc.setAttribute("x", location.x)
+            loc.setAttribute("y", location.y)
 
             const desc = doc.createElement("description")
             desc.appendChild(doc.createTextNode(location.description))
@@ -155,6 +174,14 @@ class NameModel {
         this._items.splice(this._getIndex(itemId), 1)
     }
 
+    toJson() {
+        return JSON.stringify(this._items)
+    }
+
+    setFromJson(obj) {
+        this._items = obj
+    }
+
     toXml(doc, base) {
         this._items.forEach(item => {
             const it = doc.createElement("item")
@@ -177,6 +204,18 @@ export const variables = new NameModel()
 export const flags = new NameModel()
 export const locations = new Locations()
 
+
+function toJson() {
+    return `{"locations": ${locations.toJson()}, "items": ${items.toJson()}, "variables": ${variables.toJson()}, "flags": ${flags.toJson()}}`
+}
+
+function fromJson(json) {
+    const obj = JSON.parse(json)
+    locations.setFromJson(obj.locations)
+    items.setFromJson(obj.items)
+    variables.setFromJson(obj.variables)
+    flags.setFromJson(obj.flags)
+}
 
 function toXml() {
     const doc = document.implementation.createDocument(null, "odisej", null)
@@ -206,10 +245,13 @@ function fromXml(doc) {
 }
 
 export function storeLocally() {
-    localStorage.odisej = toXml().getElementsByTagName("odisej")[0].outerHTML
+    //localStorage.odisej = toXml().getElementsByTagName("odisej")[0].outerHTML
+    localStorage.odisej = toJson()
 }
 
 export function restoreLocally() {
+    return
+    fromJson(localStorage.odisej)
     const parser = new DOMParser();
     try {
         const xmlDoc = parser.parseFromString(localStorage.odisej, "text/xml")
