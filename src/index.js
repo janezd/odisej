@@ -1,7 +1,8 @@
 import React from 'react'
 import { render } from 'react-dom'
-import { Navbar, Nav, Button, ButtonToolbar } from 'react-bootstrap'
+import { Navbar, Nav, Button, ButtonToolbar, FormControl, ControlLabel, Label } from 'react-bootstrap'
 
+import { restoreLocally, resetData } from './quill'
 import Game from './game'
 import GameMap from './map'
 
@@ -14,24 +15,31 @@ class App extends React.Component {
         }
     }
 
-    switchToCreate() {
-        this.setState({mode: 'create'})
+    switchToCreate = () => this.setState({mode: 'create'})
+    switchToTry = () => this.setState({mode: 'game'})
+    setPage = page => this.subpage = page
+
+    saveGame = () => {
+        const blob = new Blob([localStorage.odisej], { type: 'text/plain' })
+        const anchor = document.createElement('a');
+        anchor.download = "odisej.json";
+        anchor.href = (window.webkitURL || window.URL).createObjectURL(blob)
+        anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':')
+        anchor.click()
     }
 
-    switchToTry() {
-        if (this.state.mode == 'create') {
-            this.gameData = this.subpage.packData()
-            this.setState({mode: 'game'})
+    loadGame = files => {
+        const reader = new FileReader()
+        reader.onload = json => {
+            restoreLocally(json.target.result)
+            this.setState(this.state)
         }
+        reader.readAsText(files[0])
     }
 
-    switchToProjects() {
-        this.setState({mode: 'projects'})
-    }
+    showGameState = () => this.subpage.showGameState()
 
-    setPage(page) {
-        this.subpage = page
-    }
+    resetData = () => { resetData(); this.setState(this.state) }
 
     render() {
         return (
@@ -52,23 +60,24 @@ class App extends React.Component {
                                     onClick={this.switchToTry.bind(this)}>
                                 Preskusi
                             </Button>
-                            <Button active={this.state.mode == 'projects'}
-                                    onClick={this.switchToProjects.bind(this)}>
-                                Moji projekti
-                            </Button>
+                            <Label onClick={this.saveGame}>Shrani</Label>
+                            <FormControl id="gameUpload"
+                                         type="file"
+                                         accept=".json"
+                                         onChange={e => this.loadGame(e.target.files)}
+                                         style={{display: "none"}}/>
+                            <ControlLabel htmlFor="gameUpload">
+                                <Label>Naloži</Label>
+                            </ControlLabel>
+                            { this.state.mode == 'game'
+                              ? <Button onClick={this.showGameState}>Stanje igre</Button>
+                              :  <Button onClick={this.resetData}>Pobriši vse</Button> }
                         </ButtonToolbar>
                     </Navbar.Form>
                 </Navbar>
                 { (this.state.mode == 'create')
-                    ? <GameMap
-                        ref={this.setPage.bind(this)}/>
-                    : (this.state.mode == 'game')
-                    ? <Game
-                        data={this.gameData}
-                        ref={this.setPage.bind(this)}/>
-                    : <Game
-                        data={this.gameData}
-                        ref={this.setPage.bind(this)}/>
+                    ? <GameMap ref={this.setPage}/>
+                    : <Game ref={this.setPage}/>
                 }
             </div>
         )

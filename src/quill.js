@@ -12,11 +12,13 @@ function getUniqueName(name, names) {
     return `${name} (${maxNum + 1})`
 }
 
+function randomId() {
+    return Array.from({length: 5}, () => Math.round(Math.random() * 2**32).toString(16))
+                .join("-") }
 
 class LocData {
     constructor(title, description, x=0, y=0, workspace=null, locId=null) {
-        this.locId = locId || Array.from({length: 5},
-            () => Math.round(Math.random() * 2**32).toString(16)).join("-")
+        this.locId = locId || randomId()
 
         this.title = title
         this.description = description
@@ -31,9 +33,13 @@ class LocData {
 
 class Locations {
     constructor() {
+        this.reset()
+    }
+
+    reset() {
         this._locations = {}
-        this.addLocation("Začetek", "Opis začetne lokacije", 100, 100)
-        this.addLocation("Primer", "Opis še ene lokacije", 200, 150)
+        const defaultLoc = this.addLocation("Začetek", "Opis začetne lokacije", 100, 100)
+        this.startLocation = defaultLoc.locId
     }
 
     get length() {
@@ -68,10 +74,13 @@ class Locations {
         delete this._locations[location.locId]
     }
 
-    addLocation(name=null, description="") {
+    addLocation(name=null, description="", x=0, y=0) {
         name = getUniqueName(name || "Nova lokacija", this.getNames())
-        const newLoc = new LocData(name, description)
+        const newLoc = new LocData(name, description, x, y)
         this._locations[newLoc.locId] = newLoc
+        if (this._locations.size == 1) {
+            this.startLocation = newLoc.locId
+        }
         return newLoc
     }
 
@@ -83,11 +92,12 @@ class Locations {
     }
 
     toJson() {
-        return JSON.stringify(this._locations)
+        return JSON.stringify({locations: this._locations, startLocation: this.startLocation})
     }
 
-    setFromJson(obj) {
-        this._locations = obj
+    setFromJson({locations, startLocation}) {
+        this._locations = locations
+        this.startLocation = startLocation
     }
 
     toXml(doc, base) {
@@ -133,70 +143,20 @@ class Locations {
 }
 
 
-var itemCount = 0
-
 class NameModel {
-    constructor() {
-        this._items = []
-    }
+    constructor()           { this.reset() }
+    reset()                 { this._items = {} }
+    toJson()                { return JSON.stringify(this._items) }
+    setFromJson(obj)        { this._items = obj }
 
-    _getIndex(itemId) {
-        return this._items.findIndex(it => it[1] == itemId)
-    }
-
-    get length() {
-        return this._items.length
-    }
-
-    getNames() {
-        return this._items.map(it => it[0])
-    }
-
-    getNamesIds() {
-        return this._items.map(it => [it[0], `${it[1]}`])
-    }
-
-    getNameById(itemId) {
-        const idx = this._getIndex(itemId)
-        return idx != -1 ? this._items[idx][0] : null
-    }
-
-    add(name=null) {
-        this._items.push([name || "stvar", ++itemCount])
-        return itemCount
-    }
-
-    rename(itemId, newName) {
-        this._items[this._getIndex(itemId)][0] = newName
-    }
-
-    remove(itemId) {
-        this._items.splice(this._getIndex(itemId), 1)
-    }
-
-    toJson() {
-        return JSON.stringify(this._items)
-    }
-
-    setFromJson(obj) {
-        this._items = obj
-    }
-
-    toXml(doc, base) {
-        this._items.forEach(item => {
-            const it = doc.createElement("item")
-            it.setAttribute("name", item[0])
-            it.setAttribute("itemId", parseInt(item[1]))
-            base.appendChild(it)
-        })
-    }
-
-    fromXml(base) {
-        this._items = Array.from(base.childNodes)
-            .map(node => [node.getAttribute("name"), parseInt(node.getAttribute("itemId"))])
-        itemCount = Math.max(itemCount, ...this._items.map(it => it[1]))
-    }
-
+    get length()            { return this._items.length }
+    getNames()              { return Object.values(this._items) }
+    getIds()                { return Object.keys(this._items) }
+    getNamesIds()           { return Object.entries(this._items).map(it => [it[1], it[0]]) }
+    getNameById(itemId)     { return this._items[itemId] }
+    add(name=null)          { const itemId = randomId(); this._items[itemId] = name || "stvar"; return itemId }
+    rename(itemId, newName) { this._items[itemId] = newName }
+    remove(itemId)          { delete this._items[itemId] }
 }
 
 export const items = new NameModel()
@@ -204,62 +164,12 @@ export const variables = new NameModel()
 export const flags = new NameModel()
 export const locations = new Locations()
 
-
-function toJson() {
-    return `{"locations": ${locations.toJson()}, "items": ${items.toJson()}, "variables": ${variables.toJson()}, "flags": ${flags.toJson()}}`
+export function resetData() {
+    items.reset()
+    variables.reset()
+    flags.reset()
+    locations.reset()
 }
-
-function fromJson(json) {
-    const obj = JSON.parse(json)
-    locations.setFromJson(obj.locations)
-    items.setFromJson(obj.items)
-    variables.setFromJson(obj.variables)
-    flags.setFromJson(obj.flags)
-}
-
-function toXml() {
-    const doc = document.implementation.createDocument(null, "odisej", null)
-    const root = doc.getElementsByTagName("odisej")[0]
-
-    function store(name, obj) {
-        const base = doc.createElement(name)
-        root.appendChild(base)
-        obj.toXml(doc, base)
-    }
-
-    store("locations", locations)
-    store("items", items)
-    store("variables", variables)
-    store("flags", flags)
-    return doc
-}
-
-function fromXml(doc) {
-    const restore =  (name, obj) => obj.fromXml(doc.getElementsByTagName(name)[0])
-
-    restore("locations", locations)
-    restore("items", items)
-    restore("variables", variables)
-    restore("flags", flags)
-    return doc
-}
-
-export function storeLocally() {
-    //localStorage.odisej = toXml().getElementsByTagName("odisej")[0].outerHTML
-    localStorage.odisej = toJson()
-}
-
-export function restoreLocally() {
-    return
-    fromJson(localStorage.odisej)
-    const parser = new DOMParser();
-    try {
-        const xmlDoc = parser.parseFromString(localStorage.odisej, "text/xml")
-        fromXml(xmlDoc)
-    }
-    catch(err) {}
-}
-
 
 export function packBlockArgs(block, noNext=false) {
     function getChain(next) {
@@ -283,7 +193,8 @@ export function packBlockArgs(block, noNext=false) {
                 break
             case Blockly.INPUT_VALUE:
                 const value = packBlockArgs(input.connection.targetBlock())
-                const seq = input.name.match(/^(.*?)(\d+)$/)
+                const name = input.name.toLowerCase()
+                const seq = name.match(/^(.*?)(\d+)$/)
                 if (seq) {
                     if (seq[2] == "0") {
                         args[seq[1]] = []
@@ -293,7 +204,7 @@ export function packBlockArgs(block, noNext=false) {
                     }
                 }
                 else {
-                    args[input.name.toLowerCase()] = value
+                    args[name] = value
                 }
                 break
             case Blockly.NEXT_STATEMENT:
@@ -305,4 +216,21 @@ export function packBlockArgs(block, noNext=false) {
         args.next = getChain(next)
     }
     return args
+}
+
+
+export function storeLocally() {
+    localStorage.odisej = `{"locations": ${locations.toJson()}, "items": ${items.toJson()}, "variables": ${variables.toJson()}, "flags": ${flags.toJson()}}`
+}
+
+export function restoreLocally(json) {
+    try {
+        json = json || localStorage.odisej
+        const obj = JSON.parse(json)
+        locations.setFromJson(obj.locations)
+        items.setFromJson(obj.items)
+        variables.setFromJson(obj.variables)
+        flags.setFromJson(obj.flags)
+    }
+    catch (e) {}
 }

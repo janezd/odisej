@@ -179,15 +179,20 @@ appendBlock('Akcije', 'action', {
         this.setColour(36)
         this.setPreviousStatement(true, 'Akcija')
         this.setNextStatement(true, 'Akcija')
-        this.setOnChange(() =>
-            cleanUp(
-                this,
-                "ALLOW",
-                this.previousConnection
+        this.setOnChange(this.onChange.bind(this))
+    },
+
+    onChange() {
+        cleanUp(
+            this,
+            "ALLOW",
+            this.previousConnection
                 && this.previousConnection.isConnected()
-                && this.previousConnection.targetConnection.getSourceBlock().type == this.type
+                && this.previousConnection.targetBlock().type == this.type
+                && this.previousConnection.targetBlock().nextConnection.isConnected()
+                && this.previousConnection.targetBlock().nextConnection.targetBlock() === this
                 ? "sicer če" : "če",
-                "STATEMENTS"))
+            "STATEMENTS")
     },
 
     mutationToDom() {
@@ -202,9 +207,11 @@ appendBlock('Akcije', 'action', {
             xml,
             "ALLOW",
             this.previousConnection
-            && this.previousConnection.isConnected()
-            && this.previousConnection.targetConnection.getSourceBlock().type == this.type
-            ? "sicer če" : "če",
+                && this.previousConnection.isConnected()
+                && this.previousConnection.targetConnection.getSourceBlock().type == this.type
+                && this.previousConnection.targetBlock().nextConnection.isConnected()
+                && this.previousConnection.targetBlock().nextConnection.targetBlock() === this
+                ? "sicer če" : "če",
             "STATEMENTS")
     }
 })
@@ -376,3 +383,7 @@ createCondition('compare_var', "", "VARIABLE",
 
 
 export default blocks
+
+
+// TODO: če-jev ni mogoče gnezditi --- če so vgnezdeni na vrhu bloka, postanejo sicer-če); kako razlikovati tipe povezav?!
+// TODO: auto-ukazi imajo, naj sicer izpiše

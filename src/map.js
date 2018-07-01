@@ -6,7 +6,7 @@ import Blockly from 'node-blockly/browser'
 import BlocklyDrawer from 'react-blockly-drawer'
 
 import blocks, { exitBlock } from './createBlocks'
-import { locations, items, restoreLocally, storeLocally, packBlockArgs } from './quill'
+import { locations, items, flags, variables, restoreLocally, storeLocally, packBlockArgs } from './quill'
 
 Blockly.BlockSvg.START_HAT = true
 // Blockly.Flyout.prototype.autoClose = false
@@ -28,8 +28,7 @@ function fixWorkspaceNames(workspace) {
 class BlocklyDrawerWithNameCheck extends BlocklyDrawer {
     componentDidUpdate() {
         // BlocklyDrawer.prototype.componentDidUpdate.apply(this)
-        const workspace = this.workspacePlayground
-        fixWorkspaceNames(workspace)
+        fixWorkspaceNames(this.workspacePlayground)
     }
 
     onResize() {
@@ -90,7 +89,8 @@ class Node extends React.Component {
                                onMouseLeave={() => insideCb(null) }
                         />
 
-                        <path d="M67.887,90.896H36.761c-0.265,0-0.52-0.105-0.707-0.293l-22.01-22.01c-0.188-0.188-0.293-0.442-0.293-0.707V36.761
+                        <path fill={ this.props.isInitial ? "green" : "black" } stroke="white" strokeOpacity="0.8"
+                              d="M67.887,90.896H36.761c-0.265,0-0.52-0.105-0.707-0.293l-22.01-22.01c-0.188-0.188-0.293-0.442-0.293-0.707V36.761
                             c0-0.265,0.105-0.52,0.293-0.707l22.01-22.01c0.188-0.188,0.442-0.293,0.707-0.293h31.126c0.265,0,0.52,0.105,0.707,0.293
                             l22.01,22.01c0.188,0.188,0.293,0.442,0.293,0.707v31.126c0,0.265-0.105,0.52-0.293,0.707l-22.01,22.01
                             C68.406,90.791,68.152,90.896,67.887,90.896z M37.175,88.896h30.298l21.424-21.424V37.175L67.473,15.751H37.175L15.751,37.175
@@ -120,22 +120,36 @@ class Node extends React.Component {
 
 function LocImage(props) {
     const image = props.image
-    return <div>
-        { image
-            ? <img id="locimage" style={{ height: 100 }} src={ image } />
-            : <div style= {{ height: 100, width: 100, border: "thin solid"}}/> }
-        <FormControl id="fileUpload"
-                     type="file"
-                     accept=".jpg"
-                     onChange={(e) => props.uploadCallback(e.target.files)} style={{ display: "none" }} />
-        <div style={{display: "block"}}>
-        <ControlLabel htmlFor="fileUpload">
-            <Label bsStyle="success">{ image ? "Zamenjaj" : "Dodaj sliko" }</Label>
-        </ControlLabel>
-        &nbsp;
-        { image ? <Label onClick={props.removeCallback} bsStyle="danger">Odstrani</Label> : ""}
-        </div>
-    </div>
+    const uploadControl = <FormControl id="fileUpload"
+                                       type="file"
+                                       accept=".jpg"
+                                       onChange={(e) => props.uploadCallback(e.target.files)}
+                                       style={{display: "none"}}/>
+
+    if (image) {
+        return <div>
+                   <img id="locimage" style={{height: 100}} src={image}/>
+                    <div style={{display: "block"}}>
+                        { uploadControl }
+                        <ControlLabel htmlFor="fileUpload">
+                            <Label bsStyle="success">Zamenjaj</Label>
+                        </ControlLabel>
+                        &nbsp;
+                        <Label onClick={props.removeCallback} bsStyle="danger">Odstrani</Label>
+                    </div>
+                </div>
+    }
+    else {
+        return <div>
+                   { uploadControl }
+                    <ControlLabel htmlFor="fileUpload">
+                        <div style={{height: 100, width: 100, border: "thin solid",
+                                     verticalAlignment: "center", textAlign: "center" }}>
+                            <Label bsStyle="success">Dodaj sliko</Label>
+                        </div>
+                    </ControlLabel>
+               </div>
+    }
 }
 
 const S2 = Math.sqrt(2) / 2
@@ -153,32 +167,45 @@ const CONN_COORDS = {
 const CENTER = 104.647 / 2
 
 class LocationEditor extends React.Component {
-    changeWorkspace(xml) {
+    changeWorkspace = (xml) => {
         this.props.location.workspace = xml
     }
 
-    handleClose() {
+    handleClose = () => {
         const loc = this.props.location
         loc.title = this.loctitle.innerText
         loc.description = this.locDescArea.value
-        storeLocally()
-
+        loc.commands = Blockly.getMainWorkspace().getTopBlocks().map(block => packBlockArgs(block))
         this.props.handleClose()
     }
 
-    uploadImage(files) {
+    uploadImage= (files) => {
         const reader = new FileReader()
-        reader.onload = e => this.props.setLocationImage(this.props.location, e.target.result)
+        reader.onload = e => {
+            const img = new Image()
+            img.onload = () => {
+                const scale = Math.min(1, 800 / img.width, 600 / img.height)
+                const width = img.width * scale
+                const height = img.height * scale
+                const canvas = document.createElement('canvas')
+                canvas.width = width
+                canvas.height = height
+                const ctx = canvas.getContext('2d')
+                ctx.drawImage(img, 0, 0, width, height)
+                const data = canvas.toDataURL()
+                this.props.setLocationImage(this.props.location, data)
+            }
+            img.src = `data:image/jpeg;base64,${btoa(e.target.result)}`
+        }
         reader.readAsBinaryString(files[0])
     }
 
-    removeImage() {
+    removeImage = () => {
         this.props.setLocationImage(this.props.location, null)
     }
 
-    removeLocation() {
+    removeLocation = () => {
         locations.removeLocation(this.props.location)
-        storeLocally()
         this.props.handleClose()
     }
 
@@ -186,18 +213,22 @@ class LocationEditor extends React.Component {
         if (!this.props.location) return null;
 
         const loc = this.props.location
-        return <Modal dialogClassName="location-editor" show={true} onHide={this.handleClose.bind(this)}>
+        return <Modal dialogClassName="location-editor" show={true} onHide={this.handleClose} enforceFocus={false}>
                 <Modal.Header closeButton>
                     <Modal.Title>
                         <div style={{ float: "left", fontSize: "75%", marginRight: "1em" }}>
                             <LocImage image={loc.image}
-                                      uploadCallback={this.uploadImage.bind(this)}
-                                      removeCallback={this.removeImage.bind(this)} />
+                                      uploadCallback={this.uploadImage}
+                                      removeCallback={this.removeImage} />
                         </div>
                         <div ref={node => { this.loctitle = node; if (node) { node.setAttribute("contentEditable", true) }}}>
                             {loc.title}
                         </div>
-                        <Label onClick={this.removeLocation.bind(this)} bsStyle="danger">Pobriši lokacijo</Label>
+                        { this.props.isInitial
+                            ? <Label bsStyle="default">Začetna lokacija</Label>
+                            : <Label onClick={() => this.props.setStartLocation(loc)} bsStyle="success"> Nastavi kot začetno</Label>
+                        }
+                        <Label onClick={this.removeLocation} bsStyle="danger">Pobriši lokacijo</Label>
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
@@ -210,7 +241,7 @@ class LocationEditor extends React.Component {
                         <BlocklyDrawerWithNameCheck tools={blocks}
                                                     workspaceXML={loc.workspace || ""}
                                                     injectOptions={{toolboxPosition: 'end'}}
-                                                    onChange={this.changeWorkspace.bind(this)}>
+                                                    onChange={this.changeWorkspace}>
                         </BlocklyDrawerWithNameCheck>
                     </div>
                 </Modal.Body>
@@ -219,8 +250,18 @@ class LocationEditor extends React.Component {
 }
 
 class Connection extends React.Component {
+    constructor(props) {
+        super(props)
+        this.last = this.coordsDirs(props)
+    }
+
+    coordsDirs(props) {
+        const { src, dir, dest, backDir } = this.props
+        return [src.x, src.y, dest.x, dest.y, dir, backDir]
+    }
+
     shouldComponentUpdate(nextProps, nextState) {
-        return true
+        return this.last != this.coordsDirs(nextProps)
     }
 
     render() {
@@ -278,30 +319,27 @@ export default class GameMap extends React.Component {
             newLine: null,
             editing: null
         }
-        this.dirMouseDown = this.dirMouseDown.bind(this)
-        this.dirMouseUp = this.dirMouseUp.bind(this)
-        this.dirMouseMove = this.dirMouseMove.bind(this)
-
         this.currentlyHovered = null
-        this.setHovered = this.setHovered.bind(this)
-
-        this.moveNodeBy = this.moveNodeBy.bind(this)
-        this.setLocationImage = this.setLocationImage.bind(this)
     }
 
-    setHovered(node, dir) {
+    setState(newState) {
+        super.setState(newState)
+        storeLocally()
+    }
+
+    setHovered = (node, dir) => {
         this.currentlyHovered = node
         this.hoveredDirection = dir
     }
 
-    moveNodeBy(node, xDiff, yDiff) {
+    moveNodeBy = (node, xDiff, yDiff) => {
         const loc = locations.getLocation(node.props.locId)
         loc.x += xDiff
         loc.y += yDiff
         this.setState(this.state)
     }
 
-    dirMouseDown(node, dir, e) {
+    dirMouseDown = (node, dir, e) => {
         let {x, y, dx, dy} = CONN_COORDS[dir]
         const loc = locations.getLocation(node.props.locId)
         x += loc.x
@@ -311,7 +349,7 @@ export default class GameMap extends React.Component {
         document.addEventListener('mouseup', this.dirMouseUp);
     }
 
-    dirMouseUp(e) {
+    dirMouseUp = (e) => {
         const { node, dir } = this.state.newLine
         const srcLoc = locations.getLocation(node.props.locId)
         const dest = this.currentlyHovered
@@ -333,14 +371,14 @@ export default class GameMap extends React.Component {
         e.stopPropagation()
     }
 
-    dirMouseMove(e) {
+    dirMouseMove = (e) => {
         const newLine = this.state.newLine
         newLine.mx = e.clientX - this.offsetX
         newLine.my = e.clientY - this.offsetY
         this.setState({newLine})
     }
 
-    removeConnection(conn) {
+    removeConnection = (conn) => {
         const { src, dir, dest, backDir } = conn.props
         delete locations.getLocation(src).directions[dir]
         if (backDir) {
@@ -349,15 +387,11 @@ export default class GameMap extends React.Component {
         this.setState(this.state)
     }
 
-    editLocation(locId) {
-        this.setState({editing: locations.getLocation(locId)})
-    }
+    editLocation = (locId) => this.setState({editing: locations.getLocation(locId)})
 
-    closeEditor() {
-        this.setState({editing: null})
-    }
+    closeEditor = () => this.setState({editing: null})
 
-    newLocation(e) {
+    newLocation = (e) => {
         const newLoc = locations.addLocation()
         newLoc.x = e.clientX - this.offsetX - 56
         newLoc.y = e.clientY - this.offsetY - 56
@@ -365,14 +399,17 @@ export default class GameMap extends React.Component {
         return newLoc
     }
 
-    setLocationImage(location, image) {
-        location.image = image ? `data:image/jpeg;base64, ${btoa(image)}` : ""
+    setStartLocation = (location) => {
+        locations.startLocation = location.locId
         this.setState(this.state)
     }
 
-    shouldComponentUpdate(nextProps, nextState) {
-        return true
+    setLocationImage = (location, image) => {
+        location.image = image || ""
+        this.setState(this.state)
     }
+
+    shouldComponentUpdate = (nextProps, nextState) => true
 
     get offsetX() { return document.getElementById("gamemap").getBoundingClientRect().x }
     get offsetY() { return document.getElementById("gamemap").getBoundingClientRect().y }
@@ -381,8 +418,10 @@ export default class GameMap extends React.Component {
         return <div>
           <LocationEditor
               location={this.state.editing}
-              handleClose={this.closeEditor.bind(this)}
+              isInitial={this.state.editing && (this.state.editing.locId == locations.startLocation)}
+              handleClose={this.closeEditor}
               setLocationImage={this.setLocationImage}
+              setStartLocation={this.setStartLocation}
           />
           <svg width="100%" height="600" id="gamemap" onDoubleClick={e => { this.newLocation(e); e.preventDefault();e.stopPropagation() } }>
             { Array.prototype.concat(
@@ -403,17 +442,18 @@ export default class GameMap extends React.Component {
                                         return <Connection key={srcId + dir}
                                                         src={srcId} dir={dir}
                                                         dest={destId} backDir={backConnections[0][0]}
-                                                        clickCallback={this.removeConnection.bind(this)} />
+                                                        clickCallback={this.removeConnection} />
                                     }
                                 }
                                 else {
                                     return <Connection key={srcId + dir} src={srcId} dir={dir} dest={destId}
-                                                       clickCallback={this.removeConnection.bind(this)} />
+                                                       clickCallback={this.removeConnection} />
                                 }
                             })
                     })
              )}
             { locations.getIds().map(it => <Node key={it} locId={it}
+                                                 isInitial={it == locations.startLocation}
                                                  newLineCallback={this.dirMouseDown}
                                                  insideCallback={this.setHovered}
                                                  moveByCallback={this.moveNodeBy}
@@ -423,22 +463,6 @@ export default class GameMap extends React.Component {
           </svg>
           </div>
       }
-
-    packData() {
-        const locData = locations.getIds().map(it => {
-            const location = locations.getLocation(it)
-            let locBlocks = []
-            if (location.workspace) {
-                const workspace = new Blockly.Workspace()
-                const xml = Blockly.Xml.textToDom(location.workspace)
-                Blockly.Xml.domToWorkspace(xml, workspace)
-                locBlocks = workspace.getTopBlocks().map(block => packBlockArgs(block))
-            }
-            return {name: location.title, description: location.description,
-                    directions: location.directions, commands: locBlocks}
-        })
-        return {locations: locData, items: items.getNames()}
-    }
 }
 
 restoreLocally()
