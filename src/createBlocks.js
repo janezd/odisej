@@ -157,7 +157,7 @@ function createTopBlock(block_name, name, other=null) {
         init() {
           this.appendDummyInput().appendField(name)
           this.setColour(36)
-          this.setNextStatement(true, 'Akcija')
+          this.setNextStatement(true)
         }
     })
 }
@@ -166,63 +166,56 @@ createTopBlock('on_entry', 'Ob vstopu')
 createTopBlock('on_exit', 'Ob izstopu')
 createTopBlock('after_command', 'Po ukazu')
 
-appendBlock('Akcije', 'action', {
-    init() {
 
-        const condition = this.appendValueInput('ALLOW0')
-            .appendField('če')
-            .setCheck(['Boolean'])
-        this.conditions = [condition]
+const postCondition = (otherConnection) =>
+    (otherConnection.sourceBlock_.type == 'if') || (otherConnection.sourceBlock_.type == 'elif')
 
-        this.appendStatementInput('STATEMENTS')
-            .appendField('izvedi')
-        this.setColour(36)
-        this.setPreviousStatement(true, 'Akcija')
-        this.setNextStatement(true, 'Akcija')
-        this.setOnChange(this.onChange.bind(this))
-    },
+function createIfElif(block_name, field_name, prevCheck) {
+    appendBlock('Pogoji', block_name, {
+        init() {
+            const condition = this.appendValueInput('ALLOW0')
+                .appendField(field_name)
+                .setCheck(['Boolean'])
+            this.conditions = [condition]
 
-    onChange() {
-        cleanUp(
-            this,
-            "ALLOW",
-            this.previousConnection
-                && this.previousConnection.isConnected()
-                && this.previousConnection.targetBlock().type == this.type
-                && this.previousConnection.targetBlock().nextConnection.isConnected()
-                && this.previousConnection.targetBlock().nextConnection.targetBlock() === this
-                ? "sicer če" : "če",
-            "STATEMENTS")
-    },
+            this.appendStatementInput('STATEMENTS')
+                .appendField('izvedi')
+            this.setColour(36)
+            this.setPreviousStatement(true)
+            if (prevCheck) {
+                this.previousConnection.checkType_ = postCondition
+            }
+            this.setNextStatement(true)
+            this.setOnChange(this.onChange.bind(this))
+        },
 
-    mutationToDom() {
-        const container = document.createElement('mutation')
-        container.setAttribute('nconditions', this.conditions.length)
-        return container
-    },
+        onChange() {
+            cleanUp(this, "ALLOW", field_name, "STATEMENTS")
+        },
 
-    domToMutation(xml) {
-        mutate(
-            this,
-            xml,
-            "ALLOW",
-            this.previousConnection
-                && this.previousConnection.isConnected()
-                && this.previousConnection.targetConnection.getSourceBlock().type == this.type
-                && this.previousConnection.targetBlock().nextConnection.isConnected()
-                && this.previousConnection.targetBlock().nextConnection.targetBlock() === this
-                ? "sicer če" : "če",
-            "STATEMENTS")
-    }
-})
+        domToMutation(xml) {
+            mutate(this, xml, "ALLOW", field_name, "STATEMENTS")
+        },
 
+        mutationToDom() {
+            const container = document.createElement('mutation')
+            container.setAttribute('nconditions', this.conditions.length)
+            return container
+        }
+    })
+}
 
-appendBlock('Akcije', 'else_action', {
+createIfElif('if', 'če', false)
+createIfElif('elif', 'sicer če', true)
+
+appendBlock('Pogoji', 'else', {
     init() {
         this.appendStatementInput('STATEMENTS')
-            .appendField('sicer izvedi')
+            .appendField('sicer')
         this.setColour(36)
-        this.setPreviousStatement(true, 'Akcija')
+        this.setPreviousStatement(true)
+        this.previousConnection.checkType_ = postCondition
+        this.setNextStatement(true)
     }
 })
 
