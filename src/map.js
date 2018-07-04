@@ -106,7 +106,8 @@ class Node extends React.Component {
                          {direction: "ne", x: 67.821, y: 12.982, width: 31.689, height: 16, transform: "matrix(0.7071 0.7071 -0.7071 0.7071 39.3425 -53.0154)"},
                          {direction: "n",  x: 36.471,            width: 31.706, height: 16}
                         ].map(({direction, x, y, width, height, transform}) =>
-                            <rect x={x} y={y} width={width} height={height} transform={transform} fill="none"
+                            <rect key={direction}
+                                  x={x} y={y} width={width} height={height} transform={transform} fill="none"
                                   onMouseDown={(e) => {this.props.newLineCallback(this, direction, e)}}
                                   onMouseEnter={() => insideCb(this, direction) }
                                   onMouseLeave={() => insideCb(null) }
@@ -415,6 +416,15 @@ export default class GameMap extends React.Component {
     get offsetY() { return document.getElementById("gamemap").getBoundingClientRect().y }
 
     render() {
+        const xs = locations.getLocations().map(loc => loc.x)
+        const ys = locations.getLocations().map(loc => loc.y)
+        const minx = 250 // Math.min(...xs)
+        const miny = 250 // Math.min(...ys)
+        const maxx = Math.max(...xs)
+        const maxy = Math.max(...ys)
+        const width = Math.max(window.innerWidth, maxx - minx + 500)
+        const height = Math.max(window.innerHeight, maxy - miny + 500)
+
         return <div>
           <LocationEditor
               location={this.state.editing}
@@ -423,46 +433,53 @@ export default class GameMap extends React.Component {
               setLocationImage={this.setLocationImage}
               setStartLocation={this.setStartLocation}
           />
-          <svg width="100%" height="600" id="gamemap" onDoubleClick={e => { this.newLocation(e); e.preventDefault();e.stopPropagation() } }>
-            { Array.prototype.concat(
-                ...locations
-                    .getIds()
-                    .map(srcId => {
-                        const srcDirections = locations.getLocation(srcId).directions
-                        return Object
-                            .entries(srcDirections)
-                            .map(([dir, destId]) => {
-                                const multipleToDest = Object.values(srcDirections)
-                                                             .filter(it => it == destId).length > 1
-                                const destLoc = locations.getLocation(destId)
-                                const backConnections = Object.entries(destLoc.directions)
-                                                              .filter(([dir, destDestId]) => destDestId == srcId)
-                                if (destId != srcId && !multipleToDest && backConnections.length == 1) {
-                                    if (srcId < destId) {
-                                        return <Connection key={srcId + dir}
-                                                        src={srcId} dir={dir}
-                                                        dest={destId} backDir={backConnections[0][0]}
-                                                        clickCallback={this.removeConnection} />
+          <svg width={width} height={height}
+               id="gamemap" onDoubleClick={e => { this.newLocation(e); e.preventDefault();e.stopPropagation() } }>
+            <g transform={`translate(${250 - minx} ${250 - miny})`}>
+                { Array.prototype.concat(
+                    ...locations
+                        .getIds()
+                        .map(srcId => {
+                            const srcDirections = locations.getLocation(srcId).directions
+                            return Object
+                                .entries(srcDirections)
+                                .map(([dir, destId]) => {
+                                    const multipleToDest = Object.values(srcDirections)
+                                                                 .filter(it => it == destId).length > 1
+                                    const destLoc = locations.getLocation(destId)
+                                    const backConnections = Object.entries(destLoc.directions)
+                                                                  .filter(([dir, destDestId]) => destDestId == srcId)
+                                    if (destId != srcId && !multipleToDest && backConnections.length == 1) {
+                                        if (srcId < destId) {
+                                            return <Connection key={srcId + dir}
+                                                            src={srcId} dir={dir}
+                                                            dest={destId} backDir={backConnections[0][0]}
+                                                            clickCallback={this.removeConnection} />
+                                        }
                                     }
-                                }
-                                else {
-                                    return <Connection key={srcId + dir} src={srcId} dir={dir} dest={destId}
-                                                       clickCallback={this.removeConnection} />
-                                }
-                            })
-                    })
-             )}
-            { locations.getIds().map(it => <Node key={it} locId={it}
-                                                 isInitial={it == locations.startLocation}
-                                                 newLineCallback={this.dirMouseDown}
-                                                 insideCallback={this.setHovered}
-                                                 moveByCallback={this.moveNodeBy}
-                                                 onDoubleClick={e => { this.editLocation(it); e.preventDefault();e.stopPropagation() } }
-                                    />) }
-            <TempConnection line={this.state.newLine} />
+                                    else {
+                                        return <Connection key={srcId + dir} src={srcId} dir={dir} dest={destId}
+                                                           clickCallback={this.removeConnection} />
+                                    }
+                                })
+                        })
+                 )}
+                { locations.getIds().map(it => <Node key={it} locId={it}
+                                                     isInitial={it == locations.startLocation}
+                                                     newLineCallback={this.dirMouseDown}
+                                                     insideCallback={this.setHovered}
+                                                     moveByCallback={this.moveNodeBy}
+                                                     onDoubleClick={e => { this.editLocation(it); e.preventDefault();e.stopPropagation() } }
+                                        />) }
+                <TempConnection line={this.state.newLine} />
+            </g>
           </svg>
           </div>
       }
 }
 
 restoreLocally()
+
+
+// TODO Clicking within connection rectangle connects with location itself, and this is difficult to remove.
+// Don't connect if the distance is below some threshold.

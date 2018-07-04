@@ -75,12 +75,6 @@ export default class Game extends React.Component {
         return res
     }
 
-    autoExecuteBlocks = (blockType) => {
-        locations.getLocation(this.state.location).commands
-            .filter(it => (it.block == blockType))
-            .forEach(it => this.executeCommand(it, true))
-    }
-
     moveTo = (location) => {
         this.autoExecuteBlocks("on_exit")
         this.setState(
@@ -90,17 +84,39 @@ export default class Game extends React.Component {
 
     print = (msg) => {
         this.state.printed.push(msg)
-        this.setState(this.state)
+        this.setState({})
     }
 
-    showGameState= () => this.setState({showState: true})
+    autoExecuteBlocks = (blockType) => {
+        locations.getLocation(this.state.location).commands
+            .filter(it => (it.block == blockType))
+            .forEach(it => this.executeSequence(it.next))
+        this.setState({})
+    }
 
-    hideGameState = () => this.setState({showState: false})
+    executeStatement = (block) => {
+        this.print(<b>&gt; {block.name}</b>)
+        this.executeSequence(block.next)
+        this.setState({}, () => this.autoExecuteBlocks("after_command"))
+    }
 
-    checkConditionList = conditions => {
+    checkConditionList = (conditions, conjunctive=true) => {
+        const comp = (op, op1, op2) => {
+            switch (op) {
+                case 'EQ': return op1 == op2
+                case 'NE': return op1 != op2
+                case 'LT': return op1 < op2
+                case 'GT': return op1 > op2
+                case 'LE': return op1 <= op2
+                case 'GE': return op1 >= op2
+            }
+        }
+
         const checkCondition = condition => {
             switch (condition.block) {
                 case 'not': return !checkCondition(condition.not)
+
+                case 'disjunction': return this.checkConditionList(condition.allow, false)
 
                 case 'is_at': return this.state.location == condition.location
 
@@ -117,81 +133,70 @@ export default class Game extends React.Component {
             }
         }
 
-        if (!conditions) return true
+        if (!conditions) return conjunctive
         for (let condition of conditions) {
-            if (!checkCondition(condition))
+            const fulfilled = checkCondition(condition)
+            if (!fulfilled && conjunctive)
                 return condition.msg
+            else if (fulfilled &&  !conjunctive)
+                return true
         }
-        return true
+        return conjunctive
     }
 
-
-    executeCommand = (block, autoCommand=false) => {
-        const comp = (op, op1, op2) => {
-            switch (op) {
-                case 'EQ': return op1 == op2
-                case 'NE': return op1 != op2
-                case 'LT': return op1 < op2
-                case 'GT': return op1 > op2
-                case 'LE': return op1 <= op2
-                case 'GE': return op1 >= op2
+    executeSequence = (blocks, autoCommand=false) => {
+        const conditionalExecute = block => {
+            const msg = this.checkConditionList(block.allow)
+            if (msg === true) {
+                skipElses = true
+                this.executeSequence(block.statements)
+            }
+            else if (msg) {
+                this.print(msg)
             }
         }
 
-        const executeAction = action => {
-            switch (action.block) {
-                case 'go': return this.moveTo(action.location)
-                case 'print': return this.print(action.msg)
 
-                case 'pick': this.state.items[action.item] = ITEM_CARRIED; break
-                case 'drop': this.state.items[action.item] = this.state.location; break
-                case 'item_at': this.state.items[action.item] = action.location; break
-                case 'destroy': this.state.items[action.item] = ITEM_DOES_NOT_EXIST; break
-
-                case 'set_flag': this.state.flags.add(action.flag); break
-                case 'clear_flag': this.state.flags.delete(action.flag); break
-
-                case 'set_const': this.state.variable[action.variable] = action.constant; break
-                case 'increase': this.state.variable[action.variable]++; break
-                case 'decrease': this.state.variable[action.variable]--; break
-                case 'add_const': this.state.variable[action.variable] += action.constant; break
-                case 'sum_const': this.state.variable[action.variable] -= action.constant; break
-                case 'set_var': this.state.variable[action.variable] = this.state.variable[action.variable2]; break
-                case 'add_var': this.state.variable[action.variable] += this.state.variable[action.variable2]; break
-                case 'sub_var': this.state.variable[action.variable] -= this.state.variable[action.variable2]; break
-            }
-            this.setState(this.state)
-        }
-
-        const executeActionList = actions => {
-            actions.forEach(executeAction)
-        }
-
-        if (!autoCommand) {
-            this.print(<b>&gt; {block.name}</b>)
-        }
-
-        var skipElses = false
-        for (let action of block.next) {
-            if ((action.block == 'action') || (action.block == 'else_action')) {
-                if (!skipElses) {
-                    const msg = this.checkConditionList(action.allow)
-                    if (msg === true) {
-                        executeActionList(action.statements)
-                        skipElses = true
-                    }
-                    else if (msg) {
-                        this.print(msg)
-                    }
-                }
-            }
-            else {
-                executeAction(action)
-                skipElses = false
+        let skipElses = false
+        if (!blocks)
+            return
+        for(let block of blocks) {
+            switch (block.block) {
+                case 'if': skipElses = false; conditionalExecute(block); break
+                case 'elif': if (!skipElses) conditionalExecute(block); break
+                case 'else': if (!skipElses) this.executeSequence(block.statements); break
+                default: skipElses = false; this.executeBlock(block)
             }
         }
-        this.autoExecuteBlocks("after_command")
     }
+
+    executeBlock = (block) => {
+        switch (block.block) {
+            case 'go': return this.moveTo(block.location)
+            case 'print': return this.print(block.msg)
+
+            case 'pick': this.state.items[block.item] = ITEM_CARRIED; break
+            case 'drop': this.state.items[block.item] = this.state.location; break
+            case 'item_at': this.state.items[block.item] = block.location; break
+            case 'destroy': this.state.items[block.item] = ITEM_DOES_NOT_EXIST; break
+
+            case 'set_flag': this.state.flags.add(block.flag); break
+            case 'clear_flag': this.state.flags.delete(block.flag); break
+
+            case 'set_const': this.state.variable[block.variable] = block.constant; break
+            case 'increase': this.state.variable[block.variable]++; break
+            case 'decrease': this.state.variable[block.variable]--; break
+            case 'add_const': this.state.variable[block.variable] += block.constant; break
+            case 'sum_const': this.state.variable[block.variable] -= block.constant; break
+            case 'set_var': this.state.variable[block.variable] = this.state.variable[block.variable2]; break
+            case 'add_var': this.state.variable[block.variable] += this.state.variable[block.variable2]; break
+            case 'sub_var': this.state.variable[block.variable] -= this.state.variable[block.variable2]; break
+        }
+    }
+
+    showGameState= () => this.setState({showState: true})
+
+    hideGameState = () => this.setState({showState: false})
 
     render() {
         const dirmap = {"S": "n", "SV": "ne", "V": "e",
@@ -212,7 +217,7 @@ export default class Game extends React.Component {
                         <h1>{location.title}</h1>
 
                         <p>{location.description}</p>
-                        { this.state.printed.map(it => <p>{it}</p>) }
+                        { this.state.printed.map((it, i) => <p key={i}>{it}</p>) }
                         <div>
                             { ["S", "SV", "V", "JV", "J", "JZ", "Z", "SZ"].map(dir => {
                                     const where = location.directions[dirmap[dir]]
@@ -223,11 +228,9 @@ export default class Game extends React.Component {
                                     )
                                 })
                             }
-                        </div>
-                        <div>
                             { location.commands
                                 .filter(it => (it.block == 'command') && (this.checkConditionList(it.show) === true))
-                                .map(it => <Button key={it.name} onClick={() => this.executeCommand(it) }>
+                                .map(it => <Button key={it.name} onClick={() => this.executeStatement(it) }>
                                     {it.name}
                                     </Button>) }
                         </div>
@@ -237,3 +240,7 @@ export default class Game extends React.Component {
         )
     }
 }
+
+// TODO: Compass
+// TODO: Sicerče can be inserted into Če --> check whether the connection we're connecting to is the next, not the input
+//       This problem is more than mere inconvenience - children will actually make this mistake a lot

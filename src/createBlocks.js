@@ -9,13 +9,13 @@ function appendBlock(category, block_name, block) {
     blocks.push({category: category, name: block_name, block: block})
 }
 
-function cleanUp(block, namePrefix, firstLine, beforeInput=null) {
+function cleanUp(block, namePrefix, firstLine, conjunction, beforeInput=null) {
     const conditions = block.conditions
     const lastConnection = (conditions.length > 0) ? conditions[conditions.length - 1].connection : false
     if ((lastConnection === false)
             || ((lastConnection != null) && (lastConnection.isConnected()))) {
         const newInput = block.appendValueInput("TEMP")
-            .appendField('in hkrati')
+            .appendField(conjunction)
             .setAlign(Blockly.ALIGN_RIGHT)
             .setCheck(['Boolean'])
         conditions.push(newInput)
@@ -39,7 +39,7 @@ function cleanUp(block, namePrefix, firstLine, beforeInput=null) {
     conditions[0].setAlign(Blockly.ALIGN_LEFT)
 }
 
-function mutate(block, xml, namePrefix, firstLine, beforeInput=null) {
+function mutate(block, xml, namePrefix, firstLine, conjunction, beforeInput=null) {
     const numVals = parseInt(xml.getAttribute("nconditions"))
     if (numVals < block.conditions.length) {
         for(let i = numVals; i < block.conditions.length; i++) {
@@ -51,7 +51,7 @@ function mutate(block, xml, namePrefix, firstLine, beforeInput=null) {
         for(let i = block.conditions.length; i < numVals; i++) {
             const name = `${namePrefix}${i}`
             const newInput = block.appendValueInput(name)
-                .appendField(!i ? firstLine : 'in hkrati')
+                .appendField(!i ? firstLine : conjunction)
                 .setAlign(!i ? Blockly.ALIGN_LEFT : Blockly.ALIGN_RIGHT)
                 .setCheck(['Boolean'])
             block.conditions.push(newInput)
@@ -127,7 +127,8 @@ function createField(fieldName, placeholder=null) {
     return new Blockly.FieldTextInput(placeholder || "besedilo")
 }
 
-appendBlock('Akcije', 'command', {
+
+appendBlock('Ukazi', 'command', {
     init() {
         this.appendDummyInput()
             .appendField("Ukaz")
@@ -138,7 +139,7 @@ appendBlock('Akcije', 'command', {
         this.conditions = [showInput]
         this.setColour(36)
         this.setNextStatement(true, 'Akcija')
-        this.setOnChange(() => cleanUp(this, "SHOW", "pokaži, če"))
+        this.setOnChange(() => cleanUp(this, "SHOW", "pokaži, če", "in hkrati"))
     },
 
     mutationToDom() {
@@ -148,12 +149,12 @@ appendBlock('Akcije', 'command', {
     },
 
     domToMutation(xml) {
-        mutate(this, xml, "SHOW", "pokaži, če")
+        mutate(this, xml, "SHOW", "pokaži, če", "in hkrati")
     }
 })
 
 function createTopBlock(block_name, name, other=null) {
-    appendBlock("Akcije", block_name, {
+    appendBlock("Ukazi", block_name, {
         init() {
           this.appendDummyInput().appendField(name)
           this.setColour(36)
@@ -190,11 +191,11 @@ function createIfElif(block_name, field_name, prevCheck) {
         },
 
         onChange() {
-            cleanUp(this, "ALLOW", field_name, "STATEMENTS")
+            cleanUp(this, "ALLOW", field_name, "in hkrati", "STATEMENTS")
         },
 
         domToMutation(xml) {
-            mutate(this, xml, "ALLOW", field_name, "STATEMENTS")
+            mutate(this, xml, "ALLOW", field_name, "in hkrati", "STATEMENTS")
         },
 
         mutationToDom() {
@@ -220,8 +221,8 @@ appendBlock('Pogoji', 'else', {
 })
 
 
-function createCondition(block_name, condField, fieldName, other=null, toolbox="Pogoji") {
-    appendBlock(toolbox, block_name, {
+function createCondition(category, block_name, condField, fieldName, other=null) {
+    appendBlock(category, block_name, {
       init() {
           this.setInputsInline(false)
           const row = this.appendDummyInput()
@@ -282,18 +283,46 @@ appendBlock("Pogoji", "not", {
     }
 })
 
-createCondition('does_have', "ima igralec", "ITEM")
+appendBlock("Pogoji", "disjunction", {
+    init() {
+        const condition = this.appendValueInput('ALLOW0')
+            .appendField("nekaj od tega")
+            .setCheck(['Boolean'])
+        this.conditions = [condition]
+        this.setOutput(true, "Boolean")
+        this.setColour(246)
+        this.setOnChange(this.onChange.bind(this))
+    },
+
+    onChange() {
+        cleanUp(this, "ALLOW", "nekaj od tega", "ali")
+    },
+
+    domToMutation(xml) {
+        mutate(this, xml, "ALLOW", "nekaj od tega", "ali")
+    },
+
+    mutationToDom() {
+        const container = document.createElement('mutation')
+        container.setAttribute('nconditions', this.conditions.length)
+        return container
+    }
+})
+
+
+
+createCondition('Stvari', 'does_have', "ima igralec", "ITEM")
 // createCondition('has_visited', "je igralec obiskal", "LOCATION")
-createCondition('is_at', "je igralec na", "LOCATION")
-createCondition('item_is_at', "je", "ITEM", row => row.appendField("na").appendField(createField('LOCATION'), "LOCATION"))
-createCondition('item_exists', "", "ITEM", row => row.appendField("obstaja"))
-createCondition('item_is_here', "je", "ITEM", row => row.appendField("tukaj"))
-createCondition('flag_set', "", "FLAG", row => row.appendField("je postavljena"))
-createCondition('flag_clear', "", "FLAG", row => row.appendField("ni postavljena"))
+createCondition('Pogoji', 'is_at', "je igralec na", "LOCATION")
+createCondition('Stvari', 'item_is_at', "je", "ITEM", row => row.appendField("na").appendField(createField('LOCATION'), "LOCATION"))
+createCondition('Stvari', 'item_exists', "", "ITEM", row => row.appendField("obstaja"))
+createCondition('Stvari', 'item_is_here', "je", "ITEM", row => row.appendField("tukaj"))
+createCondition('Zastavice', 'flag_set', "", "FLAG", row => row.appendField("je postavljena"))
+createCondition('Zastavice', 'flag_clear', "", "FLAG", row => row.appendField("ni postavljena"))
 
 
-function createStatement(block_name, statement, fieldName, other=null) {
-    appendBlock("Ukazi", block_name, {
+function createStatement(category, block_name, statement, fieldName, other=null) {
+    appendBlock(category, block_name, {
       init() {
           this.setInputsInline(false)
           const row = this.appendDummyInput()
@@ -310,15 +339,15 @@ function createStatement(block_name, statement, fieldName, other=null) {
 }
 
 
-createStatement("go", "pojdi na", "LOCATION")
-createStatement("pick", "vzemi", "ITEM")
-createStatement("drop", "spusti", "ITEM")
-createStatement("item_at", "postavi", "ITEM",
+createStatement("Ukazi", "go", "pojdi na", "LOCATION")
+createStatement("Stvari", "pick", "vzemi", "ITEM")
+createStatement("Stvari", "drop", "spusti", "ITEM")
+createStatement("Stvari", "item_at", "postavi", "ITEM",
     row => row.appendField("na").appendField(createField("LOCATION"), "LOCATION"))
-createStatement("destroy", "uniči", "ITEM")
-createStatement("set_flag", "postavi", "FLAG")
-createStatement("clear_flag", "pobriši", "FLAG")
-createStatement("print", "izpiši", "MSG")
+createStatement("Stvari", "destroy", "uniči", "ITEM")
+createStatement("Zastavice", "set_flag", "postavi", "FLAG")
+createStatement("Zastavice", "clear_flag", "pobriši", "FLAG")
+createStatement("Ukazi", "print", "izpiši", "MSG")
 
 
 function createVarStatement(block_name, statement, fieldName, relation=null, fieldName2=null, other=null) {
@@ -360,14 +389,14 @@ createVarStatement("sub_var", "zmanjšaj", "VARIABLE", "za", "VARIABLE2")
 
 const _operators = [["=", "EQ"], ["≠", "NE"], ["<", "LT"], [">", "GT"], ["≤", "LE"], ["≥", "GE"]]
 
-createCondition('compare_const', "", "VARIABLE",
+createCondition('Spremenljivke', 'compare_const', "", "VARIABLE",
     (_, block) => block.appendDummyInput().setAlign(Blockly.ALIGN_RIGHT)
         .appendField(new Blockly.FieldDropdown(_operators), "OPERATOR")
         .appendField(new Blockly.FieldTextInput('vrednost'), "CONSTANT"),
     "Spremenljivke")
 
 
-createCondition('compare_var', "", "VARIABLE",
+createCondition('Spremenljivke', 'compare_var', "", "VARIABLE",
     (_, block) => block.appendDummyInput()
         .appendField(new Blockly.FieldDropdown(_operators), "OPERATOR")
         .appendField(createField("VARIABLE2"), "VARIABLE2"),
@@ -380,3 +409,5 @@ export default blocks
 
 // TODO: če-jev ni mogoče gnezditi --- če so vgnezdeni na vrhu bloka, postanejo sicer-če); kako razlikovati tipe povezav?!
 // TODO: auto-ukazi imajo, naj sicer izpiše
+
+// TODO: pobriši "sicer izpiši". Nejasen koncept, in pretežno neuporaben, pa še program komplicira.

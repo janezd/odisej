@@ -54,6 +54,10 @@ class Locations {
         return Object.keys(this._locations)
     }
 
+    getLocations() {
+        return Object.values(this._locations)
+    }
+
     getNamesIds() {
         return Object.values(this._locations).map(it => [it.title, it.locId])
     }
