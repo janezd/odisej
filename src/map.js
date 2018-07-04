@@ -123,7 +123,7 @@ function LocImage(props) {
     const image = props.image
     const uploadControl = <FormControl id="fileUpload"
                                        type="file"
-                                       accept=".jpg"
+                                       accept=".jpg, .png, .gif"
                                        onChange={(e) => props.uploadCallback(e.target.files)}
                                        style={{display: "none"}}/>
 
@@ -215,7 +215,7 @@ class LocationEditor extends React.Component {
         reader.onload = e => {
             const img = new Image()
             img.onload = () => {
-                const scale = Math.min(1, 800 / img.width, 600 / img.height)
+                const scale = Math.min(1, 600 / img.width, 450 / img.height)
                 const width = img.width * scale
                 const height = img.height * scale
                 const canvas = document.createElement('canvas')
@@ -226,7 +226,7 @@ class LocationEditor extends React.Component {
                 const data = canvas.toDataURL()
                 this.props.setLocationImage(this.props.location, data)
             }
-            img.src = `data:image/jpeg;base64,${btoa(e.target.result)}`
+            img.src = `data:image/png;base64,${btoa(e.target.result)}`
         }
         reader.readAsBinaryString(files[0])
     }
