@@ -1,7 +1,7 @@
 import React from "react"
 import { Panel, Button, Media, Modal } from 'react-bootstrap'
 import blocks from "./createBlocks"
-import { locations, items, flags, variables, restoreLocally, storeLocally, packBlockArgs } from './quill'
+import { locations, items, flags, variables, allLocations, restoreLocally, storeLocally, packBlockArgs } from './quill'
 
 
 const ITEM_CARRIED = -1
@@ -88,7 +88,7 @@ export default class Game extends React.Component {
     }
 
     autoExecuteBlocks = (blockType) => {
-        locations.getLocation(this.state.location).commands
+        locations.getLocation(this.state.location).commands.concat(allLocations.commands)
             .filter(it => (it.block == blockType))
             .forEach(it => this.executeSequence(it.next))
         this.setState({})
@@ -222,7 +222,7 @@ export default class Game extends React.Component {
                                     )
                                 })
                             }
-                            { location.commands
+                            { location.commands.concat(allLocations.commands)
                                 .filter(it => (it.block == 'command') && this.checkConditionList(it.show))
                                 .map(it => <Button key={it.name} onClick={() => this.executeStatement(it) }>
                                     {it.name}
@@ -236,5 +236,4 @@ export default class Game extends React.Component {
 }
 
 // TODO: Compass
-// TODO: Sicerče can be inserted into Če --> check whether the connection we're connecting to is the next, not the input
-//       This problem is more than mere inconvenience - children will actually make this mistake a lot
+// TODO: Fix variables

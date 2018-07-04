@@ -1,12 +1,12 @@
 import React from "react"
 import ReactSVG from 'react-svg'
-import { Modal, FormGroup, FormControl, ControlLabel, Input, Label } from 'react-bootstrap'
+import { Modal, FormGroup, FormControl, ControlLabel, Input, Label, Button } from 'react-bootstrap'
 
 import Blockly from 'node-blockly/browser'
 import BlocklyDrawer from 'react-blockly-drawer'
 
 import blocks, { exitBlock } from './createBlocks'
-import { locations, items, flags, variables, restoreLocally, storeLocally, packBlockArgs } from './quill'
+import { locations, items, flags, variables, allLocations, restoreLocally, storeLocally, packBlockArgs } from './quill'
 
 Blockly.BlockSvg.START_HAT = true
 // Blockly.Flyout.prototype.autoClose = false
@@ -167,6 +167,36 @@ const CONN_COORDS = {
 
 const CENTER = 104.647 / 2
 
+
+class AllLocationsEditor extends React.Component {
+    changeWorkspace = (xml) => {
+        allLocations.workspace = xml
+    }
+
+    handleClose = () => {
+        allLocations.commands = Blockly.getMainWorkspace().getTopBlocks().map(block => packBlockArgs(block))
+        this.props.handleClose()
+    }
+
+    render() {
+        if (!this.props.editing) return false;
+        return <Modal dialogClassName="location-editor" show={true} onHide={this.handleClose} enforceFocus={false}>
+            <Modal.Header closeButton>
+                <Modal.Title>Ukazi, ki se izvajajo na vseh lokacijah</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                <div id="blockly-div">
+                    <BlocklyDrawerWithNameCheck tools={blocks}
+                                                workspaceXML={allLocations.workspace || ""}
+                                                injectOptions={{toolboxPosition: 'end'}}
+                                                onChange={this.changeWorkspace}>
+                    </BlocklyDrawerWithNameCheck>
+                </div>
+            </Modal.Body>
+        </Modal>
+    }
+}
+
 class LocationEditor extends React.Component {
     changeWorkspace = (xml) => {
         this.props.location.workspace = xml
@@ -318,7 +348,8 @@ export default class GameMap extends React.Component {
         super(props)
         this.state = {
             newLine: null,
-            editing: null
+            editing: null,
+            editingGeneral: false
         }
         this.currentlyHovered = null
     }
@@ -390,7 +421,9 @@ export default class GameMap extends React.Component {
 
     editLocation = (locId) => this.setState({editing: locations.getLocation(locId)})
 
-    closeEditor = () => this.setState({editing: null})
+    startEditGeneral = () => this.setState({editingGeneral: true})
+
+    closeEditor = () => this.setState({editing: null, editingGeneral: false})
 
     newLocation = (e) => {
         const newLoc = locations.addLocation()
@@ -433,6 +466,8 @@ export default class GameMap extends React.Component {
               setLocationImage={this.setLocationImage}
               setStartLocation={this.setStartLocation}
           />
+          <AllLocationsEditor editing={this.state.editingGeneral} handleClose={this.closeEditor} />
+            <Button style={{position: "absolute", x: 0, y: 0}} onClick={this.startEditGeneral}>Ukazi povsod</Button>
           <svg width={width} height={height}
                id="gamemap" onDoubleClick={e => { this.newLocation(e); e.preventDefault();e.stopPropagation() } }>
             <g transform={`translate(${250 - minx} ${250 - miny})`}>

@@ -371,9 +371,3 @@ createCondition('Spremenljivke', 'compare_var', "", "VARIABLE",
 
 
 export default blocks
-
-
-// TODO: če-jev ni mogoče gnezditi --- če so vgnezdeni na vrhu bloka, postanejo sicer-če); kako razlikovati tipe povezav?!
-// TODO: auto-ukazi imajo, naj sicer izpiše
-
-// TODO: pobriši "sicer izpiši". Nejasen koncept, in pretežno neuporaben, pa še program komplicira.

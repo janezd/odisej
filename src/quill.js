@@ -31,6 +31,22 @@ class LocData {
     }
 }
 
+class AllLocData {
+    constructor() {
+        this.workspace = null
+        this.commands = []
+    }
+
+    toJson() {
+        return JSON.stringify({workspace: this.workspace, commands: this.commands})
+    }
+
+    setFromJson({workspace, commands}) {
+        this.workspace = workspace
+        this.commands = commands
+    }
+}
+
 class Locations {
     constructor() {
         this.reset()
@@ -103,47 +119,6 @@ class Locations {
         this._locations = locations
         this.startLocation = startLocation
     }
-
-    toXml(doc, base) {
-        Object.values(this._locations).forEach(location => {
-            const loc = doc.createElement("location")
-            loc.setAttribute("name", location.title)
-            loc.setAttribute("locId", location.locId)
-            loc.setAttribute("x", location.x)
-            loc.setAttribute("y", location.y)
-
-            const desc = doc.createElement("description")
-            desc.appendChild(doc.createTextNode(location.description))
-            loc.appendChild(desc)
-
-            const blocks = doc.createElement("blocks")
-            blocks.appendChild(doc.createTextNode(location.workspace))
-            loc.appendChild(blocks)
-
-            base.appendChild(loc)
-        })
-    }
-
-    fromXml(base) {
-        function readTextChildXml(node, name) {
-            const childNodes = node.getElementsByTagName(name)[0].childNodes
-            return childNodes.length ? childNodes[0].textContent : ""
-        }
-
-        this._locations = {}
-
-        Array.from(base.childNodes).forEach(node => {
-            const locId = node.getAttribute("locId")
-
-            this._locations[locId] =
-                new LocData(node.getAttribute("name"),
-                        readTextChildXml(node, "description"),
-                        0, 0,
-                        readTextChildXml(node, "blocks"),
-                        locId
-                    )
-        })
-    }
 }
 
 
@@ -167,6 +142,7 @@ export const items = new NameModel()
 export const variables = new NameModel()
 export const flags = new NameModel()
 export const locations = new Locations()
+export const allLocations = new AllLocData()
 
 export function resetData() {
     items.reset()
@@ -224,7 +200,7 @@ export function packBlockArgs(block, noNext=false) {
 
 
 export function storeLocally() {
-    localStorage.odisej = `{"locations": ${locations.toJson()}, "items": ${items.toJson()}, "variables": ${variables.toJson()}, "flags": ${flags.toJson()}}`
+    localStorage.odisej = `{"locations": ${locations.toJson()}, "items": ${items.toJson()}, "variables": ${variables.toJson()}, "flags": ${flags.toJson()}, "allLocations": ${allLocations.toJson()}}`
 }
 
 export function restoreLocally(json) {
@@ -235,6 +211,7 @@ export function restoreLocally(json) {
         items.setFromJson(obj.items)
         variables.setFromJson(obj.variables)
         flags.setFromJson(obj.flags)
+        allLocations.setFromJson(obj.allLocations)
     }
     catch (e) {}
 }
