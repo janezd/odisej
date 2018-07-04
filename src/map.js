@@ -259,7 +259,10 @@ class LocationEditor extends React.Component {
                             ? <Label bsStyle="default">Začetna lokacija</Label>
                             : <Label onClick={() => this.props.setStartLocation(loc)} bsStyle="success"> Nastavi kot začetno</Label>
                         }
-                        <Label onClick={this.removeLocation} bsStyle="danger">Pobriši lokacijo</Label>
+                        { this.props.isInitial
+                            ? ""
+                            : <Label onClick={this.removeLocation} bsStyle="danger">Pobriši lokacijo</Label>
+                        }
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
