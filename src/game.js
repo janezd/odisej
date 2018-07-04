@@ -133,29 +133,23 @@ export default class Game extends React.Component {
             }
         }
 
-        if (!conditions) return conjunctive
-        for (let condition of conditions) {
-            const fulfilled = checkCondition(condition)
-            if (!fulfilled && conjunctive)
-                return condition.msg
-            else if (fulfilled &&  !conjunctive)
-                return true
+        if (conditions) {
+            for (let condition of conditions) {
+                const fulfilled = checkCondition(condition)
+                if (fulfilled != conjunctive)
+                    return fulfilled
+            }
         }
         return conjunctive
     }
 
     executeSequence = (blocks, autoCommand=false) => {
         const conditionalExecute = block => {
-            const msg = this.checkConditionList(block.allow)
-            if (msg === true) {
+            if (this.checkConditionList(block.allow)) {
                 skipElses = true
                 this.executeSequence(block.statements)
             }
-            else if (msg) {
-                this.print(msg)
-            }
         }
-
 
         let skipElses = false
         if (!blocks)
@@ -229,7 +223,7 @@ export default class Game extends React.Component {
                                 })
                             }
                             { location.commands
-                                .filter(it => (it.block == 'command') && (this.checkConditionList(it.show) === true))
+                                .filter(it => (it.block == 'command') && this.checkConditionList(it.show))
                                 .map(it => <Button key={it.name} onClick={() => this.executeStatement(it) }>
                                     {it.name}
                                     </Button>) }

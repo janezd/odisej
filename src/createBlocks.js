@@ -9,7 +9,7 @@ function appendBlock(category, block_name, block) {
     blocks.push({category: category, name: block_name, block: block})
 }
 
-function cleanUp(block, namePrefix, firstLine, conjunction, beforeInput=null) {
+function cleanUp(block, namePrefix, firstLine, conjunction, beforeInput=null, noFirstIfMoreLines=false) {
     const conditions = block.conditions
     const lastConnection = (conditions.length > 0) ? conditions[conditions.length - 1].connection : false
     if ((lastConnection === false)
@@ -35,31 +35,33 @@ function cleanUp(block, namePrefix, firstLine, conjunction, beforeInput=null) {
     for(let i in conditions) {
         conditions[i].name = namePrefix + i
     }
-    conditions[0].fieldRow[0].setText(firstLine)
+    conditions[0].fieldRow[0].setText(conditions.length == 1 || !noFirstIfMoreLines ? firstLine : "")
     conditions[0].setAlign(Blockly.ALIGN_LEFT)
 }
 
-function mutate(block, xml, namePrefix, firstLine, conjunction, beforeInput=null) {
+function mutate(block, xml, namePrefix, firstLine, conjunction, beforeInput=null, noFirstIfMoreLines=false) {
     const numVals = parseInt(xml.getAttribute("nconditions"))
-    if (numVals < block.conditions.length) {
-        for(let i = numVals; i < block.conditions.length; i++) {
+    const conditions = block.conditions
+    if (numVals < conditions.length) {
+        for(let i = numVals; i < conditions.length; i++) {
             block.removeInput(`${namePrefix}${i}`)
         }
-        block.conditions.splice(numVals)
+        conditions.splice(numVals)
     }
     else {
-        for(let i = block.conditions.length; i < numVals; i++) {
+        for(let i = conditions.length; i < numVals; i++) {
             const name = `${namePrefix}${i}`
             const newInput = block.appendValueInput(name)
                 .appendField(!i ? firstLine : conjunction)
                 .setAlign(!i ? Blockly.ALIGN_LEFT : Blockly.ALIGN_RIGHT)
                 .setCheck(['Boolean'])
-            block.conditions.push(newInput)
+            conditions.push(newInput)
             if (beforeInput != null) {
                 block.moveInputBefore(name, beforeInput)
             }
         }
     }
+    conditions[0].fieldRow[0].setText(conditions.length == 1 || !noFirstIfMoreLines ? firstLine : "")
 }
 
 
@@ -231,45 +233,9 @@ function createCondition(category, block_name, condField, fieldName, other=null)
           if (other != null) {
               other(row, this)
           }
-          this.setMsgInput()
           this.setOutput(true, "Boolean")
           this.setColour(246)
-          this.addMsgInput()
-          this.setOnChange(this.setMsgInput)
       },
-
-      addMsgInput() {
-        this.appendDummyInput("MSGDUMMY")
-                  .appendField("sicer izpiši:")
-                  .appendField(new Blockly.FieldTextInput(''), 'MSG')
-      },
-
-      setMsgInput() {
-          function needsHiding() {
-              if (block.type == 'command')
-                  return true
-              if ((block.type == 'action') && block.nextConnection.isConnected()) {
-                  const nextType = block.nextConnection.targetConnection.getSourceBlock().type
-                  if ((nextType == 'action') || (nextType == 'else_action'))
-                      return true
-              }
-              return false
-          }
-
-          if (!this.outputConnection) return  // not initialized yet?
-          let block = this
-          while(block.outputConnection && block.outputConnection.isConnected()) {
-              block = block.outputConnection.targetConnection.getSourceBlock()
-          }
-          if (needsHiding()) {
-              if (this.getInput("MSGDUMMY") != null) {
-                  this.removeInput("MSGDUMMY")
-              }
-          }
-          else if (this.getInput("MSGDUMMY") == null) {
-              this.addMsgInput()
-          }
-      }
     })
 }
 
@@ -286,7 +252,7 @@ appendBlock("Pogoji", "not", {
 appendBlock("Pogoji", "disjunction", {
     init() {
         const condition = this.appendValueInput('ALLOW0')
-            .appendField("nekaj od tega")
+            .appendField("drži nekaj od tega")
             .setCheck(['Boolean'])
         this.conditions = [condition]
         this.setOutput(true, "Boolean")
@@ -295,11 +261,11 @@ appendBlock("Pogoji", "disjunction", {
     },
 
     onChange() {
-        cleanUp(this, "ALLOW", "nekaj od tega", "ali")
+        cleanUp(this, "ALLOW", "drži nekaj od tega", "ali", null, true)
     },
 
     domToMutation(xml) {
-        mutate(this, xml, "ALLOW", "nekaj od tega", "ali")
+        mutate(this, xml, "ALLOW", "drži nekaj od tega", "ali", null, true)
     },
 
     mutationToDom() {
