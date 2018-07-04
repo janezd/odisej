@@ -128,8 +128,8 @@ export default class Game extends React.Component {
                 case 'flag_set': return this.state.flags.has(condition.flag)
                 case 'flag_clear': return !this.state.flags.has(condition.flag)
 
-                case 'compare_const': return comp(this.state.variables[action.variable], action.constant)
-                case 'compare_var': return comp(this.state.variables[action.variable], this.state.variables[action.variable2])
+                case 'compare_const': return comp(condition.operator, this.state.variables[condition.variable], parseInt(condition.constant))
+                case 'compare_var': return comp(condition.operator, this.state.variables[condition.variable], this.state.variables[condition.variable2])
             }
         }
 
@@ -177,14 +177,14 @@ export default class Game extends React.Component {
             case 'set_flag': this.state.flags.add(block.flag); break
             case 'clear_flag': this.state.flags.delete(block.flag); break
 
-            case 'set_const': this.state.variable[block.variable] = block.constant; break
-            case 'increase': this.state.variable[block.variable]++; break
-            case 'decrease': this.state.variable[block.variable]--; break
-            case 'add_const': this.state.variable[block.variable] += block.constant; break
-            case 'sum_const': this.state.variable[block.variable] -= block.constant; break
-            case 'set_var': this.state.variable[block.variable] = this.state.variable[block.variable2]; break
-            case 'add_var': this.state.variable[block.variable] += this.state.variable[block.variable2]; break
-            case 'sub_var': this.state.variable[block.variable] -= this.state.variable[block.variable2]; break
+            case 'set_const': this.state.variables[block.variable] = parseInt(block.constant); break
+            case 'increase': this.state.variables[block.variable]++; break
+            case 'decrease': this.state.variables[block.variable]--; break
+            case 'add_const': this.state.variables[block.variable] += parseInt(block.constant); break
+            case 'sub_const': this.state.variables[block.variable] -= parseInt(block.constant); break
+            case 'set_var': this.state.variables[block.variable] = this.state.variables[block.variable2]; break
+            case 'add_var': this.state.variables[block.variable] += this.state.variables[block.variable2]; break
+            case 'sub_var': this.state.variables[block.variable] -= this.state.variables[block.variable2]; break
         }
     }
 
