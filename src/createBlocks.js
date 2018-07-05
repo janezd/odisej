@@ -72,7 +72,7 @@ class FieldItems extends Blockly.FieldDropdown {
                 return [[flyOutMsg, "ADD"]]
             const options = [...nameModel.getNamesIds(), [addMsg, "ADD"]]
             if (options.length > 1) {
-                options.push(["Preimenuj...", "RENAME"], ["Odstrani...", "REMOVE"])
+                options.push(["Preimenuj...", "RENAME"])
             }
             return options
         })
@@ -98,10 +98,6 @@ class FieldItems extends Blockly.FieldDropdown {
                 this.setValue(curId)
                 this.setText(newName)
             })
-        }
-        else if (id == "REMOVE") {
-            model.remove(this.getValue())
-            this.setValue("ADD")
         }
         else {
             this.setValue(id)

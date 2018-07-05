@@ -6,7 +6,7 @@ import Blockly from 'node-blockly/browser'
 import BlocklyDrawer from 'react-blockly-drawer'
 
 import blocks, { exitBlock } from './createBlocks'
-import { locations, items, flags, variables, allLocations, restoreLocally, storeLocally, packBlockArgs } from './quill'
+import { locations, items, flags, variables, allLocations, restoreLocally, storeLocally, garbageCollection, packBlockArgs } from './quill'
 
 Blockly.BlockSvg.START_HAT = true
 // Blockly.Flyout.prototype.autoClose = false
@@ -14,23 +14,8 @@ Blockly.BlockSvg.START_HAT = true
 window.React = React
 
 
-function fixWorkspaceNames(workspace) {
-    workspace.getAllBlocks().forEach(block => {
-        block.inputList.forEach(input => {
-            input.fieldRow
-                .filter(field => field.fixMissingName)
-                .forEach(field => field.fixMissingName())
-        })
-    })
-}
-
 
 class BlocklyDrawerWithNameCheck extends BlocklyDrawer {
-    componentDidUpdate() {
-        // BlocklyDrawer.prototype.componentDidUpdate.apply(this)
-        fixWorkspaceNames(this.workspacePlayground)
-    }
-
     onResize() {
       this.content.style.left = '0px';
       this.content.style.top = '0px';
@@ -175,6 +160,7 @@ class AllLocationsEditor extends React.Component {
 
     handleClose = () => {
         allLocations.commands = Blockly.getMainWorkspace().getTopBlocks().map(block => packBlockArgs(block))
+        garbageCollection()
         this.props.handleClose()
     }
 
@@ -207,6 +193,7 @@ class LocationEditor extends React.Component {
         loc.title = this.loctitle.innerText
         loc.description = this.locDescArea.value
         loc.commands = Blockly.getMainWorkspace().getTopBlocks().map(block => packBlockArgs(block))
+        garbageCollection()
         this.props.handleClose()
     }
 

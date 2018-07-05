@@ -13,7 +13,7 @@ function getUniqueName(name, names) {
 }
 
 function randomId() {
-    return Array.from({length: 5}, () => Math.round(Math.random() * 2**32).toString(16))
+    return Array.from({length: 5}, () => Math.round(Math.random() * 2**32).toString(16).padStart(8, "0"))
                 .join("-") }
 
 class LocData {
@@ -136,6 +136,7 @@ class NameModel {
     add(name=null)          { const itemId = randomId(); this._items[itemId] = name || "stvar"; return itemId }
     rename(itemId, newName) { this._items[itemId] = newName }
     remove(itemId)          { delete this._items[itemId] }
+    clean(allowed)          { this.getIds().forEach(it => { if (!allowed.has(it)) this.remove(it) })}
 }
 
 export const items = new NameModel()
@@ -198,6 +199,33 @@ export function packBlockArgs(block, noNext=false) {
     return args
 }
 
+
+export function garbageCollection() {
+    const allVariables = new Set()
+    const allItems = new Set()
+    const allFlags = new Set()
+
+    function collectAll(obj) {
+        Object.entries(obj).forEach(([key, value]) => {
+            if ((["show", "allow", "next", "statements", "not"].indexOf(key) != -1) || !isNaN((0).constructor(key))) {
+                collectAll(value)
+            }
+            // TODO: This should be length == 44, but earlier id's could be shorter
+            else if ((typeof value == "string") && (value.length > 10)) {
+                switch (key) {
+                    case "item": allItems.add(value); break
+                    case "flag": allFlags.add(value); break
+                    case "variable": case "variable2": allVariables.add(value); break
+                }
+            }
+        })
+    }
+
+    locations.getLocations().forEach(loc => collectAll(loc.commands))
+    variables.clean(allVariables)
+    items.clean(allItems)
+    flags.clean(allFlags)
+}
 
 export function storeLocally() {
     localStorage.odisej = `{"locations": ${locations.toJson()}, "items": ${items.toJson()}, "variables": ${variables.toJson()}, "flags": ${flags.toJson()}, "allLocations": ${allLocations.toJson()}}`
