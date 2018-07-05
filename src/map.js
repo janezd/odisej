@@ -5,7 +5,7 @@ import { Modal, FormGroup, FormControl, ControlLabel, Input, Label, Button } fro
 import Blockly from 'node-blockly/browser'
 import BlocklyDrawer from 'react-blockly-drawer'
 
-import blocks, { exitBlock } from './createBlocks'
+import blocks from './createBlocks'
 import { locations, items, flags, variables, allLocations, restoreLocally, storeLocally, garbageCollection, packBlockArgs } from './quill'
 
 Blockly.BlockSvg.START_HAT = true

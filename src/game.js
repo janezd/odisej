@@ -3,6 +3,7 @@ import { Panel, Button, Media, Modal, Label, FormControl, ControlLabel, Dropdown
 import blocks from "./createBlocks"
 import { locations, items, flags, variables, allLocations, restoreLocally, storeLocally, packBlockArgs } from './quill'
 
+import Compass from './compass.js'
 
 const ITEM_CARRIED = -1
 const ITEM_DOES_NOT_EXIST = -2
@@ -282,9 +283,23 @@ export default class Game extends React.Component {
     setGameState = state => this.setState(state)
 
     render() {
-        const dirmap = {"S": "n", "SV": "ne", "V": "e",
-                        "JV": "se", "J": "s", "JZ": "sw", "Z": "w", "SZ": "nw"}
+        const dirmap = {"S": "n", "SV": "ne", "V": "e", "JV": "se", "J": "s", "JZ": "sw", "Z": "w", "SZ": "nw"}
         const location = locations.getLocation(this.state.location)
+        const directions = {}
+        const allCommands = []
+
+        Object.entries(location.directions).forEach(([dir, location]) => directions[dir] = () => this.moveTo(location))
+
+        location.commands.concat(allLocations.commands)
+            .filter(it => (it.block == 'command') && this.checkConditionList(it.show))
+            .forEach(command => {
+                const eng = dirmap[command.name]
+                    if (eng) {
+                        directions[eng] = () => this.executeStatement(command)
+                    } else {
+                        allCommands.push(command)
+                    }
+            })
 
         return (
             <Panel>
@@ -294,26 +309,17 @@ export default class Game extends React.Component {
                 }
                 <Media>
                     <Media.Left>
-                        <img src={location.image} style={{float: "left", border: "solid thin", margin: 10}}/>
+                        <img src={location.image} style={{float: "left", border: "solid thin", margin: 10, width: 600}}/>
                     </Media.Left>
                     <Media.Body>
+                        <div style={{float: "right"}} >
+                            <Compass directions={directions}/>
+                        </div>
                         <h1>{location.title}</h1>
-
                         <p>{location.description}</p>
                         { this.state.printed.map((it, i) => <p key={i}>{it}</p>) }
                         <div>
-                            { ["S", "SV", "V", "JV", "J", "JZ", "Z", "SZ"].map(dir => {
-                                    const where = location.directions[dirmap[dir]]
-                                    if (where) return (
-                                        <Button key={dir} onClick={() => this.moveTo(where)}>
-                                            {dir}
-                                        </Button>
-                                    )
-                                })
-                            }
-                            { location.commands.concat(allLocations.commands)
-                                .filter(it => (it.block == 'command') && this.checkConditionList(it.show))
-                                .map(it => <Button key={it.name} onClick={() => this.executeStatement(it) }>
+                            { allCommands.map(it => <Button key={it.name} onClick={() => this.executeStatement(it) }>
                                     {it.name}
                                     </Button>) }
                         </div>
@@ -323,5 +329,3 @@ export default class Game extends React.Component {
         )
     }
 }
-
-// TODO: Compass
