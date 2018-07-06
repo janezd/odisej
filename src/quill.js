@@ -24,6 +24,7 @@ class LocData {
         this.description = description
         this.image = null
         this.workspace = workspace
+        this.commands = []
 
         this.x = x
         this.y = y
