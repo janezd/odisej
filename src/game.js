@@ -3,8 +3,6 @@ import { Panel, Button, Media, Modal, Label, FormControl, ControlLabel, Dropdown
 import blocks from "./createBlocks"
 import { locations, items, flags, variables, allLocations, restoreLocally, storeLocally, packBlockArgs } from './quill'
 
-import Compass from './compass.js'
-
 const ITEM_CARRIED = -1
 const ITEM_DOES_NOT_EXIST = -2
 
@@ -145,6 +143,49 @@ class ShowGameState extends React.Component {
     }
 }
 
+
+const Compass = ({directions}) => {
+    const Direction = ({dir}) => {
+        const dirmap = {"n": "S", "ne": "SV", "e": "V", "se": "JV", "s": "J", "sw": "JZ", "w": "Z", "nw": "SZ"}
+        const command = directions[dir]
+        if (command)
+            return <td><Button style={{width: 60}} onClick={command}>{dirmap[dir]}</Button></td>
+        else
+            return <td><Button style={{width: 60}}>&nbsp;</Button></td>
+    }
+
+    return <table>
+        <tbody>
+        <tr>
+            <Direction dir="nw"/>
+            <Direction dir="n"/>
+            <Direction dir="ne"/>
+        </tr>
+        <tr>
+            <Direction dir="w"/>
+            <td/>
+            <Direction dir="e"/>
+        </tr>
+        <tr>
+            <Direction dir="sw"/>
+            <Direction dir="s"/>
+            <Direction dir="se"/>
+        </tr>
+        </tbody>
+    </table>
+}
+
+
+const Commands = ({directions, commands}) =>
+    <div>
+        <div style={{float: "left", marginRight: 30}}>
+            <Compass directions={directions}/>
+        </div>
+        <div>
+            { Object.entries(commands).map(
+                ([name, callback]) => <Button key={name} onClick={callback}>{name}</Button>) }
+        </div>
+    </div>
 
 
 export default class Game extends React.Component {
@@ -319,7 +360,7 @@ export default class Game extends React.Component {
         const dirmap = {"S": "n", "SV": "ne", "V": "e", "JV": "se", "J": "s", "JZ": "sw", "Z": "w", "SZ": "nw"}
         const location = locations.getLocation(this.state.location)
         const directions = {}
-        const allCommands = []
+        const otherCommands = {}
 
         Object.entries(location.directions).forEach(([dir, location]) => directions[dir] = () => this.moveTo(location))
 
@@ -327,10 +368,11 @@ export default class Game extends React.Component {
             .filter(it => (it.block == 'command') && this.checkConditionList(it.show))
             .forEach(command => {
                 const eng = dirmap[command.name]
+                const callback = () => this.executeStatement(command)
                     if (eng) {
-                        directions[eng] = () => this.executeStatement(command)
+                        directions[eng] = callback
                     } else {
-                        allCommands.push(command)
+                        otherCommands[command.name] = callback
                     }
             })
 
@@ -348,18 +390,7 @@ export default class Game extends React.Component {
                         <h1>{location.title}</h1>
                         <p>{location.description}</p>
                         { this.state.printed.map((it, i) => <p key={i}>{it}</p>) }
-                        { this.state.delayed ? "" :
-                            <div style={{float: "left", marginRight: 30}}>
-                                <Compass directions={directions}/>
-                            </div>
-                        }
-                        { this.state.delayed ? "" :
-                            <div>
-                                { allCommands.map(it => <Button key={it.name} onClick={() => this.executeStatement(it) }>
-                                        {it.name}
-                                        </Button>) }
-                            </div>
-                        }
+                        { this.state.delayed ? "" : <Commands directions={directions} commands={otherCommands} /> }
                     </Media.Body>
                 </Media>
             </Panel>
