@@ -219,13 +219,13 @@ appendBlock('Pogoji', 'else', {
 })
 
 
-function createCondition(category, block_name, condField, fieldName, other=null) {
+function createCondition(category, block_name, condField, fieldName, other=null, placeholder=null) {
     appendBlock(category, block_name, {
       init() {
           this.setInputsInline(false)
           const row = this.appendDummyInput()
             .appendField(condField)
-            .appendField(createField(fieldName), fieldName)
+            .appendField(createField(fieldName, placeholder), fieldName)
           if (other != null) {
               other(row, this)
           }
@@ -281,7 +281,7 @@ createCondition('Stvari', 'item_exists', "", "ITEM", row => row.appendField("obs
 createCondition('Stvari', 'item_is_here', "je", "ITEM", row => row.appendField("tukaj"))
 createCondition('Zastavice', 'flag_set', "", "FLAG", row => row.appendField("je postavljena"))
 createCondition('Zastavice', 'flag_clear', "", "FLAG", row => row.appendField("ni postavljena"))
-
+createCondition('Pogoji', 'random', "žreb od 0 do 100 je večji od", "CONSTANT", null, "50")
 
 function createStatement(category, block_name, statement, fieldName, other=null) {
     appendBlock(category, block_name, {
