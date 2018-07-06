@@ -92,6 +92,8 @@ class FieldItems extends Blockly.FieldDropdown {
         }
         else if (id == "RENAME") {
             const curId = this.getValue()
+            if (curId == "ADD")
+                return
             const curName = this.getText()
             Blockly.prompt(`Novo ime za ${curName}:`, curName, (newName) => {
                 model.rename(curId, newName)
