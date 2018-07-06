@@ -345,14 +345,14 @@ export default class Game extends React.Component {
                         <img src={location.image} style={{float: "left", border: "solid thin", margin: 10, width: 600}}/>
                     </Media.Left>
                     <Media.Body>
-                        { this.state.delayed ? "" :
-                            <div style={{float: "right"}}>
-                                <Compass directions={directions}/>
-                            </div>
-                        }
                         <h1>{location.title}</h1>
                         <p>{location.description}</p>
                         { this.state.printed.map((it, i) => <p key={i}>{it}</p>) }
+                        { this.state.delayed ? "" :
+                            <div style={{float: "left", marginRight: 30}}>
+                                <Compass directions={directions}/>
+                            </div>
+                        }
                         { this.state.delayed ? "" :
                             <div>
                                 { allCommands.map(it => <Button key={it.name} onClick={() => this.executeStatement(it) }>

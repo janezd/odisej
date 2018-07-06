@@ -1,4 +1,38 @@
+import { Button } from 'react-bootstrap'
+
+
 const Compass = (props) => {
+    const Direction = (dirprops) => {
+        const dirmap = {"n": "S", "ne": "SV", "e": "V", "se": "JV", "s": "J", "sw": "JZ", "w": "Z", "nw": "SZ"}
+        const command = props.directions[dirprops.dir]
+        if (command)
+            return <td><Button style={{width: 60}} onClick={command}>{dirmap[dirprops.dir]}</Button></td>
+        else
+            return <td><Button style={{width: 60}}>&nbsp;</Button></td>
+    }
+
+    return <table>
+        <tbody>
+            <tr>
+                <Direction dir="nw"/>
+                <Direction dir="n"/>
+                <Direction dir="ne"/>
+            </tr>
+            <tr>
+                <Direction dir="w"/>
+                <td/>
+                <Direction dir="e"/>
+            </tr>
+            <tr>
+                <Direction dir="sw"/>
+                <Direction dir="s"/>
+                <Direction dir="se"/>
+            </tr>
+        </tbody>
+    </table>
+}
+
+const Compass2 = (props) => {
     const Direction = (dirprops) => {
         const command = props.directions[dirprops.dir]
         return command ? <g onClick={command}>{dirprops.children}</g> : null
