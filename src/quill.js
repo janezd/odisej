@@ -33,6 +33,10 @@ class LocData {
 
 class AllLocData {
     constructor() {
+        this.reset()
+    }
+
+    reset() {
         this.workspace = null
         this.commands = []
     }
@@ -150,6 +154,7 @@ export function resetData() {
     variables.reset()
     flags.reset()
     locations.reset()
+    allLocations.reset()
 }
 
 export function packBlockArgs(block, noNext=false) {
