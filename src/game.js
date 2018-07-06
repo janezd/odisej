@@ -155,7 +155,8 @@ export default class Game extends React.Component {
             items: this._obj_from_keys(items.getIds(), ITEM_DOES_NOT_EXIST),
             flags: this._obj_from_keys(flags.getIds()),
             variables: this._obj_from_keys(variables.getIds()),
-            showState: false
+            showState: false,
+            delayed: 0
         }
     }
 
@@ -173,8 +174,14 @@ export default class Game extends React.Component {
     }
 
     print = (msg) => {
-        this.state.printed.push(msg)
-        this.setState({})
+        const {printed} = this.state
+        printed.push(msg)
+        this.setState({printed})
+    }
+
+    delay = (ms) => {
+        this.state.delayed = ms // can't wait, I can't solve this by callback
+        this.forceUpdate()
     }
 
     autoExecuteBlocks = (blockType) => {
@@ -235,7 +242,7 @@ export default class Game extends React.Component {
         return conjunctive
     }
 
-    executeSequence = (blocks, autoCommand=false) => {
+    executeSequence = (blocks, blockIndex=0, skipElses=false) => {
         const conditionalExecute = block => {
             if (this.checkConditionList(block.allow)) {
                 skipElses = true
@@ -243,15 +250,21 @@ export default class Game extends React.Component {
             }
         }
 
-        let skipElses = false
-        if (!blocks)
-            return
-        for(let block of blocks) {
+        this.state.delayed = 0
+        if (blockIndex < blocks.length) {
+            const block = blocks[blockIndex]
             switch (block.block) {
                 case 'if': skipElses = false; conditionalExecute(block); break
                 case 'elif': if (!skipElses) conditionalExecute(block); break
                 case 'else': if (!skipElses) this.executeSequence(block.statements); break
                 default: skipElses = false; this.executeBlock(block)
+            }
+            const doNext = () => this.executeSequence(blocks, blockIndex + 1, skipElses)
+            if (this.state.delayed) {
+                setTimeout(doNext, this.state.delayed)
+            }
+            else {
+                doNext()
             }
         }
     }
@@ -260,6 +273,7 @@ export default class Game extends React.Component {
         switch (block.block) {
             case 'go': return this.moveTo(block.location)
             case 'print': return this.print(block.msg)
+            case 'delay': return this.delay(1000 * parseInt(block.constant)); break;
 
             case 'pick': this.state.items[block.item] = ITEM_CARRIED; break
             case 'drop': this.state.items[block.item] = this.state.location; break
@@ -314,17 +328,21 @@ export default class Game extends React.Component {
                         <img src={location.image} style={{float: "left", border: "solid thin", margin: 10, width: 600}}/>
                     </Media.Left>
                     <Media.Body>
-                        <div style={{float: "right"}} >
-                            <Compass directions={directions}/>
-                        </div>
+                        { this.state.delayed ? "" :
+                            <div style={{float: "right"}}>
+                                <Compass directions={directions}/>
+                            </div>
+                        }
                         <h1>{location.title}</h1>
                         <p>{location.description}</p>
                         { this.state.printed.map((it, i) => <p key={i}>{it}</p>) }
-                        <div>
-                            { allCommands.map(it => <Button key={it.name} onClick={() => this.executeStatement(it) }>
-                                    {it.name}
-                                    </Button>) }
-                        </div>
+                        { this.state.delayed ? "" :
+                            <div>
+                                { allCommands.map(it => <Button key={it.name} onClick={() => this.executeStatement(it) }>
+                                        {it.name}
+                                        </Button>) }
+                            </div>
+                        }
                     </Media.Body>
                 </Media>
             </Panel>
