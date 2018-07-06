@@ -146,24 +146,31 @@ class ShowGameState extends React.Component {
 }
 
 
+
 export default class Game extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            location: locations.startLocation,
-            printed: [],
-            items: this._obj_from_keys(items.getIds(), ITEM_DOES_NOT_EXIST),
-            flags: this._obj_from_keys(flags.getIds()),
-            variables: this._obj_from_keys(variables.getIds()),
-            showState: false,
-            delayed: 0
+            ...this.prepareInitialState(),
+            delayed: 0,
+            showState: false
         }
     }
 
-    _obj_from_keys = (keys, deflt=0) => {
-        const res = {}
-        keys.forEach(key => res[key] = deflt)
-        return res
+    prepareInitialState = () => {
+        const _obj_from_keys = (keys, deflt=0) => {
+            const res = {}
+            keys.forEach(key => res[key] = deflt)
+            return res
+        }
+
+        return {
+            location: locations.startLocation,
+            items: _obj_from_keys(items.getIds(), ITEM_DOES_NOT_EXIST),
+            flags: _obj_from_keys(flags.getIds()),
+            variables: _obj_from_keys(variables.getIds()),
+            printed: []
+        }
     }
 
     moveTo = (location) => {
@@ -181,7 +188,12 @@ export default class Game extends React.Component {
 
     delay = (ms) => {
         this.state.delayed = ms // can't wait, I can't solve this by callback
-        this.forceUpdate()
+        this.setState(this.state)
+    }
+
+    resetGame = () => {
+        this.setState(this.prepareInitialState())
+        this.delay(-1)
     }
 
     autoExecuteBlocks = (blockType) => {
@@ -260,11 +272,15 @@ export default class Game extends React.Component {
                 default: skipElses = false; this.executeBlock(block)
             }
             const doNext = () => this.executeSequence(blocks, blockIndex + 1, skipElses)
-            if (this.state.delayed) {
+            if (this.state.delayed > 0) {
                 setTimeout(doNext, this.state.delayed)
             }
-            else {
+            else if (!this.state.delayed) {
                 doNext()
+            }
+            else {
+                // if delayed == -1, the game is reset and we skip the remaining blocks
+                this.setState({delayed: 0})
             }
         }
     }
@@ -273,7 +289,8 @@ export default class Game extends React.Component {
         switch (block.block) {
             case 'go': return this.moveTo(block.location)
             case 'print': return this.print(block.msg)
-            case 'delay': return this.delay(1000 * parseInt(block.constant)); break;
+            case 'delay': return this.delay(1000 * parseInt(block.constant))
+            case 'reset': return this.resetGame()
 
             case 'pick': this.state.items[block.item] = ITEM_CARRIED; break
             case 'drop': this.state.items[block.item] = this.state.location; break

@@ -283,13 +283,15 @@ createCondition('Zastavice', 'flag_set', "", "FLAG", row => row.appendField("je 
 createCondition('Zastavice', 'flag_clear', "", "FLAG", row => row.appendField("ni postavljena"))
 createCondition('Pogoji', 'random', "žreb od 0 do 100 je večji od", "CONSTANT", null, "50")
 
-function createStatement(category, block_name, statement, fieldName, other=null, placeholder="besedilo") {
+function createStatement(category, block_name, statement, fieldName=null, other=null, placeholder=null) {
     appendBlock(category, block_name, {
       init() {
           this.setInputsInline(false)
           const row = this.appendDummyInput()
-            .appendField(statement)
-            .appendField(createField(fieldName, placeholder), fieldName)
+          row.appendField(statement)
+          if (fieldName) {
+              row.appendField(createField(fieldName, placeholder), fieldName)
+          }
           if (other != null) {
               other(row, this)
           }
@@ -311,6 +313,7 @@ createStatement("Zastavice", "set_flag", "postavi", "FLAG")
 createStatement("Zastavice", "clear_flag", "pobriši", "FLAG")
 createStatement("Ukazi", "print", "izpiši", "MSG")
 createStatement("Ukazi", "delay", "počakaj", "CONSTANT", row => row.appendField("s"), "1")
+createStatement("Ukazi", "reset", "ponovno začni igro")
 
 
 function createVarStatement(block_name, statement, fieldName, relation=null, fieldName2=null, other=null) {
