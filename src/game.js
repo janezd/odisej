@@ -176,13 +176,17 @@ const Compass = ({directions}) => {
 }
 
 
-const Commands = ({directions, commands}) =>
+const Commands = ({directions, commands, systemCommands}) =>
     <div>
         <div style={{float: "left", marginRight: 30}}>
             <Compass directions={directions}/>
         </div>
         <div>
             { Object.entries(commands).map(
+                ([name, callback]) => <Button key={name} onClick={callback}>{name}</Button>) }
+        </div>
+        <div style={{marginTop: 20}}>
+            { Object.entries(systemCommands).map(
                 ([name, callback]) => <Button key={name} onClick={callback}>{name}</Button>) }
         </div>
     </div>
@@ -353,11 +357,23 @@ export default class Game extends React.Component {
     hideGameState = () => this.setState({showState: false})
     setGameState = state => this.setState(state)
 
+    printInventory = () => {
+        this.print(<b>&gt; Kaj imam?</b>,
+            () => this.print(
+                Object.entries(this.state.items)
+                    .filter(([id, value]) => value == ITEM_CARRIED)
+                    .map(([id, value]) => items.getNameById(id))
+                    .join(", ")
+                || "Nič.")
+        )
+    }
+
     render() {
         const dirmap = {"S": "n", "SV": "ne", "V": "e", "JV": "se", "J": "s", "JZ": "sw", "Z": "w", "SZ": "nw"}
         const location = locations.getLocation(this.state.location)
         const directions = {}
         const otherCommands = {}
+        const systemCommands = {"Začni znova": () => this.resetGame(), "Kaj imam?": () => this.printInventory() }
 
         Object.entries(location.directions).forEach(([dir, location]) => directions[dir] = () => this.moveTo(location))
 
@@ -387,7 +403,7 @@ export default class Game extends React.Component {
                         <h1>{location.title}</h1>
                         <p>{location.description}</p>
                         { this.state.printed.map((it, i) => <p key={i}>{it}</p>) }
-                        { this.state.showCommands ? <Commands directions={directions} commands={otherCommands} /> : ""}
+                        { this.state.showCommands ? <Commands directions={directions} commands={otherCommands} systemCommands={systemCommands} /> : ""}
                     </Media.Body>
                 </Media>
             </Panel>
