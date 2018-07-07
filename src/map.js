@@ -1,12 +1,13 @@
 import React from "react"
 import ReactSVG from 'react-svg'
-import { Modal, FormGroup, FormControl, ControlLabel, Input, Label, Button } from 'react-bootstrap'
+import { Modal, FormGroup, FormControl, ControlLabel, Input, Label, Button, Checkbox } from 'react-bootstrap'
 
 import Blockly from 'node-blockly/browser'
 import BlocklyDrawer from 'react-blockly-drawer'
 
 import blocks from './createBlocks'
-import { locations, items, flags, variables, allLocations, restoreLocally, storeLocally, garbageCollection, packBlockArgs } from './quill'
+import { locations, items, flags, variables, allLocations,
+         restoreLocally, storeLocally, garbageCollection, packBlockArgs } from './quill'
 
 Blockly.BlockSvg.START_HAT = true
 // Blockly.Flyout.prototype.autoClose = false
@@ -27,6 +28,49 @@ class BlocklyDrawerWithNameCheck extends BlocklyDrawer {
 
 const D=30
 
+
+export const systemCommandsSettings = {
+    "Začni znova": "allowRestart",
+    "Kaj imam?": "showInventory",
+    "Odlaganje stvari": "dropItems",
+    "Pobiranje stvari": "takeItems"
+}
+
+export const gameSettings = {
+    allowRestart: true,
+    showInventory: true,
+    dropItems: true,
+    takeItems: true
+}
+
+
+class SettingsEditor extends React.Component {
+    constructor(props) {
+        super(props)
+        this.state = gameSettings
+    }
+
+    render() {
+        if (!this.props.show) return null
+        return <Modal dialogClassName="location-editor" show={true} onHide={this.props.closeHandler} enforceFocus={true}>
+            <Modal.Header closeButton>
+                <Modal.Title>Nastavitve igre</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                <FormGroup>
+                    <ControlLabel>Dodatni ukazi</ControlLabel>
+                    { Object.entries(systemCommandsSettings).map(([name, setting]) =>
+                        <Checkbox key={setting}
+                                  checked={gameSettings[setting]}
+                                  onChange={() => { gameSettings[setting] = !gameSettings[setting]; this.forceUpdate() }}>
+                            {name}
+                        </Checkbox>)
+                    }
+                </FormGroup>
+            </Modal.Body>
+        </Modal>
+    }
+}
 
 class Node extends React.Component {
     polyMouseDown = (e) => {
@@ -168,7 +212,7 @@ class AllLocationsEditor extends React.Component {
         if (!this.props.editing) return false;
         return <Modal dialogClassName="location-editor" show={true} onHide={this.handleClose} enforceFocus={false}>
             <Modal.Header closeButton>
-                <Modal.Title>Ukazi, ki se izvajajo na vseh lokacijah</Modal.Title>
+                <Modal.Title>Ukazi, ki veljajo na vseh lokacijah</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <div id="blockly-div">
@@ -415,6 +459,9 @@ export default class GameMap extends React.Component {
 
     closeEditor = () => this.setState({editing: null, editingGeneral: false})
 
+    openSettingsEditor = () => this.setState({editSettings: true})
+    closeSettingsEditor = () => this.setState({editSettings: false})
+
     newLocation = (e) => {
         const newLoc = locations.addLocation()
         newLoc.x = e.clientX - this.offsetX - 56
@@ -456,6 +503,7 @@ export default class GameMap extends React.Component {
               setLocationImage={this.setLocationImage}
               setStartLocation={this.setStartLocation}
           />
+          <SettingsEditor show={this.state.editSettings} closeHandler={this.closeSettingsEditor}/>
           <AllLocationsEditor editing={this.state.editingGeneral} handleClose={this.closeEditor} />
             <Button style={{position: "absolute", x: 0, y: 0}} onClick={this.startEditGeneral}>Ukazi povsod</Button>
           <svg width={width} height={height}

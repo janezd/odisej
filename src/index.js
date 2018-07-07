@@ -41,6 +41,8 @@ class App extends React.Component {
 
     resetData = () => { resetData(); this.setState(this.state) }
 
+    openSettingsEditor = () => { this.subpage.openSettingsEditor() }
+
     render() {
         return (
             <div>
@@ -71,7 +73,10 @@ class App extends React.Component {
                             </ControlLabel>
                             { this.state.mode == 'game'
                               ? <Button onClick={this.showGameState}>Stanje igre</Button>
-                              :  <Button onClick={this.resetData}>Pobriši vse</Button> }
+                                :  <span>
+                                    <Button onClick={this.resetData}>Pobriši vse</Button>
+                                    <Button onClick={this.openSettingsEditor}>Nastavitve igre</Button>
+                                </span> }
                         </ButtonToolbar>
                     </Navbar.Form>
                 </Navbar>

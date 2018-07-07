@@ -2,6 +2,7 @@ import React from "react"
 import { Panel, Button, Media, Modal, Label, FormControl, ControlLabel, DropdownButton, MenuItem } from 'react-bootstrap'
 import blocks from "./createBlocks"
 import { locations, items, flags, variables, allLocations, restoreLocally, storeLocally, packBlockArgs } from './quill'
+import { systemCommandsSettings, gameSettings } from './map'
 
 const ITEM_CARRIED = -1
 const ITEM_DOES_NOT_EXIST = -2
@@ -200,6 +201,14 @@ export default class Game extends React.Component {
             showCommands: true,
             showState: false
         }
+
+        this.systemCommands = {
+            "Začni znova": () => this.resetGame(),
+            "Kaj imam?": () => this.printInventory() }
+        Object.keys(this.systemCommands).forEach(key => {
+            if (!gameSettings[systemCommandsSettings[key]])
+                delete this.systemCommands[key]
+        })
     }
 
     prepareInitialState = () => {
@@ -358,22 +367,39 @@ export default class Game extends React.Component {
     setGameState = state => this.setState(state)
 
     printInventory = () => {
+        const inventory = Object.entries(this.state.items)
+            .filter(([id, value]) => value == ITEM_CARRIED)
+        const itemList = inventory.length
+            ? <span>{
+                  inventory.map(([id, place], i) => {
+                      const itemName = items.getNameById(id)
+                      return <span key={`item${i}`}>{i ? ", " : ""}{itemName}
+                          { gameSettings.dropItems
+                              ? <span>&nbsp;(<a onClick={() => {
+                                    if (this.state.items[id] == ITEM_CARRIED)
+                                        this.moveItem(id, this.state.location, `Odloži ${itemName}`)}}>
+                                  odloži</a>)</span>
+                              : "" }
+                          </span>
+                  })
+              }</span>
+            : "Nič."
         this.print(<b>&gt; Kaj imam?</b>,
-            () => this.print(
-                Object.entries(this.state.items)
-                    .filter(([id, value]) => value == ITEM_CARRIED)
-                    .map(([id, value]) => items.getNameById(id))
-                    .join(", ")
-                || "Nič.")
-        )
+            () => this.print(itemList))
     }
+
+    moveItem = (id, where, msg) =>
+        this.print(<b>&gt; {msg}</b>,
+            () => { this.state.items[id] = where; this.setState({items: this.state.items},
+                () => this.autoExecuteBlocks("after_command")
+            )}
+        )
 
     render() {
         const dirmap = {"S": "n", "SV": "ne", "V": "e", "JV": "se", "J": "s", "JZ": "sw", "Z": "w", "SZ": "nw"}
         const location = locations.getLocation(this.state.location)
         const directions = {}
         const otherCommands = {}
-        const systemCommands = {"Začni znova": () => this.resetGame(), "Kaj imam?": () => this.printInventory() }
 
         Object.entries(location.directions).forEach(([dir, location]) => directions[dir] = () => this.moveTo(location))
 
@@ -388,6 +414,14 @@ export default class Game extends React.Component {
                         otherCommands[command.name] = callback
                     }
             })
+        if (gameSettings.takeItems) {
+            Object.entries(this.state.items)
+                .filter(([id, location]) => location == this.state.location)
+                .forEach(([id, location]) => {
+                    const command = `Vzemi ${items.getNameById(id)}`
+                    otherCommands[command] = () => this.moveItem(id, ITEM_CARRIED, command)
+                })
+        }
 
         return (
             <Panel>
@@ -402,8 +436,10 @@ export default class Game extends React.Component {
                     <Media.Body>
                         <h1>{location.title}</h1>
                         <p>{location.description}</p>
-                        { this.state.printed.map((it, i) => <p key={i}>{it}</p>) }
-                        { this.state.showCommands ? <Commands directions={directions} commands={otherCommands} systemCommands={systemCommands} /> : ""}
+                        { this.state.printed.map((it, i) => <p key={i}>{it}</p>)}
+                        { this.state.showCommands ? <Commands directions={directions}
+                                                              commands={otherCommands}
+                                                              systemCommands={this.systemCommands} /> : ""}
                     </Media.Body>
                 </Media>
             </Panel>

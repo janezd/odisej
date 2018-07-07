@@ -200,6 +200,7 @@ export function packBlockArgs(block) {
 
 
 export function garbageCollection() {
+    // fix collection collects too much
     const allVariables = new Set()
     const allItems = new Set()
     const allFlags = new Set()
