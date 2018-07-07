@@ -158,17 +158,14 @@ export function resetData() {
     allLocations.reset()
 }
 
-export function packBlockArgs(block, noNext=false) {
-    function getChain(next) {
-        const chain = []
-        for(; next; next = next.nextConnection && next.nextConnection.targetBlock()) {
-            chain.push(packBlockArgs(next, true))
-        }
-        return chain
-    }
+export function packBlockArgs(block) {
+    if (!block)
+        return null
 
-    if (!block) return null;
-    const args = {'block': block.type.toLowerCase()}
+    const args = {
+        'block': block.type.toLowerCase(),
+        'next': packBlockArgs(block.nextConnection && block.nextConnection.targetBlock())
+    }
     block.inputList.forEach(input => {
         switch (input.type) {
             case Blockly.DUMMY_INPUT:
@@ -195,13 +192,9 @@ export function packBlockArgs(block, noNext=false) {
                 }
                 break
             case Blockly.NEXT_STATEMENT:
-                args[input.name.toLowerCase()] = getChain(input.connection.targetBlock())
+                args[input.name.toLowerCase()] = packBlockArgs(input.connection.targetBlock())
         }
     })
-    let next = block.nextConnection && block.nextConnection.targetBlock()
-    if (!noNext && next) {
-        args.next = getChain(next)
-    }
     return args
 }
 
@@ -212,6 +205,7 @@ export function garbageCollection() {
     const allFlags = new Set()
 
     function collectAll(obj) {
+        if (!obj) return
         Object.entries(obj).forEach(([key, value]) => {
             if ((["show", "allow", "next", "statements", "not"].indexOf(key) != -1) || !isNaN((0).constructor(key))) {
                 collectAll(value)
@@ -228,9 +222,27 @@ export function garbageCollection() {
     }
 
     locations.getLocations().forEach(loc => collectAll(loc.commands))
+    collectAll(allLocations.commands)
     variables.clean(allVariables)
     items.clean(allItems)
     flags.clean(allFlags)
+}
+
+function migrateCommandLists() {
+    function migrate(obj) {
+        if (!obj) return
+        if (Array.isArray(obj.statements))
+            obj.statements = obj.statements.reduceRight((next, block) => ({next, block}), {})
+        if (Array.isArray(obj.next))
+            obj.next = obj.next.reduceRight((next, block) => ({next, block}), {})
+        Object.entries(obj).forEach(([key, value]) => {
+            if ((["show", "allow", "next", "statements", "not"].indexOf(key) != -1) || !isNaN((0).constructor(key))) {
+                migrate(value)
+            }
+        })
+    }
+    locations.getLocations().forEach(loc => migrate(loc.commands))
+    migrate(allLocations.commands)
 }
 
 export function storeLocally() {
@@ -246,6 +258,7 @@ export function restoreLocally(json) {
         variables.setFromJson(obj.variables)
         flags.setFromJson(obj.flags)
         allLocations.setFromJson(obj.allLocations)
+        migrateCommandLists()
     }
     catch (e) {}
 }

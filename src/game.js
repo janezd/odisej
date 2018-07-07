@@ -193,7 +193,7 @@ export default class Game extends React.Component {
         super(props)
         this.state = {
             ...this.prepareInitialState(),
-            delayed: 0,
+            showCommands: true,
             showState: false
         }
     }
@@ -212,42 +212,6 @@ export default class Game extends React.Component {
             variables: _obj_from_keys(variables.getIds()),
             printed: []
         }
-    }
-
-    moveTo = (location) => {
-        this.autoExecuteBlocks("on_exit")
-        this.setState(
-            {location: location, printed: []},
-            () => this.autoExecuteBlocks("on_entry"))
-    }
-
-    print = (msg) => {
-        const {printed} = this.state
-        printed.push(msg)
-        this.setState({printed})
-    }
-
-    delay = (ms) => {
-        this.state.delayed = ms // can't wait, I can't solve this by callback
-        this.setState(this.state)
-    }
-
-    resetGame = () => {
-        this.setState(this.prepareInitialState())
-        this.delay(-1)
-    }
-
-    autoExecuteBlocks = (blockType) => {
-        locations.getLocation(this.state.location).commands.concat(allLocations.commands)
-            .filter(it => (it.block == blockType))
-            .forEach(it => this.executeSequence(it.next))
-        this.setState({})
-    }
-
-    executeStatement = (block) => {
-        this.print(<b>&gt; {block.name}</b>)
-        this.executeSequence(block.next)
-        this.setState({}, () => this.autoExecuteBlocks("after_command"))
     }
 
     checkConditionList = (conditions, conjunctive=true) => {
@@ -295,60 +259,93 @@ export default class Game extends React.Component {
         return conjunctive
     }
 
-    executeSequence = (blocks, blockIndex=0, skipElses=false) => {
-        const conditionalExecute = block => {
-            if (this.checkConditionList(block.allow)) {
-                skipElses = true
-                this.executeSequence(block.statements)
-            }
-        }
+    moveTo = (location, then) =>
+        this.autoExecuteBlocks("on_exit",
+            () => this.setState({location: location, printed: []},
+                () => this.autoExecuteBlocks("on_entry", then)
+            )
+        )
 
-        this.state.delayed = 0
-        if (blockIndex < blocks.length) {
-            const block = blocks[blockIndex]
-            switch (block.block) {
-                case 'if': skipElses = false; conditionalExecute(block); break
-                case 'elif': if (!skipElses) conditionalExecute(block); break
-                case 'else': if (!skipElses) this.executeSequence(block.statements); break
-                default: skipElses = false; this.executeBlock(block)
-            }
-            const doNext = () => this.executeSequence(blocks, blockIndex + 1, skipElses)
-            if (this.state.delayed > 0) {
-                setTimeout(doNext, this.state.delayed)
-            }
-            else if (!this.state.delayed) {
-                doNext()
-            }
-            else {
-                // if delayed == -1, the game is reset and we skip the remaining blocks
-                this.setState({delayed: 0})
-            }
+    print = (msg, then) =>
+        this.setState({printed: this.state.printed.concat([msg])}, then)
+
+    delay = (ms, then) =>
+        this.setState({showCommands: false},
+            () => setTimeout(
+                () => this.setState({showCommands: true}, then),
+                ms
+            )
+        )
+
+    resetGame = (then) =>
+        this.setState(this.prepareInitialState(), then)
+
+    autoExecuteBlocks = (blockType, then) => {
+        const execute = (first) => first ? this.executeSequence(first.block.next, () => execute(first.next)) : then && then()
+        const blockChain = locations.getLocation(this.state.location).commands.concat(allLocations.commands)
+            .filter(it => (it.block == blockType))
+            .reduceRight((next, block) => ({next, block}), null)
+        execute(blockChain)
+    }
+
+    executeCommand = (block, then) =>
+        this.print(<b>&gt; {block.name}</b>,
+            () => this.executeSequence(block.next,
+                () => this.autoExecuteBlocks("after_command", then)
+            )
+        )
+
+    executeSequence = (block, then, skipElses=false) => {
+        if (!block)
+            return then && then()
+        const executeNextBlock = (nextSkipElses=false) => (() => this.executeSequence(block.next, then, nextSkipElses))
+        switch (block.block) {
+            case 'elif':
+                return !skipElses && this.checkConditionList(block.allow)
+                    ? this.executeSequence(block.statements, executeNextBlock(true))
+                    : executeNextBlock(skipElses)()
+            case 'if':
+                return this.checkConditionList(block.allow)
+                    ? this.executeSequence(block.statements, executeNextBlock(true))
+                    : executeNextBlock()()
+            case 'else':
+                return !skipElses
+                    ? this.executeSequence(block.statements, executeNextBlock())
+                    : executeNextBlock()()
+            default:
+                return this.executeBlock(block, executeNextBlock())
         }
     }
 
-    executeBlock = (block) => {
+    executeBlock = (block, then) => {
+        const { variables, flags, items } = this.state
+        const name = block.item || block.flag || block.variable
+        const setItem = value => { items[name] = value; this.setState({items}, then) }
+        const setFlag = value => { flags[name] = value; this.setState({flags}, then) }
+        const setVariable = value => { variables[name] = value; this.setState({variables}, then) }
+
         switch (block.block) {
-            case 'go': return this.moveTo(block.location)
-            case 'print': return this.print(block.msg)
-            case 'delay': return this.delay(1000 * parseInt(block.constant))
-            case 'reset': return this.resetGame()
+            case 'go': return this.moveTo(block.location, then)
+            case 'print': return this.print(block.msg, then)
+            case 'delay': return this.delay(1000 * parseInt(block.constant), then)
+            case 'reset': return this.resetGame(then)
 
-            case 'pick': this.state.items[block.item] = ITEM_CARRIED; break
-            case 'drop': this.state.items[block.item] = this.state.location; break
-            case 'item_at': this.state.items[block.item] = block.location; break
-            case 'destroy': this.state.items[block.item] = ITEM_DOES_NOT_EXIST; break
+            case 'pick': return setItem(ITEM_CARRIED)
+            case 'drop': return setItem(this.state.location)
+            case 'item_at': return setItem(block.location)
+            case 'destroy': return setItem(ITEM_DOES_NOT_EXIST)
 
-            case 'set_flag': this.state.flags[block.flag] = true; break
-            case 'clear_flag': this.state.flags[block.flag] = false; break
+            case 'set_flag': return setFlag(true)
+            case 'clear_flag': return setFlag(false)
 
-            case 'set_const': this.state.variables[block.variable] = parseInt(block.constant); break
-            case 'increase': this.state.variables[block.variable]++; break
-            case 'decrease': this.state.variables[block.variable]--; break
-            case 'add_const': this.state.variables[block.variable] += parseInt(block.constant); break
-            case 'sub_const': this.state.variables[block.variable] -= parseInt(block.constant); break
-            case 'set_var': this.state.variables[block.variable] = this.state.variables[block.variable2]; break
-            case 'add_var': this.state.variables[block.variable] += this.state.variables[block.variable2]; break
-            case 'sub_var': this.state.variables[block.variable] -= this.state.variables[block.variable2]; break
+            case 'set_const': return setVariable(parseInt(block.constant))
+            case 'set_var': return setVariable(variables[block.variable2])
+            case 'increase': return setVariable(variables[name] + 1)
+            case 'decrease': return setVariable(variables[name] - 1)
+            case 'add_const': return setVariable(variables[name] + parseInt(block.constant))
+            case 'sub_const': return setVariable(variables[name] - parseInt(block.constant))
+            case 'add_var': return setVariable(variables[name] + variables[block.variable2])
+            case 'sub_var': return setVariable(variables[name] - variables[block.variable2])
         }
     }
 
@@ -368,7 +365,7 @@ export default class Game extends React.Component {
             .filter(it => (it.block == 'command') && this.checkConditionList(it.show))
             .forEach(command => {
                 const eng = dirmap[command.name]
-                const callback = () => this.executeStatement(command)
+                const callback = () => this.executeCommand(command)
                     if (eng) {
                         directions[eng] = callback
                     } else {
@@ -390,7 +387,7 @@ export default class Game extends React.Component {
                         <h1>{location.title}</h1>
                         <p>{location.description}</p>
                         { this.state.printed.map((it, i) => <p key={i}>{it}</p>) }
-                        { this.state.delayed ? "" : <Commands directions={directions} commands={otherCommands} /> }
+                        { this.state.showCommands ? <Commands directions={directions} commands={otherCommands} /> : ""}
                     </Media.Body>
                 </Media>
             </Panel>
