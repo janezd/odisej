@@ -248,6 +248,7 @@ export default class Game extends React.Component {
                 case 'is_at': return this.state.location == condition.location
 
                 case 'does_have': return this.state.items[condition.item] == ITEM_CARRIED
+                case 'doesnt_have': return this.state.items[condition.item] != ITEM_CARRIED
                 case 'item_is_at': return this.state.items[condition.item] == condition.location
                 case 'item_exists': return this.state.items[condition.item] != ITEM_DOES_NOT_EXIST
                 case 'item_is_here': return this.state.items[condition.item] == this.state.location

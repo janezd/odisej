@@ -276,6 +276,7 @@ appendBlock("Pogoji", "disjunction", {
 
 
 createCondition('Stvari', 'does_have', "ima igralec", "ITEM")
+createCondition('Stvari', 'doesnt_have', "igralec nima", "ITEM")
 // createCondition('has_visited', "je igralec obiskal", "LOCATION")
 createCondition('Pogoji', 'is_at', "je igralec na", "LOCATION")
 createCondition('Stvari', 'item_is_at', "je", "ITEM", row => row.appendField("na").appendField(createField('LOCATION'), "LOCATION"))
