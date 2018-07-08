@@ -228,15 +228,13 @@ class AllLocationsEditor extends React.Component {
 }
 
 class LocationEditor extends React.Component {
-    changeWorkspace = (xml) => {
-        this.props.location.workspace = xml
-    }
-
     handleClose = () => {
         const loc = this.props.location
+        const workspace = Blockly.getMainWorkspace()
         loc.title = this.loctitle.innerText
         loc.description = this.locDescArea.value
-        loc.commands = Blockly.getMainWorkspace().getTopBlocks().map(block => packBlockArgs(block))
+        loc.workspace = Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(workspace))
+        loc.commands = workspace.getTopBlocks().map(block => packBlockArgs(block))
         garbageCollection()
         this.props.handleClose()
     }
@@ -305,8 +303,7 @@ class LocationEditor extends React.Component {
                     <div id="blockly-div">
                         <BlocklyDrawerWithNameCheck tools={blocks}
                                                     workspaceXML={loc.workspace || ""}
-                                                    injectOptions={{toolboxPosition: 'end'}}
-                                                    onChange={this.changeWorkspace}>
+                                                    injectOptions={{toolboxPosition: 'end'}}>
                         </BlocklyDrawerWithNameCheck>
                     </div>
                 </Modal.Body>
