@@ -1,7 +1,7 @@
 import React from "react"
 import { Panel, Button, Media, Modal, Label, FormControl, ControlLabel, DropdownButton, MenuItem } from 'react-bootstrap'
 import blocks from "./createBlocks"
-import { locations, items, flags, variables, allLocations, restoreLocally, storeLocally, packBlockArgs } from './quill'
+import { locations, items, flags, variables } from './quill'
 import { systemCommandsSettings, gameSettings } from './map'
 
 const ITEM_CARRIED = -1
@@ -73,8 +73,9 @@ class ShowGameState extends React.Component {
     }
 
     render() {
-        const state = this.props.state
+        if (!this.props.show) return null
 
+        const state = this.props.state
         return <Modal show={true} onHide={this.props.handleClose}>
             <Modal.Header closeButton>
                 <Modal.Title>
@@ -177,20 +178,26 @@ const Compass = ({directions}) => {
 }
 
 
-const Commands = ({directions, commands, systemCommands}) =>
-    <div>
-        <div style={{float: "left", marginRight: 30}}>
-            <Compass directions={directions}/>
-        </div>
+const Messages = ({messages}) =>
+    messages.map((it, i) => <p key={i}>{it}</p>)
+
+
+const Commands = ({show, directions, commands, systemCommands}) =>
+    show ?
         <div>
-            { Object.entries(commands).map(
-                ([name, callback]) => <Button key={name} onClick={callback}>{name}</Button>) }
+            <div style={{float: "left", marginRight: 30}}>
+                <Compass directions={directions}/>
+            </div>
+            <div>
+                { Object.entries(commands).map(
+                    ([name, callback]) => <Button key={name} onClick={callback}>{name}</Button>) }
+            </div>
+            <div style={{marginTop: 20}}>
+                { Object.entries(systemCommands).map(
+                    ([name, callback]) => <Button key={name} onClick={callback}>{name}</Button>) }
+            </div>
         </div>
-        <div style={{marginTop: 20}}>
-            { Object.entries(systemCommands).map(
-                ([name, callback]) => <Button key={name} onClick={callback}>{name}</Button>) }
-        </div>
-    </div>
+    : null
 
 
 export default class Game extends React.Component {
@@ -296,7 +303,7 @@ export default class Game extends React.Component {
 
     autoExecuteBlocks = (blockType, then) => {
         const execute = (first) => first ? this.executeSequence(first.block.next, () => execute(first.next)) : then && then()
-        const blockChain = locations.getLocation(this.state.location).commands.concat(allLocations.commands)
+        const blockChain = locations.getLocation(this.state.location).commands.concat(locations.generalCommands.commands)
             .filter(it => (it.block == blockType))
             .reduceRight((next, block) => ({next, block}), null)
         execute(blockChain)
@@ -396,40 +403,48 @@ export default class Game extends React.Component {
             )}
         )
 
-    render() {
+    getCommandList = () => {
         const dirmap = {"S": "n", "SV": "ne", "V": "e", "JV": "se", "J": "s", "JZ": "sw", "Z": "w", "SZ": "nw"}
         const location = locations.getLocation(this.state.location)
         const directions = {}
-        const otherCommands = {}
+        const commands = {}
 
-        Object.entries(location.directions).forEach(([dir, location]) => directions[dir] = () => this.moveTo(location))
+        Object.entries(location.directions)
+            .forEach(([dir, location]) => directions[dir] = () => this.moveTo(location))
 
-        location.commands.concat(allLocations.commands)
-            .filter(it => (it.block == 'command') && this.checkConditionList(it.show))
-            .forEach(command => {
-                const eng = dirmap[command.name]
-                const callback = () => this.executeCommand(command)
-                    if (eng) {
-                        directions[eng] = callback
-                    } else {
-                        otherCommands[command.name] = callback
-                    }
-            })
         if (gameSettings.takeItems) {
             Object.entries(this.state.items)
                 .filter(([id, location]) => location == this.state.location)
                 .forEach(([id, location]) => {
-                    const command = `Vzemi ${items.getNameById(id)}`
-                    otherCommands[command] = () => this.moveItem(id, ITEM_CARRIED, command)
+                    const name = `Vzemi ${items.getNameById(id)}`
+                    commands[name] = () => this.moveItem(id, ITEM_CARRIED, anme)
                 })
         }
+        locations.generalCommands.commands.concat(location.commands)
+            .filter(command => command.block == 'command')
+            .forEach(command => {
+                const shown = this.checkConditionList(command.show)
+                const callback = () => this.executeCommand(command)
+                const dir = dirmap[command.name]
+                if (dir) {
+                    if (shown) directions[dir] = callback
+                    else delete directions[dir]
+                } else {
+                    if (shown) commands[command.name] = callback
+                    else delete commands[command.name]
+                }
+            })
 
+        return [directions, commands]
+    }
+
+    render() {
+        const location = locations.getLocation(this.state.location)
+        const [directions, commands] = this.getCommandList()
         return (
             <Panel>
-                {this.state.showState
-                    ? <ShowGameState state={this.state} setGameState={this.setGameState} handleClose={this.hideGameState}/>
-                    : ""
-                }
+                <ShowGameState show={this.state.showState}
+                               state={this.state} setGameState={this.setGameState} handleClose={this.hideGameState}/>
                 <Media>
                     <Media.Left>
                         <img src={location.image} style={{float: "left", border: "solid thin", margin: 10, width: 600}}/>
@@ -437,13 +452,15 @@ export default class Game extends React.Component {
                     <Media.Body>
                         <h1>{location.title}</h1>
                         <p>{location.description}</p>
-                        { this.state.printed.map((it, i) => <p key={i}>{it}</p>)}
-                        { this.state.showCommands ? <Commands directions={directions}
-                                                              commands={otherCommands}
-                                                              systemCommands={this.systemCommands} /> : ""}
+                        <Messages messages={this.state.printed}/>
+                        <Commands show={this.state.showCommands}
+                                  directions={directions} commands={commands} systemCommands={this.systemCommands} />
                     </Media.Body>
                 </Media>
             </Panel>
         )
     }
 }
+
+
+// TODO: Execute startup commands. Where is the state ready for it and from which function is it allowed to be updated?!

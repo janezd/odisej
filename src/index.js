@@ -49,6 +49,7 @@ class App extends React.Component {
                 <Navbar>
                     <Navbar.Header>
                         <Navbar.Brand>
+                            <Button onClick={this.resetData}>Pobriši vse</Button>
                             Odisej
                         </Navbar.Brand>
                     </Navbar.Header>
@@ -74,7 +75,6 @@ class App extends React.Component {
                             { this.state.mode == 'game'
                               ? <Button onClick={this.showGameState}>Stanje igre</Button>
                                 :  <span>
-                                    <Button onClick={this.resetData}>Pobriši vse</Button>
                                     <Button onClick={this.openSettingsEditor}>Nastavitve igre</Button>
                                 </span> }
                         </ButtonToolbar>

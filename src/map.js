@@ -6,14 +6,13 @@ import Blockly from 'node-blockly/browser'
 import BlocklyDrawer from 'react-blockly-drawer'
 
 import blocks from './createBlocks'
-import { locations, items, flags, variables, allLocations,
-         restoreLocally, storeLocally, garbageCollection, packBlockArgs } from './quill'
+import { blocksForStartup } from './createBlocks'
+import { locations, items, flags, variables, restoreLocally, storeLocally } from './quill'
 
 Blockly.BlockSvg.START_HAT = true
 // Blockly.Flyout.prototype.autoClose = false
 
 window.React = React
-
 
 
 class BlocklyDrawerWithNameCheck extends BlocklyDrawer {
@@ -72,6 +71,7 @@ class SettingsEditor extends React.Component {
     }
 }
 
+
 class Node extends React.Component {
     polyMouseDown = (e) => {
         this.coords = { x: e.pageX, y: e.pageY }
@@ -92,7 +92,8 @@ class Node extends React.Component {
 
     render() {
         const loc = locations.getLocation(this.props.locId)
-        const insideCb = this.props.insideCallback
+        const isSpecial = (loc.locId == locations.GENERAL_COMMANDS_ID) || (loc.locId == locations.STARTUP_COMMANDS_ID)
+        const insideCb = (obj, dir) => { if (!isSpecial) this.props.insideCallback(obj, dir) }
 
         return <g transform={`translate(${loc.x} ${loc.y})`}>
                     <text x="52" y="115" textAnchor="middle" fontFamily="sans-serif" style={{userSelect: 'none'}}>
@@ -100,7 +101,7 @@ class Node extends React.Component {
                     </text>
                     <g pointerEvents="all">
                         <polygon
-                            fill="#FFFFFF"
+                            fill={ isSpecial ? "#D0FFD0" : "#FFFFFF" }
                             points="36.761,89.896 14.751,67.887 14.751,36.761 36.761,14.751 67.887,14.751 89.896,36.761 89.896,67.887 67.887,89.896"
                         />
                         <clipPath id="hexagon-clip">
@@ -125,6 +126,7 @@ class Node extends React.Component {
                             C68.406,90.791,68.152,90.896,67.887,90.896z M37.175,88.896h30.298l21.424-21.424V37.175L67.473,15.751H37.175L15.751,37.175
                             v30.298L37.175,88.896z"/>
                     </g>
+            { isSpecial ? "" :
                     <g pointerEvents="all">{
                         [{direction: "nw", x: 12.982, y:5.138,   width: 16, height:31.689, transform:"matrix(0.7071 0.7071 -0.7071 0.7071 20.9821 -8.6909)"},
                          {direction: "w",             y: 36.479, width: 16, height: 31.688},
@@ -141,7 +143,7 @@ class Node extends React.Component {
                                   onMouseEnter={() => insideCb(this, direction) }
                                   onMouseLeave={() => insideCb(null) }
                                   style={{cursor: direction + '-resize'}} />)}
-                    </g>
+                    </g>}
         </g>
     }
 }
@@ -196,46 +198,12 @@ const CONN_COORDS = {
 
 const CENTER = 104.647 / 2
 
-
-class AllLocationsEditor extends React.Component {
-    changeWorkspace = (xml) => {
-        allLocations.workspace = xml
-    }
-
-    handleClose = () => {
-        allLocations.commands = Blockly.getMainWorkspace().getTopBlocks().map(block => packBlockArgs(block))
-        garbageCollection()
-        this.props.handleClose()
-    }
-
-    render() {
-        if (!this.props.editing) return false;
-        return <Modal dialogClassName="location-editor" show={true} onHide={this.handleClose} enforceFocus={false}>
-            <Modal.Header closeButton>
-                <Modal.Title>Ukazi, ki veljajo na vseh lokacijah</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-                <div id="blockly-div">
-                    <BlocklyDrawerWithNameCheck tools={blocks}
-                                                workspaceXML={allLocations.workspace || ""}
-                                                injectOptions={{toolboxPosition: 'end'}}
-                                                onChange={this.changeWorkspace}>
-                    </BlocklyDrawerWithNameCheck>
-                </div>
-            </Modal.Body>
-        </Modal>
-    }
-}
-
 class LocationEditor extends React.Component {
     handleClose = () => {
-        const loc = this.props.location
-        const workspace = Blockly.getMainWorkspace()
+        const loc = locations.getLocation(this.props.location)
         loc.title = this.loctitle.innerText
         loc.description = this.locDescArea.value
-        loc.workspace = Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(workspace))
-        loc.commands = workspace.getTopBlocks().map(block => packBlockArgs(block))
-        garbageCollection()
+        loc.updateFromWorkspace(Blockly.getMainWorkspace())
         this.props.handleClose()
     }
 
@@ -270,28 +238,54 @@ class LocationEditor extends React.Component {
     }
 
     render() {
-        if (!this.props.location) return null;
+        const loc = locations.getLocation(this.props.location)
+        if (!loc) return null;
 
-        const loc = this.props.location
+        const isSpecial = (loc.locId == locations.GENERAL_COMMANDS_ID) || (loc.locId == locations.STARTUP_COMMANDS_ID)
+
+        const setToStart = () => {
+            if (isSpecial)
+                return ""
+            else if (this.props.isInitial)
+                return <Label bsStyle="default">Začetna lokacija</Label>
+            else
+                return <Label onClick={() => this.props.setStartLocation(loc)} bsStyle="success">Nastavi kot začetno</Label>
+        }
+
+        const toDeleteLabel = () => {
+            if (this.props.isInitial || isSpecial)
+                return ""
+            const usedAt = locations.collectUses("usedLocations", this.props.location)[this.props.location]
+            if (!usedAt || (usedAt.length == 0))
+                return <Label onClick={this.removeLocation} bsStyle="danger">Pobriši lokacijo</Label>
+            const usedNames = [...usedAt].map(id => locations.getNameById(id))
+            let usedStr = usedNames.join(", ")
+            let tooltip
+            if (usedStr.length > 200) {
+                usedStr = usedStr.slice(0, 196) + " ..."
+                tooltip = usedNames.join("<br/>")
+            }
+            else { tooltip = "" }
+            return <p tooltip={tooltip}><small>Uporabljena na {usedStr}</small></p>
+        }
+
         return <Modal dialogClassName="location-editor" show={true} onHide={this.handleClose} enforceFocus={false}>
                 <Modal.Header closeButton>
                     <Modal.Title>
                         <div style={{ float: "left", fontSize: "75%", marginRight: "1em" }}>
-                            <LocImage image={loc.image}
-                                      uploadCallback={this.uploadImage}
-                                      removeCallback={this.removeImage} />
+                            {isSpecial ? ""
+                                : <LocImage image={loc.image}
+                                            uploadCallback={this.uploadImage}
+                                            removeCallback={this.removeImage}/>
+                            }
                         </div>
-                        <div ref={node => { this.loctitle = node; if (node) { node.setAttribute("contentEditable", true) }}}>
+                        <div ref={node => {
+                                this.loctitle = node
+                                if (node) { node.setAttribute("contentEditable", !isSpecial) }}}>
                             {loc.title}
                         </div>
-                        { this.props.isInitial
-                            ? <Label bsStyle="default">Začetna lokacija</Label>
-                            : <Label onClick={() => this.props.setStartLocation(loc)} bsStyle="success"> Nastavi kot začetno</Label>
-                        }
-                        { this.props.isInitial
-                            ? ""
-                            : <Label onClick={this.removeLocation} bsStyle="danger">Pobriši lokacijo</Label>
-                        }
+                        { setToStart() }
+                        { toDeleteLabel() }
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
@@ -300,12 +294,11 @@ class LocationEditor extends React.Component {
                                  defaultValue={loc.description}
                                  inputRef={node => { this.locDescArea = node }}
                     />
-                    <div id="blockly-div">
-                        <BlocklyDrawerWithNameCheck tools={blocks}
-                                                    workspaceXML={loc.workspace || ""}
-                                                    injectOptions={{toolboxPosition: 'end'}}>
-                        </BlocklyDrawerWithNameCheck>
-                    </div>
+                    <BlocklyDrawerWithNameCheck
+                        tools={this.props.location == locations.STARTUP_COMMANDS_ID ? blocksForStartup : blocks}
+                        workspaceXML={loc.workspace || ""}
+                        injectOptions={{toolboxPosition: 'end'}}>
+                    </BlocklyDrawerWithNameCheck>
                 </Modal.Body>
             </Modal>
     }
@@ -379,8 +372,7 @@ export default class GameMap extends React.Component {
         super(props)
         this.state = {
             newLine: null,
-            editing: null,
-            editingGeneral: false
+            editing: null
         }
         this.currentlyHovered = null
     }
@@ -450,11 +442,8 @@ export default class GameMap extends React.Component {
         this.setState(this.state)
     }
 
-    editLocation = (locId) => this.setState({editing: locations.getLocation(locId)})
-
-    startEditGeneral = () => this.setState({editingGeneral: true})
-
-    closeEditor = () => this.setState({editing: null, editingGeneral: false})
+    editLocation = (locId) => this.setState({editing: locId})
+    closeEditor = () => this.setState({editing: null})
 
     openSettingsEditor = () => this.setState({editSettings: true})
     closeSettingsEditor = () => this.setState({editSettings: false})
@@ -473,7 +462,7 @@ export default class GameMap extends React.Component {
     }
 
     setLocationImage = (location, image) => {
-        location.image = image || ""
+        locations.getLocation(location).image = image || ""
         this.setState(this.state)
     }
 
@@ -495,14 +484,12 @@ export default class GameMap extends React.Component {
         return <div>
           <LocationEditor
               location={this.state.editing}
-              isInitial={this.state.editing && (this.state.editing.locId == locations.startLocation)}
+              isInitial={this.state.editing == locations.startLocation}
               handleClose={this.closeEditor}
               setLocationImage={this.setLocationImage}
               setStartLocation={this.setStartLocation}
           />
           <SettingsEditor show={this.state.editSettings} closeHandler={this.closeSettingsEditor}/>
-          <AllLocationsEditor editing={this.state.editingGeneral} handleClose={this.closeEditor} />
-            <Button style={{position: "absolute", x: 0, y: 0}} onClick={this.startEditGeneral}>Ukazi povsod</Button>
           <svg width={width} height={height}
                id="gamemap" onDoubleClick={e => { this.newLocation(e); e.preventDefault();e.stopPropagation() } }>
             <g transform={`translate(${250 - minx} ${250 - miny})`}>
