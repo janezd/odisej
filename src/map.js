@@ -399,25 +399,29 @@ export default class GameMap extends React.Component {
         const loc = locations[node.props.locId]
         x += loc.x
         y += loc.y
-        this.setState({newLine: {node, dir, x, y, dx, dy, mx: e.clientX - this.offsetX, my: e.clientY - this.offsetY}})
+        this.setState({newLine: {node, dir, x, y, dx, dy, x0: e.clientX, y0: e.clientY,
+                                 mx: e.clientX - this.offsetX, my: e.clientY - this.offsetY}})
         document.addEventListener('mousemove', this.dirMouseMove);
         document.addEventListener('mouseup', this.dirMouseUp);
     }
 
     dirMouseUp = (e) => {
-        const { node, dir } = this.state.newLine
-        const srcLoc = locations[node.props.locId]
-        const dest = this.currentlyHovered
-        const destLoc = dest && locations[dest.props.locId] || this.newLocation(e)
+        const { node, dir, x0, y0 } = this.state.newLine
 
-        if (!destLoc) {
-            delete srcLoc.directions[dir]
-        }
-        else {
-            srcLoc.directions[dir] = destLoc.locId
-        }
-        if (this.hoveredDirection) {
-            destLoc.directions[this.hoveredDirection] = srcLoc.locId
+        if ((x0 - e.clientX) ** 2 + (y0 - e.clientY) ** 2 > 100) {
+            const srcLoc = locations[node.props.locId]
+            const dest = this.currentlyHovered
+            const destLoc = dest && locations[dest.props.locId] || this.newLocation(e)
+
+            if (!destLoc) {
+                delete srcLoc.directions[dir]
+            }
+            else {
+                srcLoc.directions[dir] = destLoc.locId
+            }
+            if ((srcLoc != destLoc) && this.hoveredDirection) {
+                destLoc.directions[this.hoveredDirection] = srcLoc.locId
+            }
         }
 
         this.setState({newLine: null})
