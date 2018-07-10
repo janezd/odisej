@@ -119,6 +119,8 @@ class Locations {
         this.reset()
     }
 
+    isSpecial = loc => loc.locId.startsWith("00000000-00000000-00000000-00000000-0000000")
+
     keys = () => Object.keys(this).filter(key => this[key] instanceof LocData)
     values = () => Object.values(this).filter(value => value instanceof LocData)
     entries = () => Object.entries(this).filter(([key, value]) => value instanceof LocData)

@@ -95,8 +95,11 @@ class ShowGameState extends React.Component {
                         <DropdownButton id="current-location"
                                         bsSize="xsmall"
                                         title={locations[state.location].title}>
-                            { locations.entries().map(([it, loc]) =>
-                                <MenuItem key={it} eventKey={it} onSelect={this.setLocation}>{loc.title}</MenuItem>
+                            { locations.entries()
+                                .filter(([it, loc]) =>
+                                    !locations.isSpecial(loc))
+                                .map(([it, loc]) =>
+                                     <MenuItem key={it} eventKey={it} onSelect={this.setLocation}>{loc.title}</MenuItem>
                             )}
                         </DropdownButton>
                     </dd>

@@ -92,7 +92,7 @@ class Node extends React.Component {
 
     render() {
         const loc = locations[this.props.locId]
-        const isSpecial = (loc.locId == locations.GENERAL_COMMANDS_ID) || (loc.locId == locations.STARTUP_COMMANDS_ID)
+        const isSpecial = locations.isSpecial(loc)
         const insideCb = (obj, dir) => { if (!isSpecial) this.props.insideCallback(obj, dir) }
 
         return <g transform={`translate(${loc.x} ${loc.y})`}>
@@ -241,7 +241,7 @@ class LocationEditor extends React.Component {
         const loc = locations[this.props.location]
         if (!loc) return null;
 
-        const isSpecial = (loc.locId == locations.GENERAL_COMMANDS_ID) || (loc.locId == locations.STARTUP_COMMANDS_ID)
+        const isSpecial = locations.isSpecial(loc)
 
         const setToStart = () => {
             if (isSpecial)
