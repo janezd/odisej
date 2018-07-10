@@ -17,9 +17,6 @@ function randomId() {
     return Array.from({length: 5}, () => Math.round(Math.random() * 2**32).toString(16).padStart(8, "0"))
                 .join("-") }
 
-export function clearUsed(location) {
-}
-
 class LocData {
     constructor(title, description, x=0, y=0, locId=null) {
         this.locId = locId || randomId()
@@ -102,17 +99,16 @@ class LocData {
                     input.fieldRow.forEach(field => {
                         if (field.name) {
                             const value = field.getValue()
-                            if (items.getNameById(value)) this.usedItems.push(value)
-                            if (flags.getNameById(value)) this.usedFlags.push(value)
-                            if (variables.getNameById(value)) this.usedVariables.push(value)
-                            if (locations.getLocation(value)) this.usedLocations.push(value)
+                            if (items[value]) this.usedItems.push(value)
+                            if (flags[value]) this.usedFlags.push(value)
+                            if (variables[value]) this.usedVariables.push(value)
+                            if (locations[value]) this.usedLocations.push(value)
                         }
                     })
                 )
         )
     }
 }
-
 
 
 class Locations {
@@ -123,14 +119,19 @@ class Locations {
         this.reset()
     }
 
-    reset() {
-        this._locations = {}
+    keys = () => Object.keys(this).filter(key => this[key] instanceof LocData)
+    values = () => Object.values(this).filter(value => value instanceof LocData)
+    entries = () => Object.entries(this).filter(([key, value]) => value instanceof LocData)
+    clear = () => { this.keys().forEach(key => delete this[key]) }
+
+    reset = () => {
+        this.clear()
         const defaultLoc = this.addLocation("Začetek", "Opis začetne lokacije", 150, 10)
-        this.startLocation = defaultLoc.locId
         this.addSpecialLocations()
+        this.startLocation = defaultLoc.locId
     }
 
-    addSpecialLocations() {
+    addSpecialLocations= () => {
         if (this.generalCommands == undefined)
             this.addLocation(
                 "Na vseh lokacijah",
@@ -143,74 +144,36 @@ class Locations {
                 10, 120, this.STARTUP_COMMANDS_ID)
     }
 
-    get generalCommands() { return this.getLocation(this.GENERAL_COMMANDS_ID) }
-    get startUpCommands() { return this.getLocation(this.STARTUP_COMMANDS_ID) }
+    get generalCommands() { return this[this.GENERAL_COMMANDS_ID] }
+    get startUpCommands() { return this[this.STARTUP_COMMANDS_ID] }
 
-    get length() {
-        return this._locations.length
-    }
-
-    getNames() {
-        return Object.values(this._locations).map(it => it.title)
-    }
-
-    getIds() {
-        return Object.keys(this._locations)
-    }
-
-    getLocations() {
-        return Object.values(this._locations)
-    }
-
-    getNamesIds() {
-        return Object.values(this._locations).map(it => [it.title, it.locId])
-    }
-
-    getLocation(i) {
-        return this._locations[i]
-    }
-
-    getNameById(i) {
-        return this.getLocation(i).title
-    }
-
-    removeLocation(location) {
-        Object.values(this._locations).forEach( loc =>  {
-            Object.entries(loc.directions)
-                .filter( ([dir, where]) => where == location )
-                .forEach( ([dir, where]) => delete loc.directions[dir] )
-            }
-        )
-        delete this._locations[location]
-    }
-
-    addLocation(name=null, description="", x=0, y=0, locId=null) {
-        name = getUniqueName(name || "Nova lokacija", this.getNames())
-        const newLoc = new LocData(name, description, x, y, locId)
-        this._locations[newLoc.locId] = newLoc
-        if (this._locations.size == 1) {
-            this.startLocation = newLoc.locId
-        }
+    addLocation = (name=null, description="", x=0, y=0, locId=null) => {
+        const newName = getUniqueName(name || "Nova lokacija", this.values().map(it => it.title))
+        const newLoc = new LocData(newName, description, x, y, locId)
+        this[newLoc.locId] = newLoc
         return newLoc
     }
 
-    renameLocation(location, newName) {
-        if (this._locations[location].title == newName) return;
-        const name = getUniqueName(newName, this.getNames())
-        this._locations[location].title = name
-        return name
+    removeLocation = location => {
+        this.values().forEach( loc =>  {
+            Object.entries(loc.directions)
+                .filter( ([dir, where]) => where == location )
+                .forEach( ([dir, where]) => delete loc.directions[dir] )
+        })
+        delete this[location]
     }
 
-    toJson() {
-        return JSON.stringify({locations: this._locations, startLocation: this.startLocation})
-    }
+    renameLocation = (location, newName) =>
+        this[location].title == newName ? newName : this[location].title = getUniqueName(newName, this.values())
 
-    setFromJson({locations, startLocation}) {
-        this._locations = {}
-        Object.entries(locations).forEach(([id, locdata]) => {
+    pack = () => ({locations: this.entries(), startLocation: this.startLocation})
+
+    unpack = ({locations, startLocation}) => {
+        this.clear()
+        locations.forEach(([id, locdata]) => {
             const loc = new LocData()
-            Object.entries(locdata).forEach(([key, value]) => loc[key] = value)
-            this._locations[id] = loc
+            Object.assign(loc, locdata)
+            this[id] = loc
         })
         this.startLocation = startLocation
         this.addSpecialLocations()
@@ -218,8 +181,8 @@ class Locations {
 
     collectUses = (things, skipLocation=null) => {
         const collection = {}
-        locations.getLocations()
-            .filter(loc => loc.locid != skipLocation)
+        locations.values()
+            .filter(loc => loc.locId != skipLocation)
             .forEach(loc =>
                 loc[things].forEach(thing => collection[thing] = (collection[thing] || new Set()).add(loc.locId))
             )
@@ -229,20 +192,21 @@ class Locations {
 
 
 class NameModel {
-    constructor()           { this.reset() }
-    reset()                 { this._items = {} }
-    toJson()                { return JSON.stringify(this._items) }
-    setFromJson(obj)        { this._items = obj }
+    keys() { return Object.keys(this).filter(key => typeof this[key] == "string") }
+    values() { return Object.values(this).filter(value => typeof value == "string") }
+    entries() { return Object.entries(this).filter(([key, value]) => typeof value == "string") }
 
-    get length()            { return this._items.length }
-    getNames()              { return Object.values(this._items) }
-    getIds()                { return Object.keys(this._items) }
-    getNamesIds()           { return Object.entries(this._items).map(it => [it[1], it[0]]) }
-    getNameById(itemId)     { return this._items[itemId] }
-    add(name=null)          { const itemId = randomId(); this._items[itemId] = name || "stvar"; return itemId }
-    rename(itemId, newName) { this._items[itemId] = newName }
-    remove(itemId)          { delete this._items[itemId] }
-    clean(allowed)          { this.getIds().forEach(it => { if (!allowed.has(it)) this.remove(it) })}
+    reset()                 { this.clear() }
+    add(name=null)          { const itemId = randomId(); this[itemId] = name || "stvar"; return itemId }
+    rename(itemId, newName) { this[itemId] = newName }
+    remove(itemId)          { delete this[itemId] }
+    clear(allowed)          { this.keys().forEach(key => { if (!allowed || !allowed[key]) delete this[key] })}
+
+    pack()                  { return this.entries() }
+    unpack(data) {
+        this.reset()
+        data.forEach(([key, value]) => this[key] = value)
+    }
 }
 
 export const items = new NameModel()
@@ -258,10 +222,9 @@ export function resetData() {
 }
 
 function collectGarbage() {
-    return
-    items.clean(locations.collectUses('usedItems'))
-    flags.clean(locations.collectUses('usedFlags'))
-    variables.clean(locations.collectUses('usedVariables'))
+    items.clear(locations.collectUses('usedItems'))
+    flags.clear(locations.collectUses('usedFlags'))
+    variables.clear(locations.collectUses('usedVariables'))
 }
 
 
@@ -278,14 +241,14 @@ function migrateCommandLists() {
             }
         })
     }
-    locations.getLocations().forEach(loc => migrate(loc.commands))
+    locations.values().forEach(loc => migrate(loc.commands))
 }
 
 function migrateAddUsedSets() {
     blocks.forEach(tool => { Blockly.Blocks[tool.name] = tool.block } )
 
     const workspace = new Blockly.Workspace({toolbox: blocks})
-    locations.getLocations().forEach(location => {
+    locations.values().forEach(location => {
         Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(location.workspace), workspace)
         location.recomputeUses(workspace)
         workspace.clear()
@@ -293,18 +256,21 @@ function migrateAddUsedSets() {
 }
 
 export function storeLocally() {
-    localStorage.odisej = `{"locations": ${locations.toJson()}, "items": ${items.toJson()}, "variables": ${variables.toJson()}, "flags": ${flags.toJson()}}`
+    localStorage.odisej = JSON.stringify({
+        locations: locations.pack(), items: items.pack(), flags: flags.pack(), variables: variables.pack()})
 }
 
 export function restoreLocally(json) {
+    const migrated = obj => Array.isArray(obj) ? obj : Object.entries(obj)
     // TODO: Enable try-except, alert if something is there, but can't load it.
     //try {
         json = json || localStorage.odisej
         const obj = JSON.parse(json)
-        locations.setFromJson(obj.locations)
-        items.setFromJson(obj.items)
-        variables.setFromJson(obj.variables)
-        flags.setFromJson(obj.flags)
+
+        locations.unpack({locations: migrated(obj.locations.locations), startLocation: obj.locations.startLocation})
+        items.unpack(migrated(obj.items))
+        flags.unpack(migrated(obj.flags))
+        variables.unpack(migrated(obj.variables))
 
         // Migrations; remove before publishing
         if (obj.hasOwnProperty("allLocations")) {
@@ -313,9 +279,7 @@ export function restoreLocally(json) {
         }
         migrateCommandLists()
         migrateAddUsedSets()
+        collectGarbage()
     //}
     //catch (e) {}
 }
-
-
-// TODO Re-enable garbage collection

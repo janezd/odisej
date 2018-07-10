@@ -91,7 +91,7 @@ class Node extends React.Component {
     }
 
     render() {
-        const loc = locations.getLocation(this.props.locId)
+        const loc = locations[this.props.locId]
         const isSpecial = (loc.locId == locations.GENERAL_COMMANDS_ID) || (loc.locId == locations.STARTUP_COMMANDS_ID)
         const insideCb = (obj, dir) => { if (!isSpecial) this.props.insideCallback(obj, dir) }
 
@@ -200,7 +200,7 @@ const CENTER = 104.647 / 2
 
 class LocationEditor extends React.Component {
     handleClose = () => {
-        const loc = locations.getLocation(this.props.location)
+        const loc = locations[this.props.location]
         loc.title = this.loctitle.innerText
         loc.description = this.locDescArea.value
         loc.updateFromWorkspace(Blockly.getMainWorkspace())
@@ -238,7 +238,7 @@ class LocationEditor extends React.Component {
     }
 
     render() {
-        const loc = locations.getLocation(this.props.location)
+        const loc = locations[this.props.location]
         if (!loc) return null;
 
         const isSpecial = (loc.locId == locations.GENERAL_COMMANDS_ID) || (loc.locId == locations.STARTUP_COMMANDS_ID)
@@ -258,7 +258,7 @@ class LocationEditor extends React.Component {
             const usedAt = locations.collectUses("usedLocations", this.props.location)[this.props.location]
             if (!usedAt || (usedAt.length == 0))
                 return <Label onClick={this.removeLocation} bsStyle="danger">Pobriši lokacijo</Label>
-            const usedNames = [...usedAt].map(id => locations.getNameById(id))
+            const usedNames = [...usedAt].map(id => locations[id].title)
             let usedStr = usedNames.join(", ")
             let tooltip
             if (usedStr.length > 200) {
@@ -321,14 +321,14 @@ class Connection extends React.Component {
 
     render() {
         const { src, dir, dest, backDir } = this.props
-        const srcLoc = locations.getLocation(src)
+        const srcLoc = locations[src]
         let { dx, dy, x, y} = CONN_COORDS[dir]
         const x0 = srcLoc.x + x
         const y0 = srcLoc.y + y
         dx *= D
         dy *= D
 
-        const destLoc = locations.getLocation(dest)
+        const destLoc = locations[dest]
         let x1 = destLoc.x
         let y1 = destLoc.y
         let dx1 = 0
@@ -388,7 +388,7 @@ export default class GameMap extends React.Component {
     }
 
     moveNodeBy = (node, xDiff, yDiff) => {
-        const loc = locations.getLocation(node.props.locId)
+        const loc = locations[node.props.locId]
         loc.x += xDiff
         loc.y += yDiff
         this.setState(this.state)
@@ -396,7 +396,7 @@ export default class GameMap extends React.Component {
 
     dirMouseDown = (node, dir, e) => {
         let {x, y, dx, dy} = CONN_COORDS[dir]
-        const loc = locations.getLocation(node.props.locId)
+        const loc = locations[node.props.locId]
         x += loc.x
         y += loc.y
         this.setState({newLine: {node, dir, x, y, dx, dy, mx: e.clientX - this.offsetX, my: e.clientY - this.offsetY}})
@@ -406,9 +406,9 @@ export default class GameMap extends React.Component {
 
     dirMouseUp = (e) => {
         const { node, dir } = this.state.newLine
-        const srcLoc = locations.getLocation(node.props.locId)
+        const srcLoc = locations[node.props.locId]
         const dest = this.currentlyHovered
-        const destLoc = dest && locations.getLocation(dest.props.locId) || this.newLocation(e)
+        const destLoc = dest && locations[dest.props.locId] || this.newLocation(e)
 
         if (!destLoc) {
             delete srcLoc.directions[dir]
@@ -435,9 +435,9 @@ export default class GameMap extends React.Component {
 
     removeConnection = (conn) => {
         const { src, dir, dest, backDir } = conn.props
-        delete locations.getLocation(src).directions[dir]
+        delete locations[src].directions[dir]
         if (backDir) {
-            delete locations.getLocation(dest).directions[backDir]
+            delete locations[dest].directions[backDir]
         }
         this.setState(this.state)
     }
@@ -462,7 +462,7 @@ export default class GameMap extends React.Component {
     }
 
     setLocationImage = (location, image) => {
-        locations.getLocation(location).image = image || ""
+        locations[location].image = image || ""
         this.setState(this.state)
     }
 
@@ -472,8 +472,8 @@ export default class GameMap extends React.Component {
     get offsetY() { return document.getElementById("gamemap").getBoundingClientRect().y }
 
     render() {
-        const xs = locations.getLocations().map(loc => loc.x)
-        const ys = locations.getLocations().map(loc => loc.y)
+        const xs = locations.values().map(loc => loc.x)
+        const ys = locations.values().map(loc => loc.y)
         const minx = 250 // Math.min(...xs)
         const miny = 250 // Math.min(...ys)
         const maxx = Math.max(...xs)
@@ -494,16 +494,15 @@ export default class GameMap extends React.Component {
                id="gamemap" onDoubleClick={e => { this.newLocation(e); e.preventDefault();e.stopPropagation() } }>
             <g transform={`translate(${250 - minx} ${250 - miny})`}>
                 { Array.prototype.concat(
-                    ...locations
-                        .getIds()
+                    ...locations.keys()
                         .map(srcId => {
-                            const srcDirections = locations.getLocation(srcId).directions
+                            const srcDirections = locations[srcId].directions
                             return Object
                                 .entries(srcDirections)
                                 .map(([dir, destId]) => {
                                     const multipleToDest = Object.values(srcDirections)
                                                                  .filter(it => it == destId).length > 1
-                                    const destLoc = locations.getLocation(destId)
+                                    const destLoc = locations[destId]
                                     const backConnections = Object.entries(destLoc.directions)
                                                                   .filter(([dir, destDestId]) => destDestId == srcId)
                                     if (destId != srcId && !multipleToDest && backConnections.length == 1) {
@@ -521,12 +520,13 @@ export default class GameMap extends React.Component {
                                 })
                         })
                  )}
-                { locations.getIds().map(it => <Node key={it} locId={it}
-                                                     isInitial={it == locations.startLocation}
-                                                     newLineCallback={this.dirMouseDown}
-                                                     insideCallback={this.setHovered}
-                                                     moveByCallback={this.moveNodeBy}
-                                                     onDoubleClick={e => { this.editLocation(it); e.preventDefault();e.stopPropagation() } }
+                { locations.keys().map(it => <Node
+                    key={it} locId={it}
+                    isInitial={it == locations.startLocation}
+                    newLineCallback={this.dirMouseDown}
+                    insideCallback={this.setHovered}
+                    moveByCallback={this.moveNodeBy}
+                    onDoubleClick={e => { this.editLocation(it); e.preventDefault();e.stopPropagation() } }
                                         />) }
                 <TempConnection line={this.state.newLine} />
             </g>

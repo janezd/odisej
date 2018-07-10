@@ -11,18 +11,18 @@ const ITEM_DOES_NOT_EXIST = -2
 
 const AdderRemover = (props) => (
     <div>
-        { props.model.getNamesIds()
-        .filter(([name, id]) => props.selector(id))
-        .map(([name, id]) =>
+        { props.model.entries()
+        .filter(([id, name]) => props.selector(id))
+        .map(([id, name]) =>
             <span key={id}>
                 <Label bsStyle="danger" onClick={() => props.changer(id, false)}>x</Label>
                 <Label bsStyle="success">{name}</Label>
                 <span> </span>
             </span>)}
         <DropdownButton id={props.title} bsSize="xsmall" title={props.title}>
-            {props.model.getNamesIds()
-                .filter(([name, id]) => !props.selector(id))
-                .map(([name, id]) => <MenuItem key={id} eventKey={id} onSelect={() => props.changer(id, true)}>{name}</MenuItem>)
+            {props.model.entries()
+                .filter(([id, name]) => !props.selector(id))
+                .map(([id, name]) => <MenuItem key={id} eventKey={id} onSelect={() => props.changer(id, true)}>{name}</MenuItem>)
             }
         </DropdownButton>
     </div>
@@ -94,10 +94,9 @@ class ShowGameState extends React.Component {
                     <dd>
                         <DropdownButton id="current-location"
                                         bsSize="xsmall"
-                                        title={locations.getLocation(state.location).title}>
-                            { locations.getIds().map(it =>
-                                <MenuItem key={it} eventKey={it} onSelect={this.setLocation}>
-                                    {locations.getLocation(it).title}</MenuItem>
+                                        title={locations[state.location].title}>
+                            { locations.entries().map(([it, loc]) =>
+                                <MenuItem key={it} eventKey={it} onSelect={this.setLocation}>{loc.title}</MenuItem>
                             )}
                         </DropdownButton>
                     </dd>
@@ -118,7 +117,7 @@ class ShowGameState extends React.Component {
                     <dt>Spremenljivke:</dt>
                     <dd>{[...Object.entries(state.variables)]
                         .map(([id, value]) => <span key={id}>
-                                {variables.getNameById(id)}&nbsp;=&nbsp;
+                                {variables[id]}&nbsp;=&nbsp;
                             <span
                                 onKeyDown = {
                                     e => {
@@ -219,17 +218,17 @@ export default class Game extends React.Component {
     }
 
     prepareInitialState = () => {
-        const _obj_from_keys = (keys, deflt=0) => {
+        const _obj_from_keys = (obj, deflt) => {
             const res = {}
-            keys.forEach(key => res[key] = deflt)
+            Object.keys(obj).forEach(key => res[key] = deflt)
             return res
         }
 
         return {
             location: locations.startLocation,
-            items: _obj_from_keys(items.getIds(), ITEM_DOES_NOT_EXIST),
-            flags: _obj_from_keys(flags.getIds()),
-            variables: _obj_from_keys(variables.getIds()),
+            items: _obj_from_keys(items, ITEM_DOES_NOT_EXIST),
+            flags: _obj_from_keys(flags, false),
+            variables: _obj_from_keys(variables, 0),
             printed: []
         }
     }
@@ -303,7 +302,7 @@ export default class Game extends React.Component {
 
     autoExecuteBlocks = (blockType, then) => {
         const execute = (first) => first ? this.executeSequence(first.block.next, () => execute(first.next)) : then && then()
-        const blockChain = locations.getLocation(this.state.location).commands.concat(locations.generalCommands.commands)
+        const blockChain = locations[this.state.location].commands.concat(locations.generalCommands.commands)
             .filter(it => (it.block == blockType))
             .reduceRight((next, block) => ({next, block}), null)
         execute(blockChain)
@@ -380,7 +379,7 @@ export default class Game extends React.Component {
         const itemList = inventory.length
             ? <span>{
                   inventory.map(([id, place], i) => {
-                      const itemName = items.getNameById(id)
+                      const itemName = items[id]
                       return <span key={`item${i}`}>{i ? ", " : ""}{itemName}
                           { gameSettings.dropItems
                               ? <span>&nbsp;(<a onClick={() => {
@@ -405,7 +404,7 @@ export default class Game extends React.Component {
 
     getCommandList = () => {
         const dirmap = {"S": "n", "SV": "ne", "V": "e", "JV": "se", "J": "s", "JZ": "sw", "Z": "w", "SZ": "nw"}
-        const location = locations.getLocation(this.state.location)
+        const location = locations[this.state.location]
         const directions = {}
         const commands = {}
 
@@ -416,8 +415,8 @@ export default class Game extends React.Component {
             Object.entries(this.state.items)
                 .filter(([id, location]) => location == this.state.location)
                 .forEach(([id, location]) => {
-                    const name = `Vzemi ${items.getNameById(id)}`
-                    commands[name] = () => this.moveItem(id, ITEM_CARRIED, anme)
+                    const name = `Vzemi ${items[id]}`
+                    commands[name] = () => this.moveItem(id, ITEM_CARRIED, name)
                 })
         }
         locations.generalCommands.commands.concat(location.commands)
@@ -439,7 +438,7 @@ export default class Game extends React.Component {
     }
 
     render() {
-        const location = locations.getLocation(this.state.location)
+        const location = locations[this.state.location]
         const [directions, commands] = this.getCommandList()
         return (
             <Panel>

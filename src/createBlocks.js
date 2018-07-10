@@ -71,7 +71,7 @@ class FieldItems extends Blockly.FieldDropdown {
         super(() => {
             if (!this || this.inFlyout)
                 return [[flyOutMsg, "ADD"]]
-            const options = [...nameModel.getNamesIds(), [addMsg, "ADD"]]
+            const options = [...nameModel.entries().map(([id, name]) => [name, id]), [addMsg, "ADD"]]
             if (options.length > 1) {
                 options.push(["Preimenuj...", "RENAME"])
             }
@@ -107,12 +107,6 @@ class FieldItems extends Blockly.FieldDropdown {
         }
     }
 
-    fixMissingName() {
-        if (this.nameModel.getNameById(this.getValue()) == null) {
-            this.setValue("ADD")
-        }
-    }
-
     setSourceBlock(block) {
         super.setSourceBlock(block)
         this.inFlyOut = block.isInFlyout
@@ -121,7 +115,10 @@ class FieldItems extends Blockly.FieldDropdown {
 
 
 function createField(fieldName, placeholder=null) {
-    if (fieldName.startsWith("LOCATION")) return new Blockly.FieldDropdown(locations.getNamesIds.bind(locations))
+    if (fieldName.startsWith("LOCATION"))
+        return new Blockly.FieldDropdown(
+            () => locations.entries().map(([id, loc]) => [loc.title, id])
+        )
     if (fieldName.startsWith("ITEM")) return new FieldItems(items, "Stvar ...", "Nova stvar ...")
     if (fieldName.startsWith("VARIABLE")) return new FieldItems(variables, "Spremenljivka ...", "Nova spremenljivka ...")
     if (fieldName.startsWith("FLAG")) return new FieldItems(flags, "Zastavica ...", "Nova zastavica ...")
