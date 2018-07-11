@@ -275,7 +275,18 @@ appendBlock("Pogoji", "disjunction", {
     }
 })
 
-
+appendBlock('Ukazi', 'set_timer', {
+    init() {
+        this.appendDummyInput()
+            .appendField("čez")
+            .appendField(new Blockly.FieldTextInput("5"), "TIME")
+            .appendField("sekund")
+        this.appendStatementInput('STATEMENTS')
+        this.setColour(36)
+        this.setPreviousStatement(true)
+        this.setNextStatement(true)
+    }
+})
 
 createCondition('Stvari', 'does_have', "ima igralec", "ITEM")
 createCondition('Stvari', 'doesnt_have', "igralec nima", "ITEM")

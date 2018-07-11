@@ -423,6 +423,8 @@ export default class Game extends React.Component {
             case 'sub_const': return setVariable(variables[name] - parseInt(block.constant))
             case 'add_var': return setVariable(variables[name] + variables[block.variable2])
             case 'sub_var': return setVariable(variables[name] - variables[block.variable2])
+
+            case 'set_timer': setTimeout(() => this.executeSequence(block.statements), 1000 * parseFloat(block.time)); return then && then()
         }
     }
 
