@@ -369,6 +369,34 @@ class Connection extends React.Component {
     }
 }
 
+class ImplicitConnection extends React.Component {
+    constructor(props) {
+        super(props)
+        this.last = this.coordsDirs(props)
+    }
+
+    coordsDirs = (props) => [this.props.src.x, this.props.src.y, this.props.dest.x, this.props.dest.y]
+    shouldComponentUpdate = (nextProps) => this.last != this.coordsDirs(nextProps)
+
+    render() {
+        const src = locations[this.props.src]
+        const dest = locations[this.props.dest]
+        let x0 = src.x
+        let y0 = src.y
+        let x1 = dest.x
+        let y1 = dest.y
+        const phi = Math.atan2(y1 - y0, x1 - x0)
+        x0 += CENTER + CENTER * Math.cos(phi)
+        y0 += CENTER + CENTER * Math.sin(phi)
+        x1 += CENTER - CENTER * Math.cos(phi)
+        y1 += CENTER - CENTER * Math.sin(phi)
+        return <g>
+            <circle stroke="#bbbbbb" fill="#bbbbbb" cx={x0} cy={y0} r={5}/>
+            <path stroke="#bbbbbb" strokeWidth="3" fill="transparent" d={`M${x0},${y0} L${x1},${y1}`}/>
+        </g>
+    }
+}
+
 const TempConnection = (props) => {
     if (!props.line) return null;
     let { x, y, dx, dy, mx, my} = props.line
@@ -535,6 +563,11 @@ export default class GameMap extends React.Component {
                                 })
                         })
                  )}
+               {  locations.values()
+                    .map(location => location.movesTo.map(dest => [location.locId, dest]))
+                    .reduce((acc, x) => acc.concat(x), [])
+                    .map(([src, dest]) => <ImplicitConnection src={src} dest={dest}/>)
+                }
                 { locations.keys().map(it => <Node
                     key={it} locId={it}
                     isInitial={it == locations.startLocation}

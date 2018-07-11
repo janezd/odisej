@@ -55,6 +55,7 @@ class LocData {
         this.usedFlags = []
         this.usedVariables = []
         this.usedLocations = []
+        this.movesTo = []
     }
 
     packBlockArgs = block => {
@@ -100,7 +101,7 @@ class LocData {
 
     recomputeUses = workspace => {
         this.clearUsed()
-        workspace.getAllBlocks().forEach(block =>
+        workspace.getAllBlocks().forEach(block => {
             block.inputList
                 .filter(input => input.type == Blockly.DUMMY_INPUT)
                 .forEach(input =>
@@ -114,7 +115,10 @@ class LocData {
                         }
                     })
                 )
-        )
+            if (block.type == "go") {
+                this.movesTo.push(block.inputList[0].fieldRow[1].getValue())
+            }
+        })
     }
 }
 
