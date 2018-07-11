@@ -309,9 +309,12 @@ export default class Game extends React.Component {
 
     moveTo = (location, then) =>
         this.autoExecuteBlocks("on_exit",
-            () => { this.state.nVisits[location]++; this.setState({location, nVisits: this.state.nVisits, printed: []},
-                () => this.autoExecuteBlocks("on_entry", then)
-            )}
+            () => this.setState({location, printed: []},
+                () => this.autoExecuteBlocks("on_entry",
+                    () => { this.state.nVisits[location]++
+                            this.setState({nVisits: this.state.nVisits}, then) }
+                )
+            )
         )
 
     print = (msg, then) =>
