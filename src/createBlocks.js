@@ -65,6 +65,20 @@ function mutate(block, xml, namePrefix, firstLine, conjunction, beforeInput=null
 }
 
 
+function refreshDropdowns(id, newName) {
+    Blockly.getMainWorkspace().getAllBlocks().forEach(block =>
+        block.inputList
+            .filter(input => input.type == Blockly.DUMMY_INPUT)
+            .forEach(input =>
+                input.fieldRow.forEach(field => {
+                    if (field.name && (field.getValue() == id))
+                        field.setText(newName)
+                })
+            )
+    )
+}
+
+
 class FieldItems extends Blockly.FieldDropdown {
     constructor(nameModel, flyOutMsg, addMsg) {
         super(() => {
@@ -97,8 +111,7 @@ class FieldItems extends Blockly.FieldDropdown {
             const curName = this.getText()
             Blockly.prompt(`Novo ime za ${curName}:`, curName, (newName) => {
                 model.rename(curId, newName)
-                this.setValue(curId)
-                this.setText(newName)
+                refreshDropdowns(curId, newName)
             })
         }
         else {
