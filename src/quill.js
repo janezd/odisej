@@ -1,6 +1,14 @@
 import Blockly from "node-blockly/browser"
 import blocks from './createBlocks'
 
+export const gameSettings = {
+    allowRestart: true,
+    showInventory: true,
+    dropItems: true,
+    takeItems: true,
+    maxItems: ""
+}
+
 function getUniqueName(name, names) {
     name = name.trim()
     if (names.indexOf(name) == -1) {
@@ -252,7 +260,9 @@ function migrateAddUsedSets() {
 
 export function storeLocally() {
     localStorage.odisej = JSON.stringify({
-        locations: locations.pack(), items: items.pack(), flags: flags.pack(), variables: variables.pack()})
+        locations: locations.pack(), items: items.pack(), flags: flags.pack(), variables: variables.pack(),
+        gameSettings
+    })
 }
 
 export function restoreLocally(json) {
@@ -266,6 +276,8 @@ export function restoreLocally(json) {
         items.unpack(migrated(obj.items))
         flags.unpack(migrated(obj.flags))
         variables.unpack(migrated(obj.variables))
+        // TODO Remove '|| {}' when migrations are no longer needed
+        Object.assign(gameSettings, obj.gameSettings || {})
 
         // Migrations; remove before publishing
         if (obj.hasOwnProperty("allLocations")) {

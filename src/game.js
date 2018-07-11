@@ -1,8 +1,8 @@
 import React from "react"
 import { Panel, Button, Media, Modal, Label, FormControl, ControlLabel, DropdownButton, MenuItem } from 'react-bootstrap'
 import blocks from "./createBlocks"
-import { locations, items, flags, variables } from './quill'
-import { systemCommandsSettings, gameSettings } from './map'
+import { locations, items, flags, variables, gameSettings } from './quill'
+import { systemCommandsSettings } from './map'
 
 const ITEM_CARRIED = -1
 const ITEM_DOES_NOT_EXIST = -2
@@ -265,6 +265,7 @@ export default class Game extends React.Component {
 
                 case 'does_have': return this.state.items[condition.item] == ITEM_CARRIED
                 case 'doesnt_have': return this.state.items[condition.item] != ITEM_CARRIED
+                case 'can_carry_more': return this.canCarryMore()
                 case 'item_is_at': return this.state.items[condition.item] == condition.location
                 case 'item_exists': return this.state.items[condition.item] != ITEM_DOES_NOT_EXIST
                 case 'item_is_here': return this.state.items[condition.item] == this.state.location
@@ -362,10 +363,23 @@ export default class Game extends React.Component {
         }
     }
 
+    numberOfCarried = () => Object.values(this.state.items).filter(val => val == ITEM_CARRIED).length
+    canCarryMore = () => !gameSettings.maxItems || (this.numberOfCarried() < gameSettings.maxItems)
+
+    moveItemOrComplain = (item, location, then) => {
+        if ((location == ITEM_CARRIED) && !this.canCarryMore()) {
+            this.print("Toliko pa ne morem nositi.", then)
+        } else {
+            this.state.items[item] = location
+            this.setState({items: this.state.items}, then)
+        }
+    }
+
     executeBlock = (block, then) => {
         const { variables, flags, items } = this.state
         const name = block.item || block.flag || block.variable
-        const setItem = value => { items[name] = value; this.setState({items}, then) }
+
+        const setItem = value => this.moveItemOrComplain(name, value)
         const setFlag = value => { flags[name] = value; this.setState({flags}, then) }
         const setVariable = value => { variables[name] = value; this.setState({variables}, then) }
 
@@ -424,9 +438,9 @@ export default class Game extends React.Component {
 
     moveItem = (id, where, msg) =>
         this.print(<b>&gt; {msg}</b>,
-            () => { this.state.items[id] = where; this.setState({items: this.state.items},
+            () => this.moveItemOrComplain(id, where,
                 () => this.autoExecuteBlocks("after_command")
-            )}
+            )
         )
 
     getCommandList = () => {

@@ -227,7 +227,9 @@ function createCondition(category, block_name, condField, fieldName, other=null,
           this.setInputsInline(false)
           const row = this.appendDummyInput()
             .appendField(condField)
-            .appendField(createField(fieldName, placeholder), fieldName)
+          if (fieldName) {
+              row.appendField(createField(fieldName, placeholder), fieldName)
+          }
           if (other != null) {
               other(row, this)
           }
@@ -277,6 +279,7 @@ appendBlock("Pogoji", "disjunction", {
 
 createCondition('Stvari', 'does_have', "ima igralec", "ITEM")
 createCondition('Stvari', 'doesnt_have', "igralec nima", "ITEM")
+createCondition('Stvari', 'can_carry_more', "lahko nosi še kaj")
 // createCondition('has_visited', "je igralec obiskal", "LOCATION")
 createCondition('Pogoji', 'is_at', "je igralec na", "LOCATION")
 createCondition('Stvari', 'item_is_at', "je", "ITEM", row => row.appendField("na").appendField(createField('LOCATION'), "LOCATION"))

@@ -6,7 +6,7 @@ import Blockly from 'node-blockly/browser'
 import BlocklyDrawer from 'react-blockly-drawer'
 
 import blocks from './createBlocks'
-import { locations, items, flags, variables, restoreLocally, storeLocally } from './quill'
+import { locations, items, flags, variables, restoreLocally, storeLocally, gameSettings } from './quill'
 
 Blockly.BlockSvg.START_HAT = true
 // Blockly.Flyout.prototype.autoClose = false
@@ -34,23 +34,29 @@ export const systemCommandsSettings = {
     "Pobiranje stvari": "takeItems"
 }
 
-export const gameSettings = {
-    allowRestart: true,
-    showInventory: true,
-    dropItems: true,
-    takeItems: true
-}
-
-
 class SettingsEditor extends React.Component {
     constructor(props) {
         super(props)
         this.state = gameSettings
+
+        this.changeMaxItems = this.changeMaxItems.bind(this)
+        this.onHide = this.onHide.bind(this)
+    }
+
+    changeMaxItems(e) {
+        const val = e.target.value ? parseInt(e.target.value) : e.target.value
+        if (!isNaN(val))
+            this.setState({maxItems: val})
+    }
+
+    onHide() {
+        gameSettings.maxItems = this.state.maxItems
+        this.props.closeHandler()
     }
 
     render() {
         if (!this.props.show) return null
-        return <Modal dialogClassName="location-editor" show={true} onHide={this.props.closeHandler} enforceFocus={true}>
+        return <Modal dialogClassName="location-editor" show={true} onHide={this.onHide} enforceFocus={true}>
             <Modal.Header closeButton>
                 <Modal.Title>Nastavitve igre</Modal.Title>
             </Modal.Header>
@@ -64,6 +70,12 @@ class SettingsEditor extends React.Component {
                             {name}
                         </Checkbox>)
                     }
+                    <ControlLabel>Največje število stvari, ki jih igralec lahko nosi (pusti prazno, če ne želiš omejitve)</ControlLabel>
+                    <FormControl id="inventory-size-limit"
+                                type="text"
+                                value={this.state.maxItems}
+                                onChange={this.changeMaxItems}
+                                placeholder="neomejeno"/>
                 </FormGroup>
             </Modal.Body>
         </Modal>
@@ -296,7 +308,7 @@ class LocationEditor extends React.Component {
                     <BlocklyDrawerWithNameCheck
                         tools={blocks}
                         workspaceXML={loc.workspace || ""}
-                        injectOptions={{toolboxPosition: 'end'}}>
+                        injectOptions={{toolboxPosition: 'end', media: './'}}>
                     </BlocklyDrawerWithNameCheck>
                 </Modal.Body>
             </Modal>
@@ -449,7 +461,7 @@ export default class GameMap extends React.Component {
     closeEditor = () => this.setState({editing: null})
 
     openSettingsEditor = () => this.setState({editSettings: true})
-    closeSettingsEditor = () => this.setState({editSettings: false})
+    closeSettingsEditor = () => { this.setState({editSettings: false}, storeLocally) }
 
     newLocation = (e) => {
         const newLoc = locations.addLocation()
@@ -541,5 +553,4 @@ export default class GameMap extends React.Component {
 restoreLocally()
 
 
-// TODO Clicking within connection rectangle connects with location itself, and this is difficult to remove.
-// Don't connect if the distance is below some threshold.
+// TODO Copy media to another directory, fix the link and the configuration
