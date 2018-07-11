@@ -6,7 +6,6 @@ import Blockly from 'node-blockly/browser'
 import BlocklyDrawer from 'react-blockly-drawer'
 
 import blocks from './createBlocks'
-import { blocksForStartup } from './createBlocks'
 import { locations, items, flags, variables, restoreLocally, storeLocally } from './quill'
 
 Blockly.BlockSvg.START_HAT = true
@@ -295,7 +294,7 @@ class LocationEditor extends React.Component {
                                  inputRef={node => { this.locDescArea = node }}
                     />
                     <BlocklyDrawerWithNameCheck
-                        tools={this.props.location == locations.STARTUP_COMMANDS_ID ? blocksForStartup : blocks}
+                        tools={blocks}
                         workspaceXML={loc.workspace || ""}
                         injectOptions={{toolboxPosition: 'end'}}>
                     </BlocklyDrawerWithNameCheck>

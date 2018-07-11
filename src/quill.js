@@ -113,7 +113,6 @@ class LocData {
 
 class Locations {
     GENERAL_COMMANDS_ID = "00000000-00000000-00000000-00000000-00000001"
-    STARTUP_COMMANDS_ID = "00000000-00000000-00000000-00000000-00000002"
 
     constructor() {
         this.reset()
@@ -139,15 +138,9 @@ class Locations {
                 "Na vseh lokacijah",
                 "Tu vnesi ukaze, ki so možni na vseh lokacijah",
                 10, 10, this.GENERAL_COMMANDS_ID)
-        if (this.startupCommands == undefined)
-            this.addLocation(
-                "Na začetku igre",
-                "Tu vnesi ukaze, ki se izvedejo na začetku igre. Uporabiš lahko le blok 'Ob vstopu'",
-                10, 120, this.STARTUP_COMMANDS_ID)
     }
 
     get generalCommands() { return this[this.GENERAL_COMMANDS_ID] }
-    get startUpCommands() { return this[this.STARTUP_COMMANDS_ID] }
 
     addLocation = (name=null, description="", x=0, y=0, locId=null) => {
         const newName = getUniqueName(name || "Nova lokacija", this.values().map(it => it.title))

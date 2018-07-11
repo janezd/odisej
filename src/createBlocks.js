@@ -4,7 +4,6 @@ import { locations, items, variables, flags } from './quill'
 
 
 const blocks = []
-const startUpBlocks = []
 
 function appendBlock(category, block_name, block) {
     blocks.push({category: category, name: block_name, block: block})
@@ -372,9 +371,6 @@ createCondition('Spremenljivke', 'compare_var', "", "VARIABLE",
         .appendField(createField("VARIABLE2"), "VARIABLE2"),
     "Spremenljivke")
 
-
-export const blocksForStartup = blocks.filter(block =>
-    ["random", "on_entry", "if", "elif", "else", "pick", "item_at", "set_flag", "set_const"]
-        .indexOf(block.name) != -1)
+createTopBlock('on_start', 'Ob začetku igre')
 
 export default blocks

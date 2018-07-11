@@ -241,6 +241,8 @@ export default class Game extends React.Component {
         }
     }
 
+    componentDidMount = () => this.autoExecuteOnStart()
+
     checkConditionList = (conditions, conjunctive=true) => {
         const comp = (op, op1, op2) => {
             switch (op) {
@@ -306,10 +308,25 @@ export default class Game extends React.Component {
         )
 
     resetGame = (then) =>
-        this.setState(this.prepareInitialState(), then)
+        this.setState(this.prepareInitialState(),
+            () => this.autoExecuteOnStart(then))
+
+    autoExecuteOnStart = then => {
+        const execute = first => first
+            ? this.executeSequence(first.block.next, () => execute(first.next))
+            : this.autoExecuteBlocks("on_entry", then)
+        const blockChain = locations
+            .entries()
+            .sort()  // ensure that "all locations" is executed first
+            .map(([id, location]) => location)
+            .reduce((chain, location) =>
+                chain.concat(location.commands.filter(it => (it.block == 'on_start'))), [])
+            .reduceRight((next, block) => ({next, block}), null)
+        execute(blockChain)
+    }
 
     autoExecuteBlocks = (blockType, then) => {
-        const execute = (first) => first ? this.executeSequence(first.block.next, () => execute(first.next)) : then && then()
+        const execute = first => first ? this.executeSequence(first.block.next, () => execute(first.next)) : then && then()
         const blockChain = locations[this.state.location].commands.concat(locations.generalCommands.commands)
             .filter(it => (it.block == blockType))
             .reduceRight((next, block) => ({next, block}), null)
@@ -470,6 +487,3 @@ export default class Game extends React.Component {
         )
     }
 }
-
-
-// TODO: Execute startup commands. Where is the state ready for it and from which function is it allowed to be updated?!
