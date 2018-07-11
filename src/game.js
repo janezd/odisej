@@ -180,6 +180,11 @@ const Compass = ({directions}) => {
 }
 
 
+const DropItemLink = ({itemState, itemId, onClick}) =>
+    gameSettings.dropItems && itemState[itemId] == ITEM_CARRIED
+        ? <span>&nbsp;(<a onClick={onClick}>odloži</a>)</span>
+        : null
+
 const Messages = ({messages}) =>
     messages.map((it, i) => <p key={i}>{it}</p>)
 
@@ -384,13 +389,10 @@ export default class Game extends React.Component {
                   inventory.map(([id, place], i) => {
                       const itemName = items[id]
                       return <span key={`item${i}`}>{i ? ", " : ""}{itemName}
-                          { gameSettings.dropItems
-                              ? <span>&nbsp;(<a onClick={() => {
-                                    if (this.state.items[id] == ITEM_CARRIED)
-                                        this.moveItem(id, this.state.location, `Odloži ${itemName}`)}}>
-                                  odloži</a>)</span>
-                              : "" }
-                          </span>
+                          <DropItemLink itemId={id}
+                                        itemState={this.state.items}
+                                        onClick={() => this.moveItem(id, this.state.location, `Odloži ${itemName}`)}/>
+                      </span>
                   })
               }</span>
             : "Nič."
