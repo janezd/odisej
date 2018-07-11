@@ -349,7 +349,7 @@ export default class Game extends React.Component {
 
         switch (block.block) {
             case 'go': return this.moveTo(block.location, then)
-            case 'print': return this.print(block.msg, then)
+            case 'print': return this.printBlock(block.msg, then)
             case 'delay': return this.delay(1000 * parseInt(block.constant), then)
             case 'reset': return this.resetGame(then)
 
@@ -396,6 +396,11 @@ export default class Game extends React.Component {
             : "Nič."
         this.print(<b>&gt; Kaj imam?</b>,
             () => this.print(itemList))
+    }
+
+    printBlock = (msg, then) => {
+        const msg2 = variables.entries().reduce((m, [id, name]) => m.split(`[${name}]`).join(this.state.variables[id]), msg)
+        this.print(msg2, then)
     }
 
     moveItem = (id, where, msg) =>
