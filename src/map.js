@@ -215,6 +215,9 @@ class LocationEditor extends React.Component {
         loc.title = this.loctitle.innerText
         loc.description = this.locDescArea.value
         loc.updateFromWorkspace(Blockly.getMainWorkspace())
+        // Blockly doesn't hide this -- apparently we don't close it gently enough (or at all)
+        Blockly.WidgetDiv.hide()
+        Blockly.Tooltip.hide()
         this.props.handleClose()
     }
 
