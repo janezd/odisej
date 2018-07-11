@@ -16,13 +16,15 @@ const AdderRemover = (props) => (
         .map(([id, name]) =>
             <span key={id}>
                 <Label bsStyle="danger" onClick={() => props.changer(id, false)}>x</Label>
-                <Label bsStyle="success">{name}</Label>
+                <Label bsStyle="success">{props.getName ? props.getName(id) : name}</Label>
                 <span> </span>
             </span>)}
         <DropdownButton id={props.title} bsSize="xsmall" title={props.title}>
             {props.model.entries()
                 .filter(([id, name]) => !props.selector(id))
-                .map(([id, name]) => <MenuItem key={id} eventKey={id} onSelect={() => props.changer(id, true)}>{name}</MenuItem>)
+                .map(([id, name]) => <MenuItem key={id} eventKey={id} onSelect={() => props.changer(id, true)}>
+                        {props.getName ? props.getName(id) : name}
+                    </MenuItem>)
             }
         </DropdownButton>
     </div>
@@ -70,6 +72,12 @@ class ShowGameState extends React.Component {
         const variables = this.props.state.variables
         variables[id] = value
         this.props.setGameState({variables})
+    }
+
+    visitUnvisit = (id, state) => {
+        const nVisits = this.props.state.nVisits
+        nVisits[id] = state ? 1 : 0
+        this.props.setGameState({nVisits})
     }
 
     render() {
@@ -141,6 +149,13 @@ class ShowGameState extends React.Component {
                             </span>
                         </span>)
                     }</dd>
+                    <dt>Obiskane lokacije:</dt>
+                    <dd><AdderRemover title="Označi kot obiskano"
+                                      model={locations}
+                                      getName={loc => locations[loc].title}
+                                      selector={loc => state.nVisits[loc]}
+                                      changer={this.visitUnvisit}
+                    /></dd>
                 </dl>
             </Modal.Body>
         </Modal>
@@ -237,6 +252,7 @@ export default class Game extends React.Component {
             items: _obj_from_keys(items, ITEM_DOES_NOT_EXIST),
             flags: _obj_from_keys(flags, false),
             variables: _obj_from_keys(variables, 0),
+            nVisits: _obj_from_keys(locations, 0),
             printed: []
         }
     }
@@ -262,6 +278,7 @@ export default class Game extends React.Component {
                 case 'disjunction': return this.checkConditionList(condition.allow, false)
 
                 case 'is_at': return this.state.location == condition.location
+                case 'has_visited': return this.state.nVisits[condition.location]
 
                 case 'does_have': return this.state.items[condition.item] == ITEM_CARRIED
                 case 'doesnt_have': return this.state.items[condition.item] != ITEM_CARRIED
@@ -292,9 +309,9 @@ export default class Game extends React.Component {
 
     moveTo = (location, then) =>
         this.autoExecuteBlocks("on_exit",
-            () => this.setState({location: location, printed: []},
+            () => { this.state.nVisits[location]++; this.setState({location, nVisits: this.state.nVisits, printed: []},
                 () => this.autoExecuteBlocks("on_entry", then)
-            )
+            )}
         )
 
     print = (msg, then) =>
@@ -313,6 +330,7 @@ export default class Game extends React.Component {
             () => this.autoExecuteOnStart(then))
 
     autoExecuteOnStart = then => {
+        this.state.nVisits[locations.startLocation]++
         const execute = first => first
             ? this.executeSequence(first.block.next, () => execute(first.next))
             : this.autoExecuteBlocks("on_entry", then)
@@ -379,7 +397,7 @@ export default class Game extends React.Component {
         const { variables, flags, items } = this.state
         const name = block.item || block.flag || block.variable
 
-        const setItem = value => this.moveItemOrComplain(name, value)
+        const setItem = value => this.moveItemOrComplain(name, value, then)
         const setFlag = value => { flags[name] = value; this.setState({flags}, then) }
         const setVariable = value => { variables[name] = value; this.setState({variables}, then) }
 

@@ -263,7 +263,7 @@ class LocationEditor extends React.Component {
                 return <Label onClick={() => this.props.setStartLocation(loc)} bsStyle="success">Nastavi kot začetno</Label>
         }
 
-        const toDeleteLabel = () => {
+        const deleteButton = () => {
             if (this.props.isInitial || isSpecial)
                 return ""
             const usedAt = locations.collectUses("usedLocations", this.props.location)[this.props.location]
@@ -296,7 +296,7 @@ class LocationEditor extends React.Component {
                             {loc.title}
                         </div>
                         { setToStart() }
-                        { toDeleteLabel() }
+                        { deleteButton() }
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
