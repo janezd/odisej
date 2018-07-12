@@ -153,7 +153,7 @@ class Node extends React.Component {
                                   onMouseDown={(e) => {this.props.newLineCallback(this, direction, e)}}
                                   onMouseEnter={() => insideCb(this, direction) }
                                   onMouseLeave={() => insideCb(null) }
-                                  style={{cursor: direction + '-resize'}} />)}
+                                  style={loc.directions[direction] ? {} : {cursor: direction + '-resize'}} />)}
                     </g>}
         </g>
     }
@@ -354,7 +354,7 @@ class Connection extends React.Component {
             y1 += y
             dx1 = dx * D
             dy1 = dy * D
-            destCirc = <circle cx={x1} cy={y1} r={5} />
+            destCirc = <circle cx={x1} cy={y1} z={-5} r={5} onClick={() => this.props.clickCallback(this, -1)}/>
         }
         else {
             x1 += CENTER
@@ -366,7 +366,7 @@ class Connection extends React.Component {
                   onClick={() => this.props.clickCallback(this) }/>
             <path stroke="#000000" strokeWidth="3" fill="transparent" d={`M${x0},${y0} C ${x0+dx},${y0+dy} ${x1+dx1},${y1+dy1} ${x1},${y1}`}
                   onClick={() => this.props.clickCallback(this) }/>
-            <circle cx={x0} cy={y0} r={5}/>
+            <circle cx={x0} cy={y0} z={-5} r={5} onClick={() => this.props.clickCallback(this, 1)}/>
             {destCirc}
             </g>
     }
@@ -449,22 +449,21 @@ export default class GameMap extends React.Component {
 
     dirMouseUp = (e) => {
         const { node, dir, x0, y0 } = this.state.newLine
+        const opposite = {n: 's', ne: 'sw', nw: 'se', e: 'w', w: 'e', s: 'n', se: 'nw', sw: 'ne'}
 
+        const srcLoc = locations[node.props.locId]
         if ((x0 - e.clientX) ** 2 + (y0 - e.clientY) ** 2 > 100) {
-            const srcLoc = locations[node.props.locId]
             const dest = this.currentlyHovered
             const destLoc = dest && locations[dest.props.locId] || this.newLocation(e)
-
-            if (!destLoc) {
-                delete srcLoc.directions[dir]
-            }
-            else {
-                srcLoc.directions[dir] = destLoc.locId
-            }
-            if ((srcLoc != destLoc) && this.hoveredDirection) {
-                destLoc.directions[this.hoveredDirection] = srcLoc.locId
+            srcLoc.directions[dir] = destLoc.locId
+            if (srcLoc != destLoc) {
+                destLoc.directions[this.hoveredDirection || opposite[dir]] = srcLoc.locId
             }
         }
+        else {
+            delete srcLoc.directions[dir]
+        }
+
 
         this.setState({newLine: null})
         document.removeEventListener('mousemove', this.dirMouseMove)
@@ -479,10 +478,11 @@ export default class GameMap extends React.Component {
         this.setState({newLine})
     }
 
-    removeConnection = (conn) => {
+    removeConnection = (conn, direction) => {
         const { src, dir, dest, backDir } = conn.props
+        if (direction != -1)
         delete locations[src].directions[dir]
-        if (backDir) {
+        if (backDir && (direction != 1)) {
             delete locations[dest].directions[backDir]
         }
         this.setState(this.state)
@@ -538,7 +538,7 @@ export default class GameMap extends React.Component {
           <SettingsEditor show={this.state.editSettings} closeHandler={this.closeSettingsEditor}/>
           <svg width={width} height={height}
                id="gamemap" onDoubleClick={e => { this.newLocation(e); e.preventDefault();e.stopPropagation() } }>
-            <g transform={`translate(${250 - minx} ${250 - miny})`}>
+              <g transform={`translate(${250 - minx} ${250 - miny})`}>
                 { Array.prototype.concat(
                     ...locations.keys()
                         .map(srcId => {
@@ -571,14 +571,14 @@ export default class GameMap extends React.Component {
                     .reduce((acc, x) => acc.concat(x), [])
                     .map(([src, dest]) => <ImplicitConnection key={src + ':' + dest} src={src} dest={dest}/>)
                 }
-                { locations.keys().map(it => <Node
-                    key={it} locId={it}
-                    isInitial={it == locations.startLocation}
-                    newLineCallback={this.dirMouseDown}
-                    insideCallback={this.setHovered}
-                    moveByCallback={this.moveNodeBy}
-                    onDoubleClick={e => { this.editLocation(it); e.preventDefault();e.stopPropagation() } }
-                                        />) }
+                  { locations.keys().map(it => <Node
+                      key={it} locId={it}
+                      isInitial={it == locations.startLocation}
+                      newLineCallback={this.dirMouseDown}
+                      insideCallback={this.setHovered}
+                      moveByCallback={this.moveNodeBy}
+                      onDoubleClick={e => { this.editLocation(it); e.preventDefault();e.stopPropagation() } }
+                  />) }
                 <TempConnection line={this.state.newLine} />
             </g>
           </svg>
