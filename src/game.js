@@ -37,9 +37,9 @@ class ShowGameState extends React.Component {
     }
 
     saveState = () => {
-        const {location, items, flags, variables} = this.props.state
+        const {location, items, flags, variables, nVisits} = this.props.state
         const blob = new Blob(
-            [JSON.stringify({location, items, flags, variables})],
+            [JSON.stringify({location, items, flags, variables, nVisits})],
             { type: 'text/plain' })
         const anchor = document.createElement('a');
         anchor.download = "stanje-igre.json";
