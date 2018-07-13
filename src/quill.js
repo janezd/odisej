@@ -297,3 +297,20 @@ export function restoreLocally(json) {
     //}
     //catch (e) {}
 }
+
+
+export function saveGame() {
+    const blob = new Blob([localStorage.odisej], { type: 'text/plain' })
+    const anchor = document.createElement('a');
+    anchor.download = "odisej.json";
+    anchor.href = (window.webkitURL || window.URL).createObjectURL(blob)
+    anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':')
+    anchor.click()
+}
+
+export function loadGame(file, then) {
+    const reader = new FileReader()
+    reader.onload = json => { restoreLocally(json.target.result); then && then() }
+    reader.readAsText(file)
+}
+

@@ -1,5 +1,5 @@
 import React from "react"
-import { Panel, Button, Media, Modal, Label, FormControl, ControlLabel, DropdownButton, MenuItem } from 'react-bootstrap'
+import { Panel, Button, Media, Modal, Label, FormControl, ControlLabel, DropdownButton, MenuItem, Navbar, ButtonToolbar } from 'react-bootstrap'
 import blocks from "./createBlocks"
 import { locations, items, flags, variables, gameSettings } from './quill'
 import { systemCommandsSettings } from './map'
@@ -30,28 +30,10 @@ const AdderRemover = (props) => (
     </div>
 )
 
-class ShowGameState extends React.Component {
+class GameState extends React.Component {
     constructor() {
         super()
         this.changeFlag = this.changeFlag.bind(this)
-    }
-
-    saveState = () => {
-        const {location, items, flags, variables, nVisits} = this.props.state
-        const blob = new Blob(
-            [JSON.stringify({location, items, flags, variables, nVisits})],
-            { type: 'text/plain' })
-        const anchor = document.createElement('a');
-        anchor.download = "stanje-igre.json";
-        anchor.href = (window.webkitURL || window.URL).createObjectURL(blob)
-        anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':')
-        anchor.click()
-    }
-
-    loadState = files => {
-        const reader = new FileReader()
-        reader.onload = e => this.props.setGameState(JSON.parse(e.target.result))
-        reader.readAsText(files[0])
     }
 
     setLocation = location => this.props.setGameState({location})
@@ -88,12 +70,6 @@ class ShowGameState extends React.Component {
             <Modal.Header closeButton>
                 <Modal.Title>
                     Stanje igre
-                    <Label bsStyle="success" onClick={this.saveState}>Shrani</Label>
-                    <FormControl id="stateUpload" style={{display: "none"}} type="file" accept=".json"
-                                 onChange={e => this.loadState(e.target.files)}/>
-                    <ControlLabel htmlFor="stateUpload">
-                        <Label bsStyle="success">Naloži</Label>
-                    </ControlLabel>
                 </Modal.Title>
             </Modal.Header>
             <Modal.Body>
@@ -238,6 +214,8 @@ export default class Game extends React.Component {
             if (!gameSettings[systemCommandsSettings[key]])
                 delete this.systemCommands[key]
         })
+
+        this.showGameState = this.showGameState.bind()
     }
 
     prepareInitialState = () => {
@@ -255,6 +233,24 @@ export default class Game extends React.Component {
             nVisits: _obj_from_keys(locations, 0),
             printed: []
         }
+    }
+
+    saveState = () => {
+        const {location, items, flags, variables, nVisits} = this.state
+        const blob = new Blob(
+            [JSON.stringify({location, items, flags, variables, nVisits})],
+            { type: 'text/plain' })
+        const anchor = document.createElement('a');
+        anchor.download = "stanje-igre.json";
+        anchor.href = (window.webkitURL || window.URL).createObjectURL(blob)
+        anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':')
+        anchor.click()
+    }
+
+    loadState = files => {
+        const reader = new FileReader()
+        reader.onload = e => this.setState(JSON.parse(e.target.result))
+        reader.readAsText(files[0])
     }
 
     componentDidMount = () => this.autoExecuteOnStart()
@@ -505,22 +501,51 @@ export default class Game extends React.Component {
         const location = locations[this.state.location]
         const [directions, commands] = this.getCommandList()
         return (
-            <Panel>
-                <ShowGameState show={this.state.showState}
-                               state={this.state} setGameState={this.setGameState} handleClose={this.hideGameState}/>
-                <Media>
-                    <Media.Left>
-                        <img src={location.image} style={{float: "left", border: "solid thin", margin: 10, width: 600}}/>
-                    </Media.Left>
-                    <Media.Body>
-                        <h1>{location.title}</h1>
-                        <p>{location.description}</p>
-                        <Messages messages={this.state.printed}/>
-                        <Commands show={this.state.showCommands}
-                                  directions={directions} commands={commands} systemCommands={this.systemCommands} />
-                    </Media.Body>
-                </Media>
-            </Panel>
+            <div>
+                <Navbar>
+                    <Navbar.Header>
+                        <Navbar.Brand>
+                            Odisej
+                        </Navbar.Brand>
+                    </Navbar.Header>
+                    <Navbar.Form pullRight>
+                        <ButtonToolbar>
+                            <Label bsStyle="success" onClick={this.saveState}>Shrani</Label>
+                            <FormControl id="stateUpload" style={{display: "none"}} type="file" accept=".json"
+                                         onChange={e => this.loadState(e.target.files)}/>
+                            <ControlLabel htmlFor="stateUpload">
+                                <Label bsStyle="success">Naloži</Label>
+                            </ControlLabel>
+                            { this.props.debug ?
+                                <span>
+                                    <Button onClick={this.showGameState}>
+                                        Stanje igre
+                                    </Button>
+                                    <Button onClick={this.props.switchToCreate}>
+                                        Ustvari
+                                    </Button>
+                                </span>
+                                : "" }
+                        </ButtonToolbar>
+                    </Navbar.Form>
+                </Navbar>
+                <Panel>
+                    <GameState show={this.state.showState} state={this.state}
+                               setGameState={this.setGameState} handleClose={this.hideGameState}/>
+                    <Media>
+                        <Media.Left>
+                            <img src={location.image} style={{float: "left", border: "solid thin", margin: 10, width: 600}}/>
+                        </Media.Left>
+                        <Media.Body>
+                            <h1>{location.title}</h1>
+                            <p>{location.description}</p>
+                            <Messages messages={this.state.printed}/>
+                            <Commands show={this.state.showCommands}
+                                      directions={directions} commands={commands} systemCommands={this.systemCommands} />
+                        </Media.Body>
+                    </Media>
+                </Panel>
+            </div>
         )
     }
 }

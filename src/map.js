@@ -1,13 +1,13 @@
 import React from "react"
 import ReactSVG from 'react-svg'
-import { Modal, FormGroup, FormControl, ControlLabel, Input, Label, Button, Checkbox } from 'react-bootstrap'
+import { Modal, FormGroup, FormControl, ControlLabel, Input, Label, Button, Checkbox, Navbar, ButtonToolbar } from 'react-bootstrap'
 
 import Blockly from 'node-blockly/browser'
 import BlocklyDrawer from 'react-blockly-drawer'
 
 import blocks from './createBlocks'
 import { refreshDropdowns } from './createBlocks'
-import { locations, items, flags, variables, restoreLocally, storeLocally, gameSettings } from './quill'
+import { locations, items, flags, variables, restoreLocally, storeLocally, gameSettings, saveGame, loadGame } from './quill'
 
 Blockly.BlockSvg.START_HAT = true
 // Blockly.Flyout.prototype.autoClose = false
@@ -430,12 +430,11 @@ const TempConnection = (props) => {
     </g>
 }
 
-export default class GameMap extends React.Component {
+class GameMap extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            newLine: null,
-            editing: null
+            newLine: null
         }
         this.currentlyHovered = null
     }
@@ -509,28 +508,12 @@ export default class GameMap extends React.Component {
         this.setState(this.state)
     }
 
-    editLocation = (locId) => this.setState({editing: locId})
-    closeEditor = () => this.setState({editing: null})
-
-    openSettingsEditor = () => this.setState({editSettings: true})
-    closeSettingsEditor = () => { this.setState({editSettings: false}, storeLocally) }
-
     newLocation = (e) => {
         const newLoc = locations.addLocation()
         newLoc.x = e.clientX - this.offsetX - 56
         newLoc.y = e.clientY - this.offsetY - 56
         this.setState(this.state)
         return newLoc
-    }
-
-    setStartLocation = (location) => {
-        locations.startLocation = location.locId
-        this.setState(this.state)
-    }
-
-    setLocationImage = (location, image) => {
-        locations[location].image = image || ""
-        this.setState(this.state)
     }
 
     shouldComponentUpdate = (nextProps, nextState) => true
@@ -549,14 +532,6 @@ export default class GameMap extends React.Component {
         const height = Math.max(window.innerHeight, maxy - miny + 500)
 
         return <div>
-          <LocationEditor
-              location={this.state.editing}
-              isInitial={this.state.editing == locations.startLocation}
-              handleClose={this.closeEditor}
-              setLocationImage={this.setLocationImage}
-              setStartLocation={this.setStartLocation}
-          />
-          <SettingsEditor show={this.state.editSettings} closeHandler={this.closeSettingsEditor}/>
           <svg width={width} height={height}
                id="gamemap" onDoubleClick={e => { this.newLocation(e); e.preventDefault();e.stopPropagation() } }>
               <g transform={`translate(${250 - minx} ${250 - miny})`}>
@@ -599,13 +574,77 @@ export default class GameMap extends React.Component {
                       newLineCallback={this.dirMouseDown}
                       insideCallback={this.setHovered}
                       moveByCallback={this.moveNodeBy}
-                      openEditor={() => this.editLocation(it) }
+                      openEditor={() => this.props.editLocation(it) }
                   />) }
                 <TempConnection line={this.state.newLine} />
             </g>
           </svg>
           </div>
       }
+}
+
+export default class Creator extends React.Component {
+    constructor(props) {
+        super(props)
+        this.state = {
+            editing: null,
+            editSettings: false
+        }
+        this.openSettingsEditor = this.openSettingsEditor.bind()
+    }
+
+    editLocation = (locId) => this.setState({editing: locId})
+    closeEditor = () => this.setState({editing: null})
+
+    openSettingsEditor = () => this.setState({editSettings: true})
+    closeSettingsEditor = () => { this.setState({editSettings: false}, storeLocally) }
+
+    setStartLocation = (location) => {
+        locations.startLocation = location.locId
+        this.setState(this.state)
+    }
+
+    setLocationImage = (location, image) => {
+        locations[location].image = image || ""
+        this.setState(this.state)
+    }
+
+    render = () =>
+        <div>
+            <Navbar>
+                <Navbar.Header>
+                    <Navbar.Brand>
+                        <Button onClick={this.resetData}>Pobriši vse</Button>
+                        Odisej
+                    </Navbar.Brand>
+                </Navbar.Header>
+                <Navbar.Form pullRight>
+                    <ButtonToolbar>
+                        <Button onClick={() => this.props.switchToPlay(true)}>Preskusi</Button>
+                        <Button onClick={() => this.props.switchToPlay(false)}>Igraj</Button>
+                        <Label onClick={saveGame}>Shrani</Label>
+                        <FormControl id="gameUpload"
+                                     type="file"
+                                     accept=".json"
+                                     onChange={e => loadGame(e.target.files[0], () => this.forceUpdate()) }
+                                     style={{display: "none"}}/>
+                        <ControlLabel htmlFor="gameUpload">
+                            <Label>Naloži</Label>
+                        </ControlLabel>
+                        <Button onClick={this.openSettingsEditor}>Nastavitve igre</Button>
+                    </ButtonToolbar>
+                </Navbar.Form>
+            </Navbar>
+            <LocationEditor
+                location={this.state.editing}
+                isInitial={this.state.editing == locations.startLocation}
+                handleClose={this.closeEditor}
+                setLocationImage={this.setLocationImage}
+                setStartLocation={this.setStartLocation}
+            />
+            <SettingsEditor show={this.state.editSettings} closeHandler={this.closeSettingsEditor}/>
+            <GameMap editLocation={this.editLocation}/>
+        </div>
 }
 
 restoreLocally()
