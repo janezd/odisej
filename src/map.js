@@ -87,19 +87,27 @@ class SettingsEditor extends React.Component {
 class Node extends React.Component {
     polyMouseDown = (e) => {
         this.coords = { x: e.pageX, y: e.pageY }
+        this.unsnapped = false
         document.addEventListener('mousemove', this.polyMouseMove)
     }
 
     polyMouseUp = () => {
         document.removeEventListener('mousemove', this.polyMouseMove)
+        if (!this.unsnapped) {
+            this.props.openEditor()
+        }
     }
 
     polyMouseMove = (e) => {
         const xDiff = this.coords.x - e.pageX
         const yDiff = this.coords.y - e.pageY
-        this.coords.x = e.pageX
-        this.coords.y = e.pageY
-        this.props.moveByCallback(this, -xDiff, -yDiff)
+        if (xDiff ** 2 + yDiff ** 2 > 50)
+            this.unsnapped = true
+        if (this.unsnapped) {
+            this.coords.x = e.pageX
+            this.coords.y = e.pageY
+            this.props.moveByCallback(this, -xDiff, -yDiff)
+        }
     }
 
     render() {
@@ -124,7 +132,6 @@ class Node extends React.Component {
                         </clipPath>
                         <image width="105" height="105" href={loc.image} clipPath="url(#hexagon-clip)"
                                style={{cursor: 'move'}}
-                               onDoubleClick={this.props.onDoubleClick}
                                onMouseDown={this.polyMouseDown}
                                onMouseUp={this.polyMouseUp}
                                onMouseEnter={() => insideCb(this) }
@@ -592,7 +599,7 @@ export default class GameMap extends React.Component {
                       newLineCallback={this.dirMouseDown}
                       insideCallback={this.setHovered}
                       moveByCallback={this.moveNodeBy}
-                      onDoubleClick={e => { this.editLocation(it); e.preventDefault();e.stopPropagation() } }
+                      openEditor={() => this.editLocation(it) }
                   />) }
                 <TempConnection line={this.state.newLine} />
             </g>
