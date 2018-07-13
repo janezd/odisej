@@ -384,6 +384,7 @@ class ImplicitConnection extends React.Component {
     render() {
         const src = locations[this.props.src]
         const dest = locations[this.props.dest]
+        if (src === dest) return null
         let x0 = src.x
         let y0 = src.y
         let x1 = dest.x
