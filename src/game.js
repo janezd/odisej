@@ -208,14 +208,11 @@ export default class Game extends React.Component {
         }
 
         this.systemCommands = {
-            "Začni znova": () => this.resetGame(),
             "Kaj imam?": () => this.printInventory() }
         Object.keys(this.systemCommands).forEach(key => {
             if (!gameSettings[systemCommandsSettings[key]])
                 delete this.systemCommands[key]
         })
-
-        this.showGameState = this.showGameState.bind()
     }
 
     prepareInitialState = () => {
@@ -516,6 +513,9 @@ export default class Game extends React.Component {
                             <ControlLabel htmlFor="stateUpload">
                                 <Label bsStyle="success">Naloži</Label>
                             </ControlLabel>
+                            <Button onClick={() => this.resetGame()}>
+                                Začni znova
+                            </Button>
                             { this.props.debug ?
                                 <span>
                                     <Button onClick={this.showGameState}>

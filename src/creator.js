@@ -27,7 +27,6 @@ class BlocklyDrawerWithNameCheck extends BlocklyDrawer {
 
 
 export const systemCommandsSettings = {
-    "Začni znova": "allowRestart",
     "Kaj imam?": "showInventory",
     "Odlaganje stvari": "dropItems",
     "Pobiranje stvari": "takeItems"
