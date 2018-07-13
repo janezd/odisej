@@ -4,7 +4,7 @@ import { Navbar, Nav, Button, ButtonToolbar, FormControl, ControlLabel, Label } 
 
 import { restoreLocally, resetData } from './quill'
 import Game from './game'
-import Creator from './map'
+import Creator from './creator'
 
 
 class App extends React.Component {

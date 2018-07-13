@@ -2,7 +2,7 @@ import React from "react"
 import { Panel, Button, Media, Modal, Label, FormControl, ControlLabel, DropdownButton, MenuItem, Navbar, ButtonToolbar } from 'react-bootstrap'
 import blocks from "./createBlocks"
 import { locations, items, flags, variables, gameSettings } from './quill'
-import { systemCommandsSettings } from './map'
+import { systemCommandsSettings } from './creator'
 
 const ITEM_CARRIED = -1
 const ITEM_DOES_NOT_EXIST = -2
