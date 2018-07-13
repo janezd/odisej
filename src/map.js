@@ -4,17 +4,37 @@ import { locations, storeLocally } from './quill'
 const D=30
 
 
+const Nodes = props =>
+    locations.keys().map(locId => <Node
+        key={locId} locId={locId}
+        isInitial={locId == locations.startLocation}
+        onNewLine={props.onNewLine}
+        onHover={props.onHover}
+        onMove={props.onMove}
+        onEditLocation={() => props.onEditLocation(locId) }
+    />)
+
+
 class Node extends React.Component {
+    constructor(props) {
+        super(props)
+        this.openEditor = false
+    }
+
     polyMouseDown = (e) => {
         this.coords = { x: e.pageX, y: e.pageY }
-        this.unsnapped = false
+        this.openEditor = true
         document.addEventListener('mousemove', this.polyMouseMove)
     }
 
     polyMouseUp = () => {
         document.removeEventListener('mousemove', this.polyMouseMove)
-        if (!this.unsnapped) {
-            this.props.openEditor()
+        if (this.openEditor) {
+            this.openEditor = false
+            this.props.onEditLocation()
+        }
+        else {
+            storeLocally()
         }
     }
 
@@ -22,18 +42,18 @@ class Node extends React.Component {
         const xDiff = this.coords.x - e.pageX
         const yDiff = this.coords.y - e.pageY
         if (xDiff ** 2 + yDiff ** 2 > 50)
-            this.unsnapped = true
-        if (this.unsnapped) {
+            this.openEditor = false
+        if (!this.openEditor) {
             this.coords.x = e.pageX
             this.coords.y = e.pageY
-            this.props.moveByCallback(this, -xDiff, -yDiff)
+            this.props.onMove(this.props.locId, -xDiff, -yDiff)
         }
     }
 
     render() {
         const loc = locations[this.props.locId]
         const isSpecial = locations.isSpecial(loc)
-        const insideCb = (obj, dir) => { if (!isSpecial) this.props.insideCallback(obj, dir) }
+        const insideCb = (obj, dir) => { if (!isSpecial) this.props.onHover(obj, dir) }
 
         return <g transform={`translate(${loc.x} ${loc.y})`}>
                     <text x="52" y="115" textAnchor="middle" fontFamily="sans-serif" style={{userSelect: 'none'}}>
@@ -78,7 +98,7 @@ class Node extends React.Component {
                         ].map(({direction, x, y, width, height, transform}) =>
                             <rect key={direction}
                                   x={x} y={y} width={width} height={height} transform={transform} fill="none"
-                                  onMouseDown={(e) => {this.props.newLineCallback(this, direction, e)}}
+                                  onMouseDown={(e) => {this.props.onNewLine(this, direction, e)}}
                                   onMouseEnter={() => insideCb(this, direction) }
                                   onMouseLeave={() => insideCb(null) }
                                   style={loc.directions[direction] ? {} : {cursor: direction + '-resize'}} />)}
@@ -88,6 +108,42 @@ class Node extends React.Component {
 }
 
 
+class Connections extends React.Component {
+    onRemoveConnection = (conn, direction) => {
+        const {src, dir, dest, backDir} = conn.props
+        if (direction != -1)
+            delete locations[src].directions[dir]
+        if (backDir && (direction != 1)) {
+            delete locations[dest].directions[backDir]
+        }
+        this.forceUpdate()
+        storeLocally()
+    }
+
+    render = () =>
+        locations.entries().map(([srcId, srcLoc]) => {
+            const srcDirections = locations[srcId].directions
+            return Object.entries(srcDirections)
+                .map(([dir, destId]) => {
+                    const destLoc = locations[destId]
+                    const multipleToDest = Object.values(srcDirections)
+                        .filter(dest => dest == destId).length > 1
+                    const backConnections = Object.entries(destLoc.directions)
+                        .filter(([dir, destDestId]) => destDestId == srcId)
+                    if (destId != srcId && !multipleToDest && backConnections.length == 1) {
+                        if (srcId < destId) {
+                            return <Connection key={srcId + dir} src={srcId} dir={dir} dest={destId}
+                                               backDir={backConnections[0][0]}
+                                               onRemoveConnection={this.onRemoveConnection}/>
+                        }
+                    }
+                    else {
+                        return <Connection key={srcId + dir} src={srcId} dir={dir} dest={destId}
+                                           onRemoveConnection={this.onRemoveConnection}/>
+                    }
+                })
+        })
+}
 
 const S2 = Math.sqrt(2) / 2
 
@@ -140,7 +196,7 @@ class Connection extends React.Component {
             y1 += y
             dx1 = dx * D
             dy1 = dy * D
-            destCirc = <circle cx={x1} cy={y1} z={-5} r={5} onClick={() => this.props.clickCallback(this, -1)}/>
+            destCirc = <circle cx={x1} cy={y1} z={-5} r={5} onClick={() => this.props.onRemoveConnection(this, -1)}/>
         }
         else {
             x1 += CENTER
@@ -149,14 +205,23 @@ class Connection extends React.Component {
 
         return <g>
             <path stroke="transparent" strokeWidth="6" fill="transparent" d={`M${x0},${y0} C ${x0+dx},${y0+dy} ${x1+dx1},${y1+dy1} ${x1},${y1}`}
-                  onClick={() => this.props.clickCallback(this) }/>
+                  onClick={() => this.props.onRemoveConnection(this) }/>
             <path stroke="#000000" strokeWidth="3" fill="transparent" d={`M${x0},${y0} C ${x0+dx},${y0+dy} ${x1+dx1},${y1+dy1} ${x1},${y1}`}
-                  onClick={() => this.props.clickCallback(this) }/>
-            <circle cx={x0} cy={y0} z={-5} r={5} onClick={() => this.props.clickCallback(this, 1)}/>
+                  onClick={() => this.props.onRemoveConnection(this) }/>
+            <circle cx={x0} cy={y0} z={-5} r={5} onClick={() => this.props.onRemoveConnection(this, 1)}/>
             {destCirc}
             </g>
     }
 }
+
+
+const ImplicitConnections = () =>
+    locations.values()
+        .map(location => location.movesTo.map(dest => [location.locId, dest]))
+        .reduce((acc, x) => acc.concat(x), [])
+        .filter(([src, dest]) => src !== dest)
+        .map(([src, dest]) => <ImplicitConnection key={src + ':' + dest} src={src} dest={dest}/>)
+
 
 class ImplicitConnection extends React.Component {
     constructor(props) {
@@ -205,42 +270,41 @@ export default class GameMap extends React.Component {
         this.currentlyHovered = null
     }
 
-    setState(newState) {
-        super.setState(newState)
-        storeLocally()
-    }
-
     setHovered = (node, dir) => {
         this.currentlyHovered = node
         this.hoveredDirection = dir
     }
 
-    moveNodeBy = (node, xDiff, yDiff) => {
-        const loc = locations[node.props.locId]
+    moveLocationBy = (locId, xDiff, yDiff) => {
+        const loc = locations[locId]
         loc.x += xDiff
         loc.y += yDiff
-        this.setState(this.state)
+        this.forceUpdate()
     }
 
-    dirMouseDown = (node, dir, e) => {
+    startNewLine = (node, dir, e) => {
         let {x, y, dx, dy} = CONN_COORDS[dir]
         const loc = locations[node.props.locId]
         x += loc.x
         y += loc.y
-        this.setState({newLine: {node, dir, x, y, dx, dy, x0: e.clientX, y0: e.clientY,
-                                 mx: e.clientX - this.offsetX, my: e.clientY - this.offsetY}})
+        this.setState({
+            newLine: {
+                node, dir, x, y, dx, dy, x0: e.clientX, y0: e.clientY,
+                mx: e.clientX - this.offsetX, my: e.clientY - this.offsetY
+            }
+        })
         document.addEventListener('mousemove', this.dirMouseMove);
         document.addEventListener('mouseup', this.dirMouseUp);
     }
 
     dirMouseUp = (e) => {
-        const { node, dir, x0, y0 } = this.state.newLine
+        const {node, dir, x0, y0} = this.state.newLine
         const opposite = {n: 's', ne: 'sw', nw: 'se', e: 'w', w: 'e', s: 'n', se: 'nw', sw: 'ne'}
 
         const srcLoc = locations[node.props.locId]
         if ((x0 - e.clientX) ** 2 + (y0 - e.clientY) ** 2 > 100) {
             const dest = this.currentlyHovered
-            const destLoc = dest && locations[dest.props.locId] || this.newLocation(e)
+            const destLoc = dest && locations[dest.props.locId] || this.newLocation(e)
             srcLoc.directions[dir] = destLoc.locId
             if (srcLoc != destLoc) {
                 destLoc.directions[this.hoveredDirection || opposite[dir]] = srcLoc.locId
@@ -250,11 +314,11 @@ export default class GameMap extends React.Component {
             delete srcLoc.directions[dir]
         }
 
-
         this.setState({newLine: null})
         document.removeEventListener('mousemove', this.dirMouseMove)
         document.removeEventListener('mouseup', this.dirMouseUp)
         e.stopPropagation()
+        storeLocally()
     }
 
     dirMouseMove = (e) => {
@@ -264,28 +328,24 @@ export default class GameMap extends React.Component {
         this.setState({newLine})
     }
 
-    removeConnection = (conn, direction) => {
-        const { src, dir, dest, backDir } = conn.props
-        if (direction != -1)
-        delete locations[src].directions[dir]
-        if (backDir && (direction != 1)) {
-            delete locations[dest].directions[backDir]
-        }
-        this.setState(this.state)
-    }
-
     newLocation = (e) => {
         const newLoc = locations.addLocation()
         newLoc.x = e.clientX - this.offsetX - 56
         newLoc.y = e.clientY - this.offsetY - 56
-        this.setState(this.state)
+        this.forceUpdate()
+        storeLocally()
         return newLoc
     }
 
     shouldComponentUpdate = (nextProps, nextState) => true
 
-    get offsetX() { return document.getElementById("gamemap").getBoundingClientRect().x }
-    get offsetY() { return document.getElementById("gamemap").getBoundingClientRect().y }
+    get offsetX() {
+        return document.getElementById("gamemap").getBoundingClientRect().x
+    }
+
+    get offsetY() {
+        return document.getElementById("gamemap").getBoundingClientRect().y
+    }
 
     render() {
         const xs = locations.values().map(loc => loc.x)
@@ -298,53 +358,22 @@ export default class GameMap extends React.Component {
         const height = Math.max(window.innerHeight, maxy - miny + 500)
 
         return <div>
-          <svg width={width} height={height}
-               id="gamemap" onDoubleClick={e => { this.newLocation(e); e.preventDefault();e.stopPropagation() } }>
-              <g transform={`translate(${250 - minx} ${250 - miny})`}>
-                { Array.prototype.concat(
-                    ...locations.keys()
-                        .map(srcId => {
-                            const srcDirections = locations[srcId].directions
-                            return Object
-                                .entries(srcDirections)
-                                .map(([dir, destId]) => {
-                                    const multipleToDest = Object.values(srcDirections)
-                                                                 .filter(it => it == destId).length > 1
-                                    const destLoc = locations[destId]
-                                    const backConnections = Object.entries(destLoc.directions)
-                                                                  .filter(([dir, destDestId]) => destDestId == srcId)
-                                    if (destId != srcId && !multipleToDest && backConnections.length == 1) {
-                                        if (srcId < destId) {
-                                            return <Connection key={srcId + dir}
-                                                            src={srcId} dir={dir}
-                                                            dest={destId} backDir={backConnections[0][0]}
-                                                            clickCallback={this.removeConnection} />
-                                        }
-                                    }
-                                    else {
-                                        return <Connection key={srcId + dir} src={srcId} dir={dir} dest={destId}
-                                                           clickCallback={this.removeConnection} />
-                                    }
-                                })
-                        })
-                 )}
-               {  locations.values()
-                    .map(location => location.movesTo.map(dest => [location.locId, dest]))
-                    .reduce((acc, x) => acc.concat(x), [])
-                    .filter(([src, dest]) => src !== dest)
-                    .map(([src, dest]) => <ImplicitConnection key={src + ':' + dest} src={src} dest={dest}/>)
-                }
-                  { locations.keys().map(it => <Node
-                      key={it} locId={it}
-                      isInitial={it == locations.startLocation}
-                      newLineCallback={this.dirMouseDown}
-                      insideCallback={this.setHovered}
-                      moveByCallback={this.moveNodeBy}
-                      openEditor={() => this.props.editLocation(it) }
-                  />) }
-                <TempConnection line={this.state.newLine} />
-            </g>
-          </svg>
-          </div>
-      }
+            <svg width={width} height={height}
+                 id="gamemap" onDoubleClick={e => {
+                this.newLocation(e);
+                e.preventDefault();
+                e.stopPropagation()
+            }}>
+                <g transform={`translate(${250 - minx} ${250 - miny})`}>
+                    <Connections/>
+                    <ImplicitConnections/>
+                    <Nodes onNewLine={this.startNewLine}
+                           onHover={this.setHovered}
+                           onMove={this.moveLocationBy}
+                           onEditLocation={this.props.onEditLocation}/>
+                    <TempConnection line={this.state.newLine}/>
+                </g>
+            </svg>
+        </div>
+    }
 }

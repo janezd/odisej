@@ -251,7 +251,7 @@ export default class Creator extends React.Component {
     }
 
     editLocation = (locId) => this.setState({editing: locId})
-    closeEditor = () => this.setState({editing: null})
+    closeEditor = () => this.setState({editing: null}, storeLocally)
 
     openSettingsEditor = () => this.setState({editSettings: true})
     closeSettingsEditor = () => { this.setState({editSettings: false}, storeLocally) }
@@ -259,11 +259,13 @@ export default class Creator extends React.Component {
     setStartLocation = (location) => {
         locations.startLocation = location.locId
         this.setState(this.state)
+        storeLocally()
     }
 
     setLocationImage = (location, image) => {
         locations[location].image = image || ""
         this.setState(this.state)
+        storeLocally()
     }
 
     render = () =>
@@ -300,11 +302,8 @@ export default class Creator extends React.Component {
                 setStartLocation={this.setStartLocation}
             />
             <SettingsEditor show={this.state.editSettings} closeHandler={this.closeSettingsEditor}/>
-            <GameMap editLocation={this.editLocation}/>
+            <GameMap onEditLocation={this.editLocation}/>
         </div>
 }
-
-restoreLocally()
-
 
 // TODO Copy media to another directory, fix the link and the configuration

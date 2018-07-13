@@ -25,4 +25,5 @@ class App extends React.Component {
     }
 }
 
+restoreLocally()
 render(<App/>, document.getElementById('react-container'))
