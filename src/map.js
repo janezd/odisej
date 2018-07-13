@@ -405,7 +405,6 @@ class ImplicitConnection extends React.Component {
     render() {
         const src = locations[this.props.src]
         const dest = locations[this.props.dest]
-        if (src === dest) return null
         let x0 = src.x
         let y0 = src.y
         let x1 = dest.x
@@ -591,6 +590,7 @@ export default class GameMap extends React.Component {
                {  locations.values()
                     .map(location => location.movesTo.map(dest => [location.locId, dest]))
                     .reduce((acc, x) => acc.concat(x), [])
+                    .filter(([src, dest]) => src !== dest)
                     .map(([src, dest]) => <ImplicitConnection key={src + ':' + dest} src={src} dest={dest}/>)
                 }
                   { locations.keys().map(it => <Node

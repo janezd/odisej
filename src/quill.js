@@ -116,7 +116,10 @@ class LocData {
                     })
                 )
             if (block.type == "go") {
-                this.movesTo.push(block.inputList[0].fieldRow[1].getValue())
+                const where = block.inputList[0].fieldRow[1].getValue()
+                if (this.movesTo.indexOf(where) == -1) {
+                    this.movesTo.push(where)
+                }
             }
         })
     }
