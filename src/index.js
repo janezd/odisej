@@ -2,7 +2,7 @@ import React from 'react'
 import { render } from 'react-dom'
 import { Navbar, Nav, Button, ButtonToolbar, FormControl, ControlLabel, Label } from 'react-bootstrap'
 
-import { restoreLocally, resetData } from './quill'
+import { restoreLocally } from './quill'
 import Game from './game'
 import Creator from './creator'
 

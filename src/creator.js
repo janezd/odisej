@@ -6,8 +6,9 @@ import BlocklyDrawer from 'react-blockly-drawer'
 
 import blocks from './createBlocks'
 import { refreshDropdowns } from './createBlocks'
-import { locations, items, flags, variables, restoreLocally, storeLocally, gameSettings, saveGame, loadGame } from './quill'
-import GameMap from './map.js'
+import { locations, items, flags, variables,
+         gameSettings, storeLocally, resetData, saveGame, loadGame } from './quill'
+import GameMap from './map'
 
 Blockly.BlockSvg.START_HAT = true
 // Blockly.Flyout.prototype.autoClose = false
@@ -270,6 +271,11 @@ export default class Creator extends React.Component {
         locations[location].image = image || ""
         this.setState(this.state)
         storeLocally()
+    }
+
+    resetData = () => {
+        resetData()
+        this.forceUpdate()
     }
 
     render = () =>
