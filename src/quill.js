@@ -6,7 +6,8 @@ export const gameSettings = {
     showInventory: true,
     dropItems: true,
     takeItems: true,
-    maxItems: ""
+    maxItems: "",
+    gameTitle: "Odisej"
 }
 
 function getUniqueName(name, names) {

@@ -502,7 +502,7 @@ export default class Game extends React.Component {
                 <Navbar>
                     <Navbar.Header>
                         <Navbar.Brand>
-                            Odisej
+                            {gameSettings.gameTitle}
                         </Navbar.Brand>
                     </Navbar.Header>
                     <Navbar.Form pullRight>

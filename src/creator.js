@@ -36,19 +36,18 @@ class SettingsEditor extends React.Component {
     constructor(props) {
         super(props)
         this.state = gameSettings
-
-        this.changeMaxItems = this.changeMaxItems.bind(this)
-        this.onHide = this.onHide.bind(this)
     }
 
-    changeMaxItems(e) {
+    changeMaxItems = (e) => {
         const val = e.target.value ? parseInt(e.target.value) : e.target.value
         if (!isNaN(val))
             this.setState({maxItems: val})
     }
 
-    onHide() {
-        gameSettings.maxItems = this.state.maxItems
+    changeGameTitle = e => this.setState({gameTitle: e.target.value.split("\n").join("")})
+
+    onHide = () => {
+        Object.keys(gameSettings).forEach(key => gameSettings[key] = this.state[key])
         this.props.closeHandler()
     }
 
@@ -60,11 +59,17 @@ class SettingsEditor extends React.Component {
             </Modal.Header>
             <Modal.Body>
                 <FormGroup>
+                    <ControlLabel>Ime igre</ControlLabel>
+                    <FormControl id="inventory-size-limit"
+                                 type="text"
+                                 value={this.state.gameTitle}
+                                 onChange={this.changeGameTitle}
+                                 placeholder="Odisej"/>
                     <ControlLabel>Dodatni ukazi</ControlLabel>
                     { Object.entries(systemCommandsSettings).map(([name, setting]) =>
                         <Checkbox key={setting}
-                                  checked={gameSettings[setting]}
-                                  onChange={() => { gameSettings[setting] = !gameSettings[setting]; this.forceUpdate() }}>
+                                  checked={this.state[setting]}
+                                  onChange={e => this.setState({[setting]: e.target.checked }) }>
                             {name}
                         </Checkbox>)
                     }
