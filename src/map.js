@@ -6,6 +6,7 @@ import Blockly from 'node-blockly/browser'
 import BlocklyDrawer from 'react-blockly-drawer'
 
 import blocks from './createBlocks'
+import { refreshDropdowns } from './createBlocks'
 import { locations, items, flags, variables, restoreLocally, storeLocally, gameSettings } from './quill'
 
 Blockly.BlockSvg.START_HAT = true
@@ -210,6 +211,11 @@ const CONN_COORDS = {
 const CENTER = 104.647 / 2
 
 class LocationEditor extends React.Component {
+    constructor(props) {
+        super(props)
+        this.onTitleBlur = this.onTitleBlur.bind(this)
+    }
+
     handleClose = () => {
         const loc = locations[this.props.location]
         loc.title = this.loctitle.innerText
@@ -219,6 +225,13 @@ class LocationEditor extends React.Component {
         Blockly.WidgetDiv.hide()
         Blockly.Tooltip.hide()
         this.props.handleClose()
+    }
+
+    onTitleBlur() {
+        const value = this.loctitle.innerText.split("\n").join(" ")
+        this.loctitle.innerText = value
+        refreshDropdowns(this.props.location, value)
+        // TODO Blocks in the flyouts don't refresh. Discover how the are constucted
     }
 
     uploadImage= (files) => {
@@ -295,7 +308,8 @@ class LocationEditor extends React.Component {
                         </div>
                         <div ref={node => {
                                 this.loctitle = node
-                                if (node) { node.setAttribute("contentEditable", !isSpecial) }}}>
+                                if (node) { node.setAttribute("contentEditable", !isSpecial) }}}
+                                onBlur={this.onTitleBlur}>
                             {loc.title}
                         </div>
                         { setToStart() }

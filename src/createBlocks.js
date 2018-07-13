@@ -65,7 +65,7 @@ function mutate(block, xml, namePrefix, firstLine, conjunction, beforeInput=null
 }
 
 
-function refreshDropdowns(id, newName) {
+export function refreshDropdowns(id, newName) {
     Blockly.getMainWorkspace().getAllBlocks().forEach(block =>
         block.inputList
             .filter(input => input.type == Blockly.DUMMY_INPUT)

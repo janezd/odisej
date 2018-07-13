@@ -139,7 +139,7 @@ class Locations {
 
     reset = () => {
         this.clear()
-        const defaultLoc = this.addLocation("Začetek", "Opis začetne lokacije", 150, 10)
+        const defaultLoc = this.addLocation("Začetek", "", 150, 10)
         this.addSpecialLocations()
         this.startLocation = defaultLoc.locId
     }
