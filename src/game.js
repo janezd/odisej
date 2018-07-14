@@ -207,12 +207,9 @@ export default class Game extends React.Component {
             showState: false
         }
 
-        this.systemCommands = {
-            "Kaj imam?": () => this.printInventory() }
-        Object.keys(this.systemCommands).forEach(key => {
-            if (!gameSettings[systemCommandsSettings[key]])
-                delete this.systemCommands[key]
-        })
+        this.systemCommands = {}
+        if (gameSettings.showInventory)
+            this.systemCommands["Kaj imam?"] = () => this.printInventory()
     }
 
     prepareInitialState = () => {

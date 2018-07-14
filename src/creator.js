@@ -28,9 +28,9 @@ class BlocklyDrawerWithNameCheck extends BlocklyDrawer {
 
 
 export const systemCommandsSettings = {
-    "Ukaz 'Kaj imam?'": "showInventory",
-    "Možnost odlaganja stvari (prek 'Kaj imam?')": "dropItems",
-    "Ukazi za jemanje stvari z lokacij": "takeItems"
+    showInventory: "Ukaz 'Kaj imam?'",
+    dropItems: "Možnost odlaganja stvari (prek 'Kaj imam?')",
+    takeItems: "Ukazi za jemanje stvari z lokacij"
 }
 
 class SettingsEditor extends React.Component {
@@ -68,7 +68,7 @@ class SettingsEditor extends React.Component {
                                  onChange={this.changeGameTitle}
                                  placeholder="Odisej"/>
                     <ControlLabel>Dodatni ukazi</ControlLabel>
-                    { Object.entries(systemCommandsSettings).map(([name, setting]) =>
+                    { Object.entries(systemCommandsSettings).map(([setting, name]) =>
                         <Checkbox key={setting}
                                   checked={this.state[setting]}
                                   onChange={e => this.setState({[setting]: e.target.checked }) }>
