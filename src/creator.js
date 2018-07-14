@@ -1,5 +1,5 @@
 import React from "react"
-import { Modal, FormGroup, FormControl, ControlLabel, Input, Label, Button, Checkbox, Navbar, ButtonToolbar } from 'react-bootstrap'
+import { Modal, FormGroup, FormControl, ControlLabel, Input, Label, Button, Checkbox, Navbar, ButtonToolbar, Media } from 'react-bootstrap'
 
 import Blockly from 'node-blockly/browser'
 import BlocklyDrawer from 'react-blockly-drawer'
@@ -28,9 +28,9 @@ class BlocklyDrawerWithNameCheck extends BlocklyDrawer {
 
 
 export const systemCommandsSettings = {
-    "Kaj imam?": "showInventory",
-    "Odlaganje stvari": "dropItems",
-    "Pobiranje stvari": "takeItems"
+    "Ukaz 'Kaj imam?'": "showInventory",
+    "Možnost odlaganja stvari (prek 'Kaj imam?')": "dropItems",
+    "Ukazi za jemanje stvari z lokacij": "takeItems"
 }
 
 class SettingsEditor extends React.Component {
@@ -61,8 +61,9 @@ class SettingsEditor extends React.Component {
             <Modal.Body>
                 <FormGroup>
                     <ControlLabel>Ime igre</ControlLabel>
-                    <FormControl id="inventory-size-limit"
+                    <FormControl id="game-title"
                                  type="text"
+                                 bsSize="large"
                                  value={this.state.gameTitle}
                                  onChange={this.changeGameTitle}
                                  placeholder="Odisej"/>
@@ -123,30 +124,24 @@ function LocImage(props) {
 
 
 class LocationEditor extends React.Component {
-    constructor(props) {
-        super(props)
-        this.onTitleBlur = this.onTitleBlur.bind(this)
-    }
-
     handleClose = () => {
-        const loc = locations[this.props.location]
-        loc.title = this.loctitle.innerText
-        loc.description = this.locDescArea.value
-        loc.updateFromWorkspace(Blockly.getMainWorkspace())
         // Blockly doesn't hide this -- apparently we don't close it gently enough (or at all)
         Blockly.WidgetDiv.hide()
         Blockly.Tooltip.hide()
         this.props.handleClose()
     }
 
-    onTitleBlur() {
-        const value = this.loctitle.innerText.split("\n").join(" ")
-        this.loctitle.innerText = value
-        refreshDropdowns(this.props.location, value)
-        // TODO Blocks in the flyouts don't refresh. Discover how the are constucted
-    }
+    get location() { return locations[this.props.location] }
 
-    uploadImage= (files) => {
+    // TODO Blocks in the flyouts don't refresh. Discover how the are constructed
+    handleTitleBlur = () => refreshDropdowns(this.props.location, locations[this.props.location].title)
+    handleTitleKeyPress = e => { if (e.charCode == 13) { e.preventDefault(); e.target.blur() } }
+
+    handleTitleChange = e => { this.location.title = e.target.value; this.forceUpdate() }
+    handleDescriptionChange = e => { this.location.description = e.target.value; this.forceUpdate() }
+    handleWorkspaceChange = () => this.location.updateFromWorkspace(Blockly.getMainWorkspace())
+
+    uploadImage = (files) => {
         const reader = new FileReader()
         reader.onload = e => {
             const img = new Image()
@@ -211,32 +206,39 @@ class LocationEditor extends React.Component {
         return <Modal dialogClassName="location-editor" show={true} onHide={this.handleClose} enforceFocus={false}>
             <Modal.Header closeButton>
                 <Modal.Title>
-                    <div style={{ float: "left", fontSize: "75%", marginRight: "1em" }}>
-                        {isSpecial ? ""
-                            : <LocImage image={loc.image}
-                                        uploadCallback={this.uploadImage}
-                                        removeCallback={this.removeImage}/>
-                        }
-                    </div>
-                    <div ref={node => {
-                        this.loctitle = node
-                        if (node) { node.setAttribute("contentEditable", !isSpecial) }}}
-                         onBlur={this.onTitleBlur}>
-                        {loc.title}
-                    </div>
-                    { setToStart() }
-                    { deleteButton() }
+                    <Media>
+                        <Media.Left>
+                            <div style={{ fontSize: "75%", marginRight: "1em" }}>
+                                {isSpecial ? ""
+                                    : <LocImage image={loc.image}
+                                                uploadCallback={this.uploadImage}
+                                                removeCallback={this.removeImage}/>
+                                }
+                            </div>
+                        </Media.Left>
+                        <Media.Body>
+                            <FormControl type="text"
+                                         bsSize="large"
+                                         value={locations[this.props.location].title}
+                                         onKeyPress={this.handleTitleKeyPress}
+                                         onChange={this.handleTitleChange}
+                                         onBlur={this.handleTitleBlur}
+                                         placeholder="Vnesi ime lokacije ..."/>
+                            { setToStart() }
+                            { deleteButton() }
+                        </Media.Body>
+                    </Media>
                 </Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <FormControl componentClass="textarea"
                              placeholder="Opis lokacije ..."
                              defaultValue={loc.description}
-                             inputRef={node => { this.locDescArea = node }}
-                />
+                             onChange={this.handleDescriptionChange} />
                 <BlocklyDrawerWithNameCheck
                     tools={blocks}
                     workspaceXML={loc.workspace || ""}
+                    onChange={this.handleWorkspaceChange}
                     injectOptions={{toolboxPosition: 'end', media: './'}}>
                 </BlocklyDrawerWithNameCheck>
             </Modal.Body>
