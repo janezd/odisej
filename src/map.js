@@ -333,8 +333,8 @@ export default class GameMap extends React.Component {
         const newLoc = locations.addLocation()
         newLoc.x = e.clientX - this.offsetX - 56
         newLoc.y = e.clientY - this.offsetY - 56
-        this.forceUpdate()
         storeLocally()
+        this.props.onEditLocation(newLoc.locId, true)
         return newLoc
     }
 
@@ -361,8 +361,8 @@ export default class GameMap extends React.Component {
         return <div>
             <svg width={width} height={height}
                  id="gamemap" onDoubleClick={e => {
-                this.newLocation(e);
-                e.preventDefault();
+                this.newLocation(e)
+                e.preventDefault()
                 e.stopPropagation()
             }}>
                 <g transform={`translate(${250 - minx} ${250 - miny})`}>

@@ -135,7 +135,7 @@ class LocationEditor extends React.Component {
 
     // TODO Blocks in the flyouts don't refresh. Discover how the are constructed
     handleTitleBlur = () => refreshDropdowns(this.props.location, locations[this.props.location].title)
-    handleTitleKeyPress = e => { if (e.charCode == 13) { e.preventDefault(); e.target.blur() } }
+    handleTitleKeyPress = e => { if (e.charCode == 13) { e.preventDefault(); e.stopPropagation(); e.target.blur() } }
 
     handleTitleChange = e => { this.location.title = e.target.value; this.forceUpdate() }
     handleDescriptionChange = e => { this.location.description = e.target.value; this.forceUpdate() }
@@ -171,6 +171,13 @@ class LocationEditor extends React.Component {
         this.props.handleClose()
     }
 
+    handleKeyPress = e => {
+        if (e.charCode == 13) {
+            e.stopPropagation()
+            this.handleClose()
+        }
+    }
+
     render() {
         const loc = locations[this.props.location]
         if (!loc) return null;
@@ -203,7 +210,9 @@ class LocationEditor extends React.Component {
             return <p tooltip={tooltip}><small>Uporabljena na {usedStr}</small></p>
         }
 
-        return <Modal dialogClassName="location-editor" show={true} onHide={this.handleClose} enforceFocus={false}>
+        return <Modal dialogClassName="location-editor" show={true}
+                      onHide={this.handleClose} onKeyPress={this.handleKeyPress}
+                      enforceFocus={false}>
             <Modal.Header closeButton>
                 <Modal.Title>
                     <Media>
@@ -223,7 +232,12 @@ class LocationEditor extends React.Component {
                                          onKeyPress={this.handleTitleKeyPress}
                                          onChange={this.handleTitleChange}
                                          onBlur={this.handleTitleBlur}
-                                         placeholder="Vnesi ime lokacije ..."/>
+                                         placeholder="Vnesi ime lokacije ..."
+                                         inputRef={ e => {
+                                             if (e && this.props.selectTitle) {
+                                                 e.select()
+                                                 e.addEventListener('select', this.props.onTitleSelectionChange)
+                                             } }}/>
                             { setToStart() }
                             { deleteButton() }
                         </Media.Body>
@@ -252,12 +266,13 @@ export default class Creator extends React.Component {
         super(props)
         this.state = {
             editing: null,
+            selectTitle: false,
             editSettings: false
         }
         this.openSettingsEditor = this.openSettingsEditor.bind()
     }
 
-    editLocation = (locId) => this.setState({editing: locId})
+    editLocation = (locId, selectTitle=false) => this.setState({editing: locId, selectTitle})
     closeEditor = () => this.setState({editing: null}, storeLocally)
 
     openSettingsEditor = () => this.setState({editSettings: true})
@@ -309,6 +324,8 @@ export default class Creator extends React.Component {
             <LocationEditor
                 location={this.state.editing}
                 isInitial={this.state.editing == locations.startLocation}
+                selectTitle={this.state.selectTitle}
+                onTitleSelectionChange={() => this.setState({selectTitle: false})}
                 handleClose={this.closeEditor}
                 setLocationImage={this.setLocationImage}
                 setStartLocation={this.setStartLocation}
