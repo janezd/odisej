@@ -56,7 +56,8 @@ class Node extends React.Component {
         const insideCb = (obj, dir) => { if (!isSpecial) this.props.onHover(obj, dir) }
 
         return <g transform={`translate(${loc.x} ${loc.y})`}>
-                    <text x="52" y="115" textAnchor="middle" fontFamily="sans-serif" style={{userSelect: 'none'}}>
+                    <text x="52" y="115" textAnchor="middle" fontFamily="sans-serif" style={{userSelect: 'none', cursor: 'text'}}
+                          onClick={this.props.onEditLocation}>
                         {loc.title}
                     </text>
                     <g pointerEvents="all">
