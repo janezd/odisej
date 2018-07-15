@@ -1,8 +1,15 @@
 import Blockly from "node-blockly/browser"
 import blocks from './createBlocks'
 
+const defaultGameSettings = {
+    showInventory: true,
+    dropItems: true,
+    takeItems: true,
+    maxItems: "",
+    gameTitle: "Odisej"
+}
+
 export const gameSettings = {
-    allowRestart: true,
     showInventory: true,
     dropItems: true,
     takeItems: true,
@@ -230,6 +237,7 @@ export function resetData() {
     variables.reset()
     flags.reset()
     locations.reset()
+    Object.assign(gameSettings, defaultGameSettings)
 }
 
 function collectGarbage() {
