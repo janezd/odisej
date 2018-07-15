@@ -178,7 +178,7 @@ function createTopBlock(block_name, name, other=null) {
 
 createTopBlock('on_entry', 'Ob vstopu')
 createTopBlock('on_exit', 'Ob izstopu')
-createTopBlock('after_command', 'Po ukazu')
+createTopBlock('after_command', 'Po vsakem ukazu')
 
 
 const postCondition = (otherConnection) =>
