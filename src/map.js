@@ -61,6 +61,13 @@ class Node extends React.Component {
                         {loc.title}
                     </text>
                     <g pointerEvents="all">
+                        <path fill={ this.props.isInitial ? "green" : "gray" } stroke="transparent" strokeOpacity="0.8"
+                              d="M67.887,90.896H36.761c-0.265,0-0.52-0.105-0.707-0.293l-22.01-22.01c-0.188-0.188-0.293-0.442-0.293-0.707V36.761
+                            c0-0.265,0.105-0.52,0.293-0.707l22.01-22.01c0.188-0.188,0.442-0.293,0.707-0.293h31.126c0.265,0,0.52,0.105,0.707,0.293
+                            l22.01,22.01c0.188,0.188,0.293,0.442,0.293,0.707v31.126c0,0.265-0.105,0.52-0.293,0.707l-22.01,22.01
+                            C68.406,90.791,68.152,90.896,67.887,90.896z M37.175,88.896h30.298l21.424-21.424V37.175L67.473,15.751H37.175L15.751,37.175
+                            v30.298L37.175,88.896z"
+                        />
                         <polygon
                             fill={ isSpecial ? "#D0FFD0" : "#FFFFFF" }
                             points="36.761,89.896 14.751,67.887 14.751,36.761 36.761,14.751 67.887,14.751 89.896,36.761 89.896,67.887 67.887,89.896"
@@ -79,12 +86,6 @@ class Node extends React.Component {
                                onMouseLeave={() => insideCb(null) }
                         />
 
-                        <path fill={ this.props.isInitial ? "green" : "black" } stroke="white" strokeOpacity="0.8"
-                              d="M67.887,90.896H36.761c-0.265,0-0.52-0.105-0.707-0.293l-22.01-22.01c-0.188-0.188-0.293-0.442-0.293-0.707V36.761
-                            c0-0.265,0.105-0.52,0.293-0.707l22.01-22.01c0.188-0.188,0.442-0.293,0.707-0.293h31.126c0.265,0,0.52,0.105,0.707,0.293
-                            l22.01,22.01c0.188,0.188,0.293,0.442,0.293,0.707v31.126c0,0.265-0.105,0.52-0.293,0.707l-22.01,22.01
-                            C68.406,90.791,68.152,90.896,67.887,90.896z M37.175,88.896h30.298l21.424-21.424V37.175L67.473,15.751H37.175L15.751,37.175
-                            v30.298L37.175,88.896z"/>
                     </g>
             { isSpecial ? "" :
                     <g pointerEvents="all">{
@@ -365,6 +366,11 @@ export default class GameMap extends React.Component {
                 e.preventDefault()
                 e.stopPropagation()
             }}>
+                <defs>
+                    <filter id="shadow">
+                        <feDropShadow dx="2" dy="2" stdDeviation="2"/>
+                    </filter>
+                </defs>
                 <g transform={`translate(${250 - minx} ${250 - miny})`}>
                     <Connections/>
                     <ImplicitConnections/>

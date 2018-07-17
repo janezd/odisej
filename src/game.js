@@ -1,5 +1,6 @@
 import React from "react"
-import { Panel, Button, Media, Modal, Label, FormControl, ControlLabel, DropdownButton, MenuItem, Navbar, ButtonToolbar, ButtonGroup } from 'react-bootstrap'
+import { Panel, Button, Media, Modal, Label, FormControl, ControlLabel, DropdownButton, MenuItem, Navbar,
+    ButtonToolbar, ButtonGroup, Image } from 'react-bootstrap'
 import blocks from "./createBlocks"
 import { locations, items, flags, variables, gameSettings } from './quill'
 import { systemCommandsSettings } from './creator'
@@ -593,7 +594,8 @@ export default class Game extends React.Component {
                                setGameState={this.setGameState} handleClose={this.hideGameState}/>
                     <Media>
                         <Media.Left>
-                            <img src={location.image} style={{float: "left", border: "solid thin", margin: 10, width: 600}}/>
+                            <Image rounded src={location.image}
+                                   style={{margin: 10, boxShadow:"rgba(0, 0, 0, 0.3) 2px 2px 4px"}}/>
                         </Media.Left>
                         <Media.Body>
                             <h1>{location.title}</h1>
