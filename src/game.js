@@ -1,5 +1,5 @@
 import React from "react"
-import { Panel, Button, Media, Modal, Label, FormControl, ControlLabel, DropdownButton, MenuItem, Navbar, ButtonToolbar } from 'react-bootstrap'
+import { Panel, Button, Media, Modal, Label, FormControl, ControlLabel, DropdownButton, MenuItem, Navbar, ButtonToolbar, ButtonGroup } from 'react-bootstrap'
 import blocks from "./createBlocks"
 import { locations, items, flags, variables, gameSettings } from './quill'
 import { systemCommandsSettings } from './creator'
@@ -204,7 +204,8 @@ export default class Game extends React.Component {
         this.state = {
             ...this.prepareInitialState(),
             showCommands: true,
-            showState: false
+            showState: false,
+            modal: ""
         }
         this.currentCommand = null
         this.allowReexecute = false
@@ -324,9 +325,27 @@ export default class Game extends React.Component {
             )
         )
 
-    resetGame = (then) =>
-        this.setState(this.prepareInitialState(),
-            () => this.autoExecuteOnStart(then))
+    resetGame = (then) => {
+        this.setState({modal:
+            <Modal.Dialog show={true}>
+                <Modal.Header>
+                    <Modal.Title>Začni znova</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                Želiš res začeti od začetka?
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button onClick={() =>
+                        this.setState({modal: "", ...this.prepareInitialState()},
+                            () => this.autoExecuteOnStart(then))}>
+                        Da
+                    </Button>
+                    <Button onClick={() => this.setState({modal: ""}, then)}>
+                        Ne
+                    </Button>
+                </Modal.Footer>
+            </Modal.Dialog>})
+    }
 
     autoExecuteOnStart = then => {
         this.state.nVisits[locations.startLocation]++
@@ -530,6 +549,7 @@ export default class Game extends React.Component {
         const [directions, commands] = this.getCommandList()
         return (
             <div>
+                {this.state.modal}
                 <Navbar>
                     <Navbar.Header>
                         <Navbar.Brand>
@@ -537,24 +557,32 @@ export default class Game extends React.Component {
                         </Navbar.Brand>
                     </Navbar.Header>
                     <Navbar.Form pullRight>
-                        <ButtonToolbar>
-                            <Label bsStyle="success" onClick={this.saveState}>Shrani</Label>
-                            <FormControl id="stateUpload" style={{display: "none"}} type="file" accept=".json"
-                                         onChange={e => this.loadState(e.target.files)}/>
-                            <ControlLabel htmlFor="stateUpload">
-                                <Label bsStyle="success">Naloži</Label>
-                            </ControlLabel>
-                            <Button onClick={() => this.resetGame()}>
-                                Začni znova
-                            </Button>
+                        <FormControl id="stateUpload" style={{display: "none"}} type="file" accept=".json"
+                                     onChange={e => this.loadState(e.target.files)}/>
+                        <ButtonToolbar className="with-labels">
+                            <ButtonGroup>
+                                <Label onClick={this.saveState}>Shrani</Label>
+                                <ControlLabel htmlFor="stateUpload" className="no-round-left">
+                                    <Label>Naloži</Label>
+                                </ControlLabel>
+                            </ButtonGroup>
+                            <ButtonGroup>
+                                <Label onClick={() => this.resetGame()}>
+                                    Začni znova
+                                </Label>
+                            </ButtonGroup>
                             { this.props.debug ?
                                 <span>
-                                    <Button onClick={this.showGameState}>
-                                        Stanje igre
-                                    </Button>
-                                    <Button onClick={this.props.switchToCreate}>
-                                        Ustvari
-                                    </Button>
+                                    <ButtonGroup>
+                                        <Label onClick={this.showGameState}>
+                                            Stanje igre
+                                        </Label>
+                                    </ButtonGroup>
+                                    <ButtonGroup>
+                                        <Label onClick={this.props.switchToCreate}>
+                                            Ustvari
+                                        </Label>
+                                    </ButtonGroup>
                                 </span>
                                 : "" }
                         </ButtonToolbar>

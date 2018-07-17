@@ -19,6 +19,56 @@
     }
 
     .location-editor { width: 90% }
+
+    .btn-toolbar.with-labels .btn-group .label {
+
+
+    }
+
+    .btn-toolbar.with-labels .btn-group .label {
+        border-color: #ccc;
+        padding: 6px 12px;
+        color: #333;
+        font-size: 14px;
+        font-weight: 400;
+        background-color: #fff;
+        text-align: center;
+        display: inline-block;
+        /* margin-bottom: 0; */
+        line-height: 1;
+        white-space: nowrap;
+        vertical-align: middle;
+        -ms-touch-action: manipulation;
+        touch-action: manipulation;
+        cursor: pointer;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        background-image: none;
+        border: 1px solid;
+        border-radius: 4px;
+    }
+
+    .btn-toolbar.with-labels  .btn-group > .label:last-child:not(:first-child),
+    .btn-toolbar.with-labels .btn-group > .control-label.no-round-left .label {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+
+    .btn-toolbar.with-labels .btn-group > .label:first-child:not(:last-child):not(.dropdown-toggle),
+    .btn-toolbar.with-labels .btn-group > .control-label.no-round-right .label {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
+    .btn-toolbar.with-labels .btn-group > .control-label.no-round-right .label {
+        border-right: none
+    }
+
+    .btn-toolbar.with-labels >  .btn-group .label+.label, .btn-toolbar.with-labels >  .btn-group .label+label,  .btn-toolbar.with-labels >  .btn-group .no-right-round+.label {
+        margin-left: -1px;
+    }
   </style>
 
 

@@ -1,5 +1,5 @@
 import React from "react"
-import { Modal, FormGroup, FormControl, ControlLabel, Input, Label, Button, Checkbox, Navbar, ButtonToolbar, Media } from 'react-bootstrap'
+import { Modal, FormGroup, FormControl, ControlLabel, Input, Label, Button, Checkbox, Navbar, ButtonToolbar, Media, ButtonGroup } from 'react-bootstrap'
 
 import Blockly from 'node-blockly/browser'
 import BlocklyDrawer from 'react-blockly-drawer'
@@ -267,7 +267,8 @@ export default class Creator extends React.Component {
         this.state = {
             editing: null,
             selectTitle: false,
-            editSettings: false
+            editSettings: false,
+            modal: ""
         }
         this.openSettingsEditor = this.openSettingsEditor.bind()
     }
@@ -291,33 +292,58 @@ export default class Creator extends React.Component {
     }
 
     resetData = () => {
-        resetData()
-        this.forceUpdate()
+        this.setState({modal:
+                <Modal.Dialog>
+                    <Modal.Header>
+                        <Modal.Title>Pobriši igro</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        Pobrišem igro?
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button onClick={() => { saveGame(); resetData(); this.setState({modal: ""})}}>
+                            Shrani in pobriši
+                        </Button>
+                        <Button onClick={() => { resetData(); this.setState({modal: ""})}}>
+                            Pobriši brez milosti
+                        </Button>
+                        <Button onClick={() => this.setState({modal: ""})}>
+                            Ups, ne
+                        </Button>
+                    </Modal.Footer>
+                </Modal.Dialog>})
     }
 
     render = () =>
         <div>
+            {this.state.modal}
             <Navbar>
                 <Navbar.Header>
                     <Navbar.Brand>
-                        <Button onClick={this.resetData}>Pobriši vse</Button>
                         Odisej
                     </Navbar.Brand>
                 </Navbar.Header>
                 <Navbar.Form pullRight>
-                    <ButtonToolbar>
-                        <Button onClick={() => this.props.switchToPlay(true)}>Preskusi</Button>
-                        <Button onClick={() => this.props.switchToPlay(false)}>Igraj</Button>
-                        <Label onClick={saveGame}>Shrani</Label>
-                        <FormControl id="gameUpload"
-                                     type="file"
-                                     accept=".json"
-                                     onChange={e => loadGame(e.target.files[0], () => this.forceUpdate()) }
-                                     style={{display: "none"}}/>
-                        <ControlLabel htmlFor="gameUpload">
-                            <Label>Naloži</Label>
-                        </ControlLabel>
-                        <Button onClick={this.openSettingsEditor}>Nastavitve igre</Button>
+                    <FormControl id="gameUpload"
+                                 type="file"
+                                 accept=".json"
+                                 onChange={e => loadGame(e.target.files[0], () => this.forceUpdate()) }
+                                 style={{display: "none"}}/>
+                    <ButtonToolbar className="with-labels">
+                        <ButtonGroup>
+                            <Label onClick={() => this.props.switchToPlay(true)}>Preskusi</Label>
+                            <Label onClick={() => this.props.switchToPlay(false)}>Igraj</Label>
+                        </ButtonGroup>
+                        <ButtonGroup>
+                            <Label onClick={saveGame}>Shrani igro</Label>
+                            <ControlLabel htmlFor="gameUpload" className="no-round-right no-round-left">
+                                <Label>Naloži igro</Label>
+                            </ControlLabel>
+                            <Label onClick={this.resetData}>Pobriši igro</Label>
+                        </ButtonGroup>
+                        <ButtonGroup>
+                            <Label onClick={this.openSettingsEditor}>Nastavitve igre</Label>
+                        </ButtonGroup>
                     </ButtonToolbar>
                 </Navbar.Form>
             </Navbar>

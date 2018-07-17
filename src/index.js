@@ -1,6 +1,6 @@
 import React from 'react'
 import { render } from 'react-dom'
-import { Navbar, Nav, Button, ButtonToolbar, FormControl, ControlLabel, Label } from 'react-bootstrap'
+import { Navbar, Nav, Button, ButtonToolbar, FormControl, ControlLabel, Label, Modal } from 'react-bootstrap'
 
 import { restoreLocally } from './quill'
 import Game from './game'
