@@ -353,21 +353,29 @@ export default class Game extends React.Component {
 
     executeCommand = (block, then) => {
         const endCommand = () => {
-            // This must happen after the command is ran.
-            // Allow re-execute block then can't have an immediate effect but must be taken into account here
-            const { executed } = this.state
-            if (this.allowReexecute) {
-                delete this.state.executed[this.currentLocAndCommand()]
+            if (this.endGame) {
+                this.endGame = false
+                this.currentCommand = null
+                this.setState(this.prepareInitialState(),
+                    () => this.autoExecuteOnStart()) // no then!
             }
             else {
-                executed[this.currentLocAndCommand()] = true
+                // This must happen after the command is ran.
+                // Allow re-execute block then can't have an immediate effect but must be taken into account here
+                const {executed} = this.state
+                if (this.allowReexecute) {
+                    delete this.state.executed[this.currentLocAndCommand()]
+                }
+                else {
+                    executed[this.currentLocAndCommand()] = true
+                }
+                this.setState({executed}, then)
             }
-            this.currentCommand = null;
-            this.setState({executed}, then)
         }
 
         this.currentCommand = block.name
         this.allowReexecute = false
+        this.endGame = false
         this.print(<b>&gt; {block.name}</b>,
             () => this.executeSequence(block.next,
                 () => this.autoExecuteBlocks("after_command", endCommand)
@@ -422,8 +430,8 @@ export default class Game extends React.Component {
             case 'go': return this.moveTo(block.location, then)
             case 'print': return this.printBlock(block.msg, then)
             case 'delay': return this.delay(1000 * parseInt(block.constant), then)
-            case 'reset': return this.resetGame(then)
 
+            case 'reset': this.endGame = true; return then && then()
             case 'allow_reexecute': this.allowReexecute = true; return then && then()
 
             case 'pick': return setItem(ITEM_CARRIED)
