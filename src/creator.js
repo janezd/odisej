@@ -93,7 +93,7 @@ function LocImage(props) {
     const uploadControl = <FormControl id="fileUpload"
                                        type="file"
                                        accept=".jpg, .png, .gif"
-                                       onChange={(e) => props.uploadCallback(e.target.files)}
+                                       value="" onChange={(e) => props.uploadCallback(e.target)}
                                        style={{display: "none"}}/>
 
     if (image) {
@@ -141,7 +141,7 @@ class LocationEditor extends React.Component {
     handleDescriptionChange = e => { this.location.description = e.target.value; this.forceUpdate() }
     handleWorkspaceChange = () => this.location.updateFromWorkspace(Blockly.getMainWorkspace())
 
-    uploadImage = (files) => {
+    uploadImage = (control) => {
         const reader = new FileReader()
         reader.onload = e => {
             const img = new Image()
@@ -156,10 +156,11 @@ class LocationEditor extends React.Component {
                 ctx.drawImage(img, 0, 0, width, height)
                 const data = canvas.toDataURL()
                 this.props.setLocationImage(this.props.location, data, width, height)
+                control.value = ""
             }
             img.src = `data:image/png;base64,${btoa(e.target.result)}`
         }
-        reader.readAsBinaryString(files[0])
+        reader.readAsBinaryString(control.files[0])
     }
 
     removeImage = () => {
@@ -327,7 +328,7 @@ export default class Creator extends React.Component {
                     <FormControl id="gameUpload"
                                  type="file"
                                  accept=".json"
-                                 onChange={e => loadGame(e.target.files[0], () => this.forceUpdate()) }
+                                 value="" onChange={e => loadGame(e.target.files[0], () => this.forceUpdate()) }
                                  style={{display: "none"}}/>
                     <ButtonToolbar className="with-labels">
                         <ButtonGroup>

@@ -247,10 +247,13 @@ export default class Game extends React.Component {
         anchor.click()
     }
 
-    loadState = files => {
+    loadState = control => {
         const reader = new FileReader()
-        reader.onload = e => this.setState(JSON.parse(e.target.result))
-        reader.readAsText(files[0])
+        reader.onload = e => {
+            this.setState(JSON.parse(e.target.result))
+            control.value = ""
+        }
+        reader.readAsText(control.files[0])
     }
 
     componentDidMount = () => this.autoExecuteOnStart()
@@ -551,7 +554,7 @@ export default class Game extends React.Component {
         const buttonClass =  this.state.currentCommand ? " disabled" : ""
         return <span>
             <FormControl id="stateUpload" style={{display: "none"}} type="file" accept=".json"
-                         onChange={ifAllowed(e => this.loadState(e.target.files))}/>
+                         onChange={ifAllowed(e => this.loadState(e.target))}/>
             <ButtonToolbar className="with-labels">
                 <ButtonGroup>
                     <Label className={buttonClass}
