@@ -39,7 +39,7 @@ class LocData {
 
         this.title = title
         this.description = description
-        this.image = null
+        this.image = [null, 0, 0]
 
         this.workspace = null
         this.commands = []
@@ -274,6 +274,13 @@ function migrateAddUsedSets() {
     })
 }
 
+function migrateImages() {
+    locations.values().forEach(location => {
+        if (!Array.isArray(location.image))
+            location.image = [location.image, 105, 105]
+    })
+}
+
 export function storeLocally() {
     localStorage.odisej = JSON.stringify({
         locations: locations.pack(), items: items.pack(), flags: flags.pack(), variables: variables.pack(),
@@ -302,6 +309,7 @@ export function restoreLocally(json) {
         }
         migrateCommandLists()
         migrateAddUsedSets()
+        migrateImages()
         collectGarbage()
     //}
     //catch (e) {}

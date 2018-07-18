@@ -55,6 +55,22 @@ class Node extends React.Component {
         const isSpecial = locations.isSpecial(loc)
         const insideCb = (obj, dir) => { if (!isSpecial) this.props.onHover(obj, dir) }
 
+        // Resize the image to fill the shape
+        let [imgSrc, imgWidth, imgHeight] = loc.image
+        let offx, offy
+        if (imgWidth < imgHeight) {
+            imgHeight *= 105 / imgWidth
+            offy = - (imgHeight - 105) / 2
+            imgWidth = 105
+            offx = 0
+        }
+        else {
+            imgWidth *= 105 / imgHeight
+            offx = - (imgWidth - 105) / 2
+            imgHeight = 105
+            offy = 0
+        }
+
         return <g transform={`translate(${loc.x} ${loc.y})`}>
                     <text x="52" y="115" textAnchor="middle" fontFamily="sans-serif" style={{userSelect: 'none', cursor: 'text'}}
                           onClick={this.props.onEditLocation}>
@@ -78,14 +94,17 @@ class Node extends React.Component {
                                 points="36.761,89.896 14.751,67.887 14.751,36.761 36.761,14.751 67.887,14.751 89.896,36.761 89.896,67.887 67.887,89.896"
                             />
                         </clipPath>
-                        <image width="105" height="105" href={loc.image} clipPath="url(#hexagon-clip)"
-                               style={{cursor: 'move'}}
-                               onMouseDown={this.polyMouseDown}
-                               onMouseUp={this.polyMouseUp}
-                               onMouseEnter={() => insideCb(this) }
-                               onMouseLeave={() => insideCb(null) }
-                        />
-
+                        <g clipPath="url(#hexagon-clip)">
+                            <g transform={`translate(${offx}, ${offy})`}>
+                                <image width={imgWidth} height={imgHeight} href={imgSrc}
+                                       style={{cursor: 'move'}}
+                                       onMouseDown={this.polyMouseDown}
+                                       onMouseUp={this.polyMouseUp}
+                                       onMouseEnter={() => insideCb(this) }
+                                       onMouseLeave={() => insideCb(null) }
+                                />
+                            </g>
+                        </g>
                     </g>
             { isSpecial ? "" :
                     <g pointerEvents="all">{

@@ -588,7 +588,7 @@ export default class Game extends React.Component {
         </span>
 
     }
-    
+
     render() {
         const location = locations[this.state.location]
         const [directions, commands] = this.getCommandList()
@@ -612,7 +612,7 @@ export default class Game extends React.Component {
                                setGameState={this.setGameState} handleClose={this.hideGameState}/>
                     <Media>
                         <Media.Left>
-                            <Image rounded src={location.image}
+                            <Image rounded src={location.image[0]}
                                    style={{margin: 10, boxShadow:"rgba(0, 0, 0, 0.3) 2px 2px 4px"}}/>
                         </Media.Left>
                         <Media.Body>

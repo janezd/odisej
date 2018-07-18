@@ -89,7 +89,7 @@ class SettingsEditor extends React.Component {
 
 
 function LocImage(props) {
-    const image = props.image
+    const [image, width, heigh] = props.image
     const uploadControl = <FormControl id="fileUpload"
                                        type="file"
                                        accept=".jpg, .png, .gif"
@@ -155,7 +155,7 @@ class LocationEditor extends React.Component {
                 const ctx = canvas.getContext('2d')
                 ctx.drawImage(img, 0, 0, width, height)
                 const data = canvas.toDataURL()
-                this.props.setLocationImage(this.props.location, data)
+                this.props.setLocationImage(this.props.location, data, width, height)
             }
             img.src = `data:image/png;base64,${btoa(e.target.result)}`
         }
@@ -285,8 +285,8 @@ export default class Creator extends React.Component {
         storeLocally()
     }
 
-    setLocationImage = (location, image) => {
-        locations[location].image = image || ""
+    setLocationImage = (location, image, width, height) => {
+        locations[location].image = [image || "", width, height]
         this.setState(this.state)
         storeLocally()
     }
