@@ -206,9 +206,9 @@ export default class Game extends React.Component {
             ...this.prepareInitialState(),
             showCommands: true,
             showState: false,
+            currentCommand: null,
             modal: ""
         }
-        this.currentCommand = null
         this.allowReexecute = false
 
         this.systemCommands = {}
@@ -236,9 +236,9 @@ export default class Game extends React.Component {
     }
 
     saveState = () => {
-        const {location, items, flags, variables, nVisits, executed, gameEnded} = this.state
+        const {location, items, flags, variables, nVisits, executed, printed, gameEnded} = this.state
         const blob = new Blob(
-            [JSON.stringify({location, items, flags, variables, nVisits, executed, gameEnded})],
+            [JSON.stringify({location, items, flags, variables, nVisits, executed, printed, gameEnded})],
             { type: 'text/plain' })
         const anchor = document.createElement('a');
         anchor.download = "stanje-igre.json";
@@ -255,7 +255,7 @@ export default class Game extends React.Component {
 
     componentDidMount = () => this.autoExecuteOnStart()
 
-    currentLocAndCommand = (commandName) => `${this.state.location}:${commandName || this.currentCommand}`
+    currentLocAndCommand = (commandName) => `${this.state.location}:${commandName || this.state.currentCommand}`
 
     checkConditionList = (conditions, conjunctive=true, commandName=null) => {
         const comp = (op, op1, op2) => {
@@ -391,14 +391,15 @@ export default class Game extends React.Component {
             else {
                 executed[this.currentLocAndCommand()] = true
             }
-            this.setState({executed}, then)
+            this.setState({executed, currentCommand: null}, then)
         }
 
-        this.currentCommand = block.name
         this.allowReexecute = false
-        this.print(<b>&gt; {block.name}</b>,
-            () => this.executeSequence(block.next,
-                () => this.autoExecuteBlocks("after_command", endCommand)
+        this.setState({currentCommand: block.name},
+            () => this.print(<b>&gt; {block.name}</b>,
+                () => this.executeSequence(block.next,
+                    () => this.autoExecuteBlocks("after_command", endCommand)
+                )
             )
         )
     }
@@ -545,9 +546,54 @@ export default class Game extends React.Component {
         return [directions, commands]
     }
 
+    buttonToolbar() {
+        const ifAllowed = f => this.state.currentCommand ? null : f
+        const buttonClass =  this.state.currentCommand ? " disabled" : ""
+        return <span>
+            <FormControl id="stateUpload" style={{display: "none"}} type="file" accept=".json"
+                         onChange={ifAllowed(e => this.loadState(e.target.files))}/>
+            <ButtonToolbar className="with-labels">
+                <ButtonGroup>
+                    <Label className={buttonClass}
+                           onClick={ifAllowed(this.saveState)}>
+                        Shrani
+                    </Label>
+                    <ControlLabel htmlFor="stateUpload"
+                                  className={"no-round-left" + buttonClass}>
+                        <Label>Naloži</Label>
+                    </ControlLabel>
+                </ButtonGroup>
+                <ButtonGroup>
+                    <Label className={buttonClass}
+                           style={this.state.gameEnded ? {backgroundColor: "greenyellow"} : {}}
+                           onClick={ifAllowed(() => this.resetGame())}>
+                        Začni znova
+                    </Label>
+                </ButtonGroup>
+                { this.props.debug ?
+                    <span>
+                                    <ButtonGroup>
+                                        <Label onClick={this.showGameState}>
+                                            Stanje igre
+                                        </Label>
+                                    </ButtonGroup>
+                                    <ButtonGroup>
+                                        <Label className={buttonClass} onClick={ifAllowed(this.props.switchToCreate)}>
+                                            Ustvari
+                                        </Label>
+                                    </ButtonGroup>
+                                </span>
+                    : "" }
+            </ButtonToolbar>
+        </span>
+
+    }
+    
     render() {
         const location = locations[this.state.location]
         const [directions, commands] = this.getCommandList()
+        const ifNotCommand = f => this.state.currentCommand ? null : f
+        const buttonClass =  this.state.currentCommand ? " disabled" : ""
         return (
             <div>
                 {this.state.modal}
@@ -558,36 +604,7 @@ export default class Game extends React.Component {
                         </Navbar.Brand>
                     </Navbar.Header>
                     <Navbar.Form pullRight>
-                        <FormControl id="stateUpload" style={{display: "none"}} type="file" accept=".json"
-                                     onChange={e => this.loadState(e.target.files)}/>
-                        <ButtonToolbar className="with-labels">
-                            <ButtonGroup>
-                                <Label onClick={this.saveState}>Shrani</Label>
-                                <ControlLabel htmlFor="stateUpload" className="no-round-left">
-                                    <Label>Naloži</Label>
-                                </ControlLabel>
-                            </ButtonGroup>
-                            <ButtonGroup>
-                                <Label style={this.state.gameEnded ? {backgroundColor: "greenyellow"} : {}}
-                                       onClick={() => this.resetGame()}>
-                                    Začni znova
-                                </Label>
-                            </ButtonGroup>
-                            { this.props.debug ?
-                                <span>
-                                    <ButtonGroup>
-                                        <Label onClick={this.showGameState}>
-                                            Stanje igre
-                                        </Label>
-                                    </ButtonGroup>
-                                    <ButtonGroup>
-                                        <Label onClick={this.props.switchToCreate}>
-                                            Ustvari
-                                        </Label>
-                                    </ButtonGroup>
-                                </span>
-                                : "" }
-                        </ButtonToolbar>
+                        { this.buttonToolbar() }
                     </Navbar.Form>
                 </Navbar>
                 <Panel>

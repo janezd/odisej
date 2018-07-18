@@ -21,11 +21,6 @@
     .location-editor { width: 90% }
 
     .btn-toolbar.with-labels .btn-group .label {
-
-
-    }
-
-    .btn-toolbar.with-labels .btn-group .label {
         border-color: #ccc;
         padding: 6px 12px;
         color: #333;
@@ -69,6 +64,16 @@
     .btn-toolbar.with-labels >  .btn-group .label+.label, .btn-toolbar.with-labels >  .btn-group .label+label,  .btn-toolbar.with-labels >  .btn-group .no-right-round+.label {
         margin-left: -1px;
     }
+
+    .btn-toolbar.with-labels .btn-group .label.disabled,
+    .btn-toolbar.with-labels .btn-group .control-label.disabled .label {
+        background-color: #fff;
+        border-color: #ccc;
+        cursor: not-allowed;
+        box-shadow: none;
+        opacity: .65;
+    }
+
   </style>
 
 
