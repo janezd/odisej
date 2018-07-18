@@ -230,14 +230,15 @@ export default class Game extends React.Component {
             variables: _obj_from_keys(variables, 0),
             nVisits: _obj_from_keys(locations, 0),
             executed: {},
-            printed: []
+            printed: [],
+            gameEnded: false
         }
     }
 
     saveState = () => {
-        const {location, items, flags, variables, nVisits, executed} = this.state
+        const {location, items, flags, variables, nVisits, executed, gameEnded} = this.state
         const blob = new Blob(
-            [JSON.stringify({location, items, flags, variables, nVisits, executed})],
+            [JSON.stringify({location, items, flags, variables, nVisits, executed, gameEnded})],
             { type: 'text/plain' })
         const anchor = document.createElement('a');
         anchor.download = "stanje-igre.json";
@@ -327,25 +328,33 @@ export default class Game extends React.Component {
         )
 
     resetGame = (then) => {
-        this.setState({modal:
-            <Modal.Dialog show={true}>
-                <Modal.Header>
-                    <Modal.Title>Začni znova</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                Želiš res začeti od začetka?
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button onClick={() =>
-                        this.setState({modal: "", ...this.prepareInitialState()},
-                            () => this.autoExecuteOnStart(then))}>
-                        Da
-                    </Button>
-                    <Button onClick={() => this.setState({modal: ""}, then)}>
-                        Ne
-                    </Button>
-                </Modal.Footer>
-            </Modal.Dialog>})
+        const reset = () =>
+            this.setState({modal: "", ...this.prepareInitialState()},
+                () => this.autoExecuteOnStart(then))
+
+        if (this.state.gameEnded) {
+            reset()
+        } else {
+            this.setState({
+                modal:
+                    <Modal.Dialog show={true}>
+                        <Modal.Header>
+                            <Modal.Title>Začni znova</Modal.Title>
+                        </Modal.Header>
+                        <Modal.Body>
+                            Želiš res začeti od začetka?
+                        </Modal.Body>
+                        <Modal.Footer>
+                            <Button onClick={reset}>
+                                Da
+                            </Button>
+                            <Button onClick={() => this.setState({modal: ""}, then)}>
+                                Ne
+                            </Button>
+                        </Modal.Footer>
+                    </Modal.Dialog>
+            })
+        }
     }
 
     autoExecuteOnStart = then => {
@@ -373,29 +382,20 @@ export default class Game extends React.Component {
 
     executeCommand = (block, then) => {
         const endCommand = () => {
-            if (this.endGame) {
-                this.endGame = false
-                this.currentCommand = null
-                this.setState(this.prepareInitialState(),
-                    () => this.autoExecuteOnStart()) // no then!
+            // This must happen after the command is ran.
+            // Allow re-execute block then can't have an immediate effect but must be taken into account here
+            const {executed} = this.state
+            if (this.allowReexecute) {
+                delete this.state.executed[this.currentLocAndCommand()]
             }
             else {
-                // This must happen after the command is ran.
-                // Allow re-execute block then can't have an immediate effect but must be taken into account here
-                const {executed} = this.state
-                if (this.allowReexecute) {
-                    delete this.state.executed[this.currentLocAndCommand()]
-                }
-                else {
-                    executed[this.currentLocAndCommand()] = true
-                }
-                this.setState({executed}, then)
+                executed[this.currentLocAndCommand()] = true
             }
+            this.setState({executed}, then)
         }
 
         this.currentCommand = block.name
         this.allowReexecute = false
-        this.endGame = false
         this.print(<b>&gt; {block.name}</b>,
             () => this.executeSequence(block.next,
                 () => this.autoExecuteBlocks("after_command", endCommand)
@@ -451,7 +451,7 @@ export default class Game extends React.Component {
             case 'print': return this.printBlock(block.msg, then)
             case 'delay': return this.delay(1000 * parseInt(block.constant), then)
 
-            case 'reset': this.endGame = true; return then && then()
+            case 'reset': return this.setState({gameEnded: true}, then)
             case 'allow_reexecute': this.allowReexecute = true; return then && then()
 
             case 'pick': return setItem(ITEM_CARRIED)
@@ -568,7 +568,8 @@ export default class Game extends React.Component {
                                 </ControlLabel>
                             </ButtonGroup>
                             <ButtonGroup>
-                                <Label onClick={() => this.resetGame()}>
+                                <Label style={this.state.gameEnded ? {backgroundColor: "greenyellow"} : {}}
+                                       onClick={() => this.resetGame()}>
                                     Začni znova
                                 </Label>
                             </ButtonGroup>
@@ -601,7 +602,7 @@ export default class Game extends React.Component {
                             <h1>{location.title}</h1>
                             <p>{location.description}</p>
                             <Messages messages={this.state.printed}/>
-                            <Commands show={this.state.showCommands}
+                            <Commands show={this.state.showCommands && !this.state.gameEnded}
                                       directions={directions} commands={commands} systemCommands={this.systemCommands} />
                         </Media.Body>
                     </Media>
