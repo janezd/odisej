@@ -1,6 +1,8 @@
 import React from "react"
 import { locations, storeLocally } from './quill'
 
+import { MenuItem, Popover} from "react-bootstrap"
+
 const D=30
 
 
@@ -12,6 +14,7 @@ const Nodes = props =>
         onHover={props.onHover}
         onMove={props.onMove}
         onEditLocation={() => props.onEditLocation(locId) }
+        onContextMenu={(x, y) => props.onContextMenu(locId, x, y)}
     />)
 
 
@@ -21,8 +24,16 @@ class Node extends React.Component {
         this.openEditor = false
     }
 
+    triggerContextMenu = e => {
+        e.stopPropagation()
+        e.preventDefault()
+        this.props.onContextMenu(e.pageX, e.pageY)
+    }
+
     polyMouseDown = (e) => {
-        this.coords = { x: e.pageX, y: e.pageY }
+        if (e.button != 0)
+            return
+        this.coords = {x: e.pageX, y: e.pageY}
         this.openEditor = true
         document.addEventListener('mousemove', this.polyMouseMove)
     }
@@ -102,6 +113,7 @@ class Node extends React.Component {
                                        onMouseUp={this.polyMouseUp}
                                        onMouseEnter={() => insideCb(this) }
                                        onMouseLeave={() => insideCb(null) }
+                                       onContextMenu={this.triggerContextMenu}
                                 />
                             </g>
                         </g>
@@ -282,11 +294,34 @@ const TempConnection = (props) => {
 }
 
 
+class NodeContextMenu extends React.Component {
+    render() {
+        if (!this.props.show)
+            return null
+
+        const [x, y] = this.props.coords
+        return <div style={{position: "fixed", top: 0, left: 0, width: "100%", height: "100%"}}
+                    onClick={this.props.onHide}
+                    onContextMenu={e => { e.preventDefault(); this.props.onHide()}}>
+                <Popover id="node-context-menu" placement="right" positionLeft={x} positionTop={y}>
+                    <strong>{locations[this.props.show].title}</strong>
+                    <ul className="dropdown-menu open" style={{display: "block"}}>
+                        <MenuItem onClick={() => this.props.onEditLocation(this.props.show)}>Spremeni</MenuItem>
+                        <MenuItem onClick={() => this.props.onRemoveLocation(this.props.show)}>Pobriši</MenuItem>
+                    </ul>
+                </Popover>
+            </div>
+    }
+}
+
+
 export default class GameMap extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            newLine: null
+            newLine: null,
+            contextMenuLoc: null,
+            contextMenuCoords: [0, 0]
         }
         this.currentlyHovered = null
     }
@@ -360,6 +395,12 @@ export default class GameMap extends React.Component {
 
     shouldComponentUpdate = (nextProps, nextState) => true
 
+    removeLocation = locId => {
+        locations.removeLocation(locId)
+        storeLocally()
+        this.forceUpdate()
+    }
+
     get offsetX() {
         return document.getElementById("gamemap").getBoundingClientRect().x
     }
@@ -379,6 +420,12 @@ export default class GameMap extends React.Component {
         const height = Math.max(window.innerHeight, maxy - miny + 500)
 
         return <div>
+            <NodeContextMenu
+                show={this.state.contextMenuLoc} coords={this.state.contextMenuCoords}
+                onHide={() => this.setState({contextMenuLoc: null})}
+                onEditLocation={locId => { this.setState({contextMenuLoc: null}); this.props.onEditLocation(locId) }}
+                onRemoveLocation={locId => { this.setState({contextMenuLoc: null}); this.removeLocation(locId) }}
+            />
             <svg width={width} height={height}
                  id="gamemap" onDoubleClick={e => {
                 this.newLocation(e)
@@ -396,7 +443,9 @@ export default class GameMap extends React.Component {
                     <Nodes onNewLine={this.startNewLine}
                            onHover={this.setHovered}
                            onMove={this.moveLocationBy}
-                           onEditLocation={this.props.onEditLocation}/>
+                           onEditLocation={this.props.onEditLocation}
+                           onContextMenu={(locId, x, y) => this.setState({contextMenuLoc: locId, contextMenuCoords: [x, y]})}
+                    />
                     <TempConnection line={this.state.newLine}/>
                 </g>
             </svg>
