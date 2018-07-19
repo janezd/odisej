@@ -12,10 +12,12 @@ const Nodes = props =>
     locations.keys().map(locId => <Node
         key={locId} locId={locId}
         isInitial={locId == locations.startLocation}
+        selected={props.selection.has(locId)}
         onNewLine={props.onNewLine}
         onHover={props.onHover}
         onMove={props.onMove}
         onEditLocation={() => props.onEditLocation(locId) }
+        onSelectLocation={(shiftKey) => props.onSelectLocation(shiftKey ? locId : null, shiftKey) }
         onContextMenu={(x, y) => props.onContextMenu(locId, x, y)}
     />)
 
@@ -35,14 +37,22 @@ class Node extends React.Component {
     polyMouseDown = (e) => {
         if (e.button != 0)
             return
+        if (!e.shiftKey && !this.props.selected) {
+            this.props.onSelectLocation(false)
+        }
         this.coords = {x: e.pageX, y: e.pageY}
         this.openEditor = true
         document.addEventListener('mousemove', this.polyMouseMove)
+        e.stopPropagation()
     }
 
-    polyMouseUp = () => {
+    polyMouseUp = (e) => {
         document.removeEventListener('mousemove', this.polyMouseMove)
-        if (this.openEditor) {
+        if (e.shiftKey) {
+            this.props.onSelectLocation(true)
+        }
+        else if (this.openEditor) {
+            this.props.onSelectLocation(false)
             this.openEditor = false
             this.props.onEditLocation()
         }
@@ -103,6 +113,8 @@ class Node extends React.Component {
                             v30.298L37.175,88.896z"
                         />
                         <polygon
+                            stroke={this.props.selected ? "blue" : "transparent"}
+                            strokeWidth={6}
                             fill={ isSpecial ? "#D0FFD0" : "#FFFFFF" }
                             points="36.761,89.896 14.751,67.887 14.751,36.761 36.761,14.751 67.887,14.751 89.896,36.761 89.896,67.887 67.887,89.896"
                         />
@@ -325,12 +337,22 @@ class NodeContextMenu extends React.Component {
     }
 }
 
+class SelectionRect extends React.Component {
+    render() {
+        if (!this.props.coords) return null
+        const [x0, y0, x1, y1] = this.props.coords
+        return <polygon fill="#00ffff" fillOpacity={0.2} stroke="#0000bb" strokeOpacity={0.7} strokeWidth={2} strokeLinejoin="round"
+                        points={`${x0}, ${y0} ${x1}, ${y0} ${x1}, ${y1} ${x0}, ${y1}`}/>
+    }
+}
 
 export default class GameMap extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
             newLine: null,
+            selectionRect: null,
+            selectedLocations: new Set(),
             contextMenuLoc: null,
             contextMenuCoords: [0, 0]
         }
@@ -343,9 +365,17 @@ export default class GameMap extends React.Component {
     }
 
     moveLocationBy = (locId, xDiff, yDiff) => {
-        const loc = locations[locId]
-        loc.x += xDiff
-        loc.y += yDiff
+        const moveLoc = (loc) => {
+            const location = locations[loc]
+            location.x += xDiff
+            location.y += yDiff
+        }
+        if (this.state.selectedLocations.size) {
+            this.state.selectedLocations.forEach(moveLoc)
+        }
+        else {
+            moveLoc(locId)
+        }
         this.forceUpdate()
     }
 
@@ -362,6 +392,54 @@ export default class GameMap extends React.Component {
         })
         document.addEventListener('mousemove', this.dirMouseMove);
         document.addEventListener('mouseup', this.dirMouseUp);
+        e.stopPropagation()
+    }
+
+    mouseDown = e => {
+        if (e.button != 0)
+            return
+        const x = e.clientX - this.offsetX
+        const y = e.clientY - this.offsetY
+        this.setState({selectionRect: [x, y, x, y]})
+        document.addEventListener('mousemove', this.selMouseMove)
+        document.addEventListener('mouseup', this.selMouseUp)
+    }
+
+    selMouseMove = e => {
+        const [x0, y0] = this.state.selectionRect
+        this.setState({selectionRect: [x0, y0, e.clientX - this.offsetX, e.clientY - this.offsetY]})
+    }
+
+    selMouseUp = e => {
+        let [x0, y0, x1, y1] = this.state.selectionRect
+        if (x0 > x1) { const t = x0; x0 = x1; x1 = t }
+        if (y0 > y1) { const t = y0; y0 = y1; y1 = t }
+        const { selectedLocations } = this.state
+        if (!e.shiftKey) {
+            selectedLocations.clear()
+        }
+        const selection = locations.values()
+            .filter(loc => x0 < loc.x + 105 && x1 > loc.x && y0 < loc.y + 105 && y1 > loc.y)
+            .forEach(loc => selectedLocations.add(loc.locId))
+        this.setState({selectedLocations, selectionRect: null})
+        document.removeEventListener('mousemove', this.selMouseMove)
+        document.removeEventListener('mouseup', this.selMouseUp)
+    }
+
+    selectLocation = (locId, shiftKey) => {
+        const {selectedLocations} = this.state
+        const locSelected = selectedLocations.has(locId)
+        if (!shiftKey) {
+            selectedLocations.clear()
+        }
+        if (locId) {
+            if (locSelected)
+                selectedLocations.delete(locId)
+            else {
+                selectedLocations.add(locId)
+            }
+        }
+        this.setState({selectedLocations})
     }
 
     dirMouseUp = (e) => {
@@ -407,9 +485,22 @@ export default class GameMap extends React.Component {
     shouldComponentUpdate = (nextProps, nextState) => true
 
     removeLocation = locId => {
+        const { selectedLocations } = this.state
+        selectedLocations.delete(locId)
         locations.removeLocation(locId)
+        this.setState({selectedLocations})
         storeLocally()
-        this.forceUpdate()
+    }
+
+    handleKeyDown = e => {
+        if ((e.keyCode == 8) || (e.keyCode == 46)) {
+            const { selectedLocations } = this.state
+            selectedLocations.forEach(locations.removeLocation)
+            selectedLocations.clear()
+            this.setState({selectedLocations})
+            storeLocally()
+            e.stopPropagation()
+        }
     }
 
     get offsetX() {
@@ -430,7 +521,8 @@ export default class GameMap extends React.Component {
         const width = Math.max(window.innerWidth, maxx - minx + 500)
         const height = Math.max(window.innerHeight, maxy - miny + 500)
 
-        return <div>
+        return <div onMouseDown={this.mouseDown} onKeyDown={this.handleKeyDown} tabIndex={0}
+                    style={{outline: "none"}}>
             <NodeContextMenu
                 show={this.state.contextMenuLoc} coords={this.state.contextMenuCoords}
                 onHide={() => this.setState({contextMenuLoc: null})}
@@ -451,14 +543,17 @@ export default class GameMap extends React.Component {
                 <g transform={`translate(${250 - minx} ${250 - miny})`}>
                     <Connections/>
                     <ImplicitConnections/>
-                    <Nodes onNewLine={this.startNewLine}
+                    <Nodes selection={this.state.selectedLocations}
+                           onNewLine={this.startNewLine}
                            onHover={this.setHovered}
                            onMove={this.moveLocationBy}
                            onEditLocation={this.props.onEditLocation}
+                           onSelectLocation={this.selectLocation}
                            onContextMenu={(locId, x, y) => this.setState({contextMenuLoc: locId, contextMenuCoords: [x, y]})}
                     />
                     <TempConnection line={this.state.newLine}/>
                 </g>
+                <SelectionRect coords={this.state.selectionRect}/>
             </svg>
         </div>
     }
