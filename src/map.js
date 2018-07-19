@@ -301,14 +301,18 @@ class NodeContextMenu extends React.Component {
             return null
 
         const [x, y] = this.props.coords
+
+        const location = locations[this.props.show]
         return <div style={{position: "fixed", top: 0, left: 0, width: "100%", height: "100%"}}
                     onClick={this.props.onHide}
                     onContextMenu={e => { e.preventDefault(); this.props.onHide()}}>
                 <Popover id="node-context-menu" placement="right" positionLeft={x} positionTop={y}>
-                    <strong>{locations[this.props.show].title}</strong>
+                    <strong>{location.title}</strong>
                     <ul className="dropdown-menu open" style={{display: "block"}}>
                         <MenuItem onClick={() => this.props.onEditLocation(this.props.show)}>Spremeni</MenuItem>
-                        <MenuItem onClick={() => this.props.onRemoveLocation(this.props.show)}>Pobriši</MenuItem>
+                        {locations.isSpecial(location) ? "" :
+                            <MenuItem onClick={() => this.props.onRemoveLocation(this.props.show)}>Pobriši</MenuItem>
+                        }
                     </ul>
                 </Popover>
             </div>

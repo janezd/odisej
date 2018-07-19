@@ -249,6 +249,7 @@ class LocationEditor extends React.Component {
                 <FormControl componentClass="textarea"
                              placeholder="Opis lokacije ..."
                              defaultValue={loc.description}
+                             readOnly={locations.isSpecial(loc)}
                              onChange={this.handleDescriptionChange} />
                 <BlocklyDrawerWithNameCheck
                     tools={blocks}
