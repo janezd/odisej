@@ -68,18 +68,19 @@ class Node extends React.Component {
 
         // Resize the image to fill the shape
         let [imgSrc, imgWidth, imgHeight] = loc.image
-        let offx, offy
-        if (imgWidth < imgHeight) {
-            imgHeight *= 105 / imgWidth
-            offy = - (imgHeight - 105) / 2
-            imgWidth = 105
-            offx = 0
-        }
-        else {
-            imgWidth *= 105 / imgHeight
-            offx = - (imgWidth - 105) / 2
-            imgHeight = 105
-            offy = 0
+        let offx = 0
+        let offy = 0
+        if (imgSrc) {
+            if (imgWidth < imgHeight) {
+                imgHeight *= 105 / imgWidth
+                offy = -(imgHeight - 105) / 2
+                imgWidth = 105
+            }
+            else {
+                imgWidth *= 105 / imgHeight
+                offx = -(imgWidth - 105) / 2
+                imgHeight = 105
+            }
         }
 
         return <g transform={`translate(${loc.x} ${loc.y})`}>
