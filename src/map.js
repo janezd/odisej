@@ -6,6 +6,8 @@ import { MenuItem, Popover} from "react-bootstrap"
 const D=30
 
 
+const questionPng="data:image/.png;base64,iVBORw0KGgoAAAANSUhEUgAAAGkAAABpCAYAAAA5gg06AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAfxJREFUeNrs289RAjEYhvEVPXi0BO1AK9AStAK1A0rACiwBO5AOxAqwg6UDuHrSMC4z6CgQ/oREfs/MO14k4Pf4ZZPs0qqQPS0lIAkkkQSSQBJJIAkkkQSSSAJJIIkkkASSSAJJIIkkkEQSSAJJJIEkkEQSSCIJeXJU+Oc/CTkPuZrzO8MmfbrTimmHDEI+IjIK6S4Qig3QaYr9sWZemg7EhrtnsAE5P3OntHkLmuZRidfnZYuCdNQGaCcQNF1UnORahMPMp7nnkOME7zV5j/dcl+k5b2avE/933zpx2H7ReiEXIQdNbkLGEa8/bYIIYq4pnT/GuIocx0Y3gpji1gvGGpUuKdfpLuY0oLfEAqRocj1g7c0U93Kmu37jdcExUgzjHItxUOhUOPvzqfo65f7JZIPajRh3MsaZK006HlfY0HaULe0GOFZQ/R+uXaUIWuUgdlS5bZGEU4Ly76ARQXmzSgfVBKWjU61269wiISF1pKCukqXf1O6FoJIfjoy5pvRD7knazapuWR5KnjL25THjPkl581b6H1Dys+BPS3bIuAJ00vwleMyUp6N2wN48YOJLZCSBJJJAEkgiCSThOyWfOMTcfhhSDdMdSSAJJJEEkkASSSAJJJEEkkgCSSCJJJAEkkgCSSQpAUkgiSSQBJJIAkkgiSSQtI98CjAAIS1L8fleihUAAAAASUVORK5CYII="
+
 const Nodes = props =>
     locations.keys().map(locId => <Node
         key={locId} locId={locId}
@@ -70,17 +72,21 @@ class Node extends React.Component {
         let [imgSrc, imgWidth, imgHeight] = loc.image
         let offx = 0
         let offy = 0
-        if (imgSrc) {
-            if (imgWidth < imgHeight) {
-                imgHeight *= 105 / imgWidth
-                offy = -(imgHeight - 105) / 2
-                imgWidth = 105
+        if (!imgSrc) {
+            if (!isSpecial) {
+                imgSrc = questionPng
+                imgWidth = imgHeight = 105
             }
-            else {
-                imgWidth *= 105 / imgHeight
-                offx = -(imgWidth - 105) / 2
-                imgHeight = 105
-            }
+        }
+        else if (imgWidth < imgHeight) {
+            imgHeight *= 105 / imgWidth
+            offy = -(imgHeight - 105) / 2
+            imgWidth = 105
+        }
+        else {
+            imgWidth *= 105 / imgHeight
+            offx = -(imgWidth - 105) / 2
+            imgHeight = 105
         }
 
         return <g transform={`translate(${loc.x} ${loc.y})`}>
