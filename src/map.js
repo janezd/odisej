@@ -17,7 +17,7 @@ const Nodes = props =>
         onHover={props.onHover}
         onMove={props.onMove}
         onEditLocation={() => props.onEditLocation(locId) }
-        onSelectLocation={(shiftKey) => props.onSelectLocation(shiftKey ? locId : null, shiftKey) }
+        onSelectLocation={(select, add) => props.onSelectLocation(select ? locId : null, add) }
         onContextMenu={(x, y) => props.onContextMenu(locId, x, y)}
     />)
 
@@ -25,7 +25,7 @@ const Nodes = props =>
 class Node extends React.Component {
     constructor(props) {
         super(props)
-        this.openEditor = false
+        this.didntMove = false
     }
 
     triggerContextMenu = e => {
@@ -41,22 +41,16 @@ class Node extends React.Component {
             this.props.onSelectLocation(false)
         }
         this.coords = {x: e.pageX, y: e.pageY}
-        this.openEditor = true
+        this.didntMove = true
         document.addEventListener('mousemove', this.polyMouseMove)
         e.stopPropagation()
     }
 
     polyMouseUp = (e) => {
         document.removeEventListener('mousemove', this.polyMouseMove)
-        if (e.shiftKey) {
-            this.props.onSelectLocation(true)
-        }
-        else if (this.openEditor) {
-            this.props.onSelectLocation(false)
-            this.openEditor = false
-            this.props.onEditLocation()
-        }
-        else {
+        if (this.didntMove) {
+            this.props.onSelectLocation(true, e.shiftKey)
+        } else {
             storeLocally()
         }
     }
@@ -65,12 +59,17 @@ class Node extends React.Component {
         const xDiff = this.coords.x - e.pageX
         const yDiff = this.coords.y - e.pageY
         if (xDiff ** 2 + yDiff ** 2 > 50)
-            this.openEditor = false
-        if (!this.openEditor) {
+            this.didntMove = false
+        if (!this.didntMove) {
             this.coords.x = e.pageX
             this.coords.y = e.pageY
             this.props.onMove(this.props.locId, -xDiff, -yDiff)
         }
+    }
+
+    editLocation = (e) => {
+        e.stopPropagation()
+        this.props.onEditLocation()
     }
 
     render() {
@@ -128,6 +127,7 @@ class Node extends React.Component {
                             <g transform={`translate(${offx}, ${offy})`}>
                                 <image width={imgWidth} height={imgHeight} href={imgSrc}
                                        style={{cursor: 'move'}}
+                                       onDoubleClick={this.editLocation}
                                        onMouseDown={this.polyMouseDown}
                                        onMouseUp={this.polyMouseUp}
                                        onMouseEnter={() => insideCb(this) }
