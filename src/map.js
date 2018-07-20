@@ -320,20 +320,52 @@ class NodeContextMenu extends React.Component {
 
         const [x, y] = this.props.coords
 
-        const location = locations[this.props.show]
+        let locId = this.props.locations
+        if ((locId instanceof Set) && locId.size == 1) {
+            locId = [...locId.values()][0]
+        }
+
+        let location, title, editable, removable, removeLocation, asInitial
+        if (locId instanceof Set) {
+            title = `(${locId.size} lokacij)`
+            editable = false
+            asInitial = false
+            removable = locations.checkRemoveLocations(locId)
+            removeLocation = () => locId.values().forEach(this.props.onRemoveLocation)
+        }
+        else {
+            location = locations[locId]
+            title = location.title
+            editable = true
+            asInitial = !locations.isSpecial(locId) && locations.startLocation != locId
+            removable = locations.checkRemoveLocation(locId) === true
+            removeLocation = () => this.props.onRemoveLocation(locId)
+        }
+
         return <div style={{position: "fixed", top: 0, left: 0, width: "100%", height: "100%"}}
                     onClick={this.props.onHide}
-                    onContextMenu={e => { e.preventDefault(); this.props.onHide()}}>
-                <Popover id="node-context-menu" placement="right" positionLeft={x} positionTop={y}>
-                    <strong>{location.title}</strong>
-                    <ul className="dropdown-menu open" style={{display: "block"}}>
-                        <MenuItem onClick={() => this.props.onEditLocation(this.props.show)}>Spremeni</MenuItem>
-                        {locations.isSpecial(location) ? "" :
-                            <MenuItem onClick={() => this.props.onRemoveLocation(this.props.show)}>Pobriši</MenuItem>
-                        }
-                    </ul>
-                </Popover>
-            </div>
+                    onContextMenu={e => {
+                        e.preventDefault();
+                        this.props.onHide()
+                    }}>
+            <Popover id="node-context-menu" placement="right" positionLeft={x} positionTop={y}>
+                <strong>{title}</strong>
+                <ul className="dropdown-menu open" style={{display: "block"}}>
+                    <MenuItem disabled={!editable}
+                              onClick={() => this.props.onEditLocation(locId)}>
+                        Spremeni
+                    </MenuItem>
+                    <MenuItem disabled={!asInitial}
+                              onClick={() => this.props.onAsInitial(location)}>
+                        Nastavi kot začetno
+                    </MenuItem>
+                    <MenuItem disabled={!removable}
+                              onClick={removeLocation}>
+                        Pobriši
+                    </MenuItem>
+                </ul>
+            </Popover>
+        </div>
     }
 }
 
@@ -495,10 +527,12 @@ export default class GameMap extends React.Component {
     handleKeyDown = e => {
         if ((e.keyCode == 8) || (e.keyCode == 46)) {
             const { selectedLocations } = this.state
-            selectedLocations.forEach(locations.removeLocation)
-            selectedLocations.clear()
-            this.setState({selectedLocations})
-            storeLocally()
+            if (locations.checkRemoveLocations(selectedLocations)) {
+                selectedLocations.forEach(locations.removeLocation)
+                selectedLocations.clear()
+                this.setState({selectedLocations})
+                storeLocally()
+            }
             e.stopPropagation()
         }
     }
@@ -524,10 +558,13 @@ export default class GameMap extends React.Component {
         return <div onMouseDown={this.mouseDown} onKeyDown={this.handleKeyDown} tabIndex={0}
                     style={{outline: "none"}}>
             <NodeContextMenu
-                show={this.state.contextMenuLoc} coords={this.state.contextMenuCoords}
+                show={this.state.contextMenuLoc}
+                coords={this.state.contextMenuCoords}
+                locations = {this.state.selectedLocations.size ? this.state.selectedLocations : this.state.contextMenuLoc}
                 onHide={() => this.setState({contextMenuLoc: null})}
                 onEditLocation={locId => { this.setState({contextMenuLoc: null}); this.props.onEditLocation(locId) }}
                 onRemoveLocation={locId => { this.setState({contextMenuLoc: null}); this.removeLocation(locId) }}
+                onAsInitial={this.props.onAsInitial}
             />
             <svg width={width} height={height}
                  id="gamemap" onDoubleClick={e => {

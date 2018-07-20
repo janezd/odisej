@@ -141,7 +141,7 @@ class Locations {
         this.reset()
     }
 
-    isSpecial = loc => loc.locId.startsWith("00000000-00000000-00000000-00000000-0000000")
+    isSpecial = loc => (loc instanceof LocData ? loc.locId : loc).startsWith("00000000-00000000-00000000-00000000-0000000")
 
     keys = () => Object.keys(this).filter(key => this[key] instanceof LocData)
     values = () => Object.values(this).filter(value => value instanceof LocData)
@@ -181,6 +181,23 @@ class Locations {
         delete this[location]
     }
 
+    checkRemoveLocation = (locId) => {
+        if ((locId == this.startLocation) || this.isSpecial(locId))
+            return false
+        const used = this.collectUses("usedLocations", new Set([locId]))[locId]
+        if (used && used.size)
+            return [...used].map(id => this[id].title)
+        return true
+    }
+
+    checkRemoveLocations = (locations) => {
+        const used = this.collectUses("usedLocations", locations)
+        for(let locId of locations)
+            if ((locId == this.startLocation) || this.isSpecial(locId) || (used[locId] && used[locId].size))
+                return false
+        return true
+    }
+
     renameLocation = (location, newName) =>
         this[location].title == newName ? newName : this[location].title = getUniqueName(newName, this.values())
 
@@ -197,10 +214,10 @@ class Locations {
         this.addSpecialLocations()
     }
 
-    collectUses = (things, skipLocation=null) => {
+    collectUses = (things, skipLocations=null) => {
         const collection = {}
         locations.values()
-            .filter(loc => loc.locId != skipLocation)
+            .filter(loc => !(skipLocations && skipLocations.has(loc.locId)))
             .forEach(loc =>
                 loc[things].forEach(thing => collection[thing] = (collection[thing] || new Set()).add(loc.locId))
             )

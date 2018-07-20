@@ -195,17 +195,16 @@ class LocationEditor extends React.Component {
         }
 
         const deleteButton = () => {
-            if (this.props.isInitial || isSpecial)
+            const canRemove = locations.checkRemoveLocation(this.props.location)
+            if (canRemove === false)
                 return ""
-            const usedAt = locations.collectUses("usedLocations", this.props.location)[this.props.location]
-            if (!usedAt || (usedAt.length == 0))
+            if (canRemove === true)
                 return <Label onClick={this.removeLocation} bsStyle="danger">Pobriši lokacijo</Label>
-            const usedNames = [...usedAt].map(id => locations[id].title)
-            let usedStr = usedNames.join(", ")
+            let usedStr = canRemove.join(", ")
             let tooltip
             if (usedStr.length > 200) {
                 usedStr = usedStr.slice(0, 196) + " ..."
-                tooltip = usedNames.join("<br/>")
+                tooltip = canRemove.join("<br/>")
             }
             else { tooltip = "" }
             return <p tooltip={tooltip}><small>Uporabljena na {usedStr}</small></p>
@@ -359,7 +358,7 @@ export default class Creator extends React.Component {
                 setStartLocation={this.setStartLocation}
             />
             <SettingsEditor show={this.state.editSettings} closeHandler={this.closeSettingsEditor}/>
-            <GameMap onEditLocation={this.editLocation}/>
+            <GameMap onEditLocation={this.editLocation} onAsInitial={this.setStartLocation}/>
         </div>
 }
 
