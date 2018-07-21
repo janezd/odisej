@@ -115,7 +115,10 @@ class Node extends React.Component {
                         {loc.title}
                     </text>
                     <g pointerEvents="all">
-                        <path fill={ this.props.isInitial ? "green" : "gray" } stroke="transparent" strokeOpacity="0.8"
+                        <path fill={ this.props.isInitial ? "green" : "gray" }
+                              stroke={this.props.isInitial ? "green" : "transparent"}
+                              strokeWidth={this.props.isInitial ? 3 : 0}
+                              strokeOpacity="0.8"
                               d="M67.887,90.896H36.761c-0.265,0-0.52-0.105-0.707-0.293l-22.01-22.01c-0.188-0.188-0.293-0.442-0.293-0.707V36.761
                             c0-0.265,0.105-0.52,0.293-0.707l22.01-22.01c0.188-0.188,0.442-0.293,0.707-0.293h31.126c0.265,0,0.52,0.105,0.707,0.293
                             l22.01,22.01c0.188,0.188,0.293,0.442,0.293,0.707v31.126c0,0.265-0.105,0.52-0.293,0.707l-22.01,22.01
