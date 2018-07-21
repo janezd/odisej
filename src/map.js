@@ -1,5 +1,5 @@
 import React from "react"
-import { locations, storeLocally } from './quill'
+import { locations, storeLocally, undoStack, redoStack } from './quill'
 
 import { MenuItem, Popover} from "react-bootstrap"
 
@@ -41,6 +41,7 @@ class Node extends React.Component {
             this.props.onSelectLocation(false)
         }
         this.coords = {x: e.pageX, y: e.pageY}
+        this.travelled = {xDiff: 0, yDiff: 0}
         this.didntMove = true
         document.addEventListener('mousemove', this.polyMouseMove)
         e.stopPropagation()
@@ -51,6 +52,12 @@ class Node extends React.Component {
         if (this.didntMove) {
             this.props.onSelectLocation(true, e.shiftKey)
         } else {
+            const location = locations[this.props.locId]
+            const {xDiff, yDiff} = this.travelled
+            console.log("up")
+            undoStack.push(
+                [() => { location.x += xDiff; location.y += yDiff },
+                 () => { location.x -= xDiff; location.y -= yDiff }])
             storeLocally()
         }
     }
@@ -58,11 +65,15 @@ class Node extends React.Component {
     polyMouseMove = (e) => {
         const xDiff = this.coords.x - e.pageX
         const yDiff = this.coords.y - e.pageY
-        if (xDiff ** 2 + yDiff ** 2 > 50)
+        if (this.didntMove && (xDiff ** 2 + yDiff ** 2 > 50)) {
             this.didntMove = false
+            undoStack.push([null, null])
+        }
         if (!this.didntMove) {
             this.coords.x = e.pageX
             this.coords.y = e.pageY
+            this.travelled.xDiff += xDiff
+            this.travelled.yDiff += yDiff
             this.props.onMove(this.props.locId, -xDiff, -yDiff)
         }
     }
@@ -163,10 +174,11 @@ class Node extends React.Component {
 class Connections extends React.Component {
     onRemoveConnection = (conn, direction) => {
         const {src, dir, dest, backDir} = conn.props
+        undoStack.push([null, null])
         if (direction != -1)
-            delete locations[src].directions[dir]
+            locations[src].removeConnection(dir)
         if (backDir && (direction != 1)) {
-            delete locations[dest].directions[backDir]
+            locations[dest].removeConnection(backDir)
         }
         this.forceUpdate()
         storeLocally()
@@ -479,16 +491,17 @@ export default class GameMap extends React.Component {
         const opposite = {n: 's', ne: 'sw', nw: 'se', e: 'w', w: 'e', s: 'n', se: 'nw', sw: 'ne'}
 
         const srcLoc = locations[node.props.locId]
+        undoStack.push([null, null])
         if ((x0 - e.clientX) ** 2 + (y0 - e.clientY) ** 2 > 100) {
             const dest = this.currentlyHovered
             const destLoc = dest && locations[dest.props.locId] || this.newLocation(e)
-            srcLoc.directions[dir] = destLoc.locId
+            srcLoc.setConnection(dir, destLoc.locId)
             if (srcLoc != destLoc) {
-                destLoc.directions[this.hoveredDirection || opposite[dir]] = srcLoc.locId
+                destLoc.setConnection(this.hoveredDirection || opposite[dir], srcLoc.locId)
             }
         }
         else {
-            delete srcLoc.directions[dir]
+            srcLoc.removeConnection(dir)
         }
 
         this.setState({newLine: null})
@@ -506,6 +519,7 @@ export default class GameMap extends React.Component {
     }
 
     newLocation = (e) => {
+        undoStack.push([null, null])
         const newLoc = locations.addLocation()
         newLoc.x = e.clientX - this.offsetX - 56
         newLoc.y = e.clientY - this.offsetY - 56
@@ -517,6 +531,7 @@ export default class GameMap extends React.Component {
     shouldComponentUpdate = (nextProps, nextState) => true
 
     removeLocation = locId => {
+        undoStack.push([null, null])
         const { selectedLocations } = this.state
         selectedLocations.delete(locId)
         locations.removeLocation(locId)
@@ -525,12 +540,34 @@ export default class GameMap extends React.Component {
     }
 
     handleKeyDown = e => {
+        const runStack = (fromStack, toStack) => {
+            if (!fromStack.length)
+                return false
+            toStack.push([null, null])
+            while (fromStack.length) {
+                const [action, opposite] = fromStack.pop()
+                if (!action)
+                    return true
+                toStack.push([opposite, action])
+                action()
+            }
+        }
+
         if ((e.keyCode == 8) || (e.keyCode == 46)) {
             const { selectedLocations } = this.state
-            if (locations.checkRemoveLocations(selectedLocations)) {
+            if (selectedLocations.size // prevent putting this onto undo stack
+                && locations.checkRemoveLocations(selectedLocations)) {
+                undoStack.push([null, null])
                 selectedLocations.forEach(locations.removeLocation)
                 selectedLocations.clear()
                 this.setState({selectedLocations})
+                storeLocally()
+            }
+            e.stopPropagation()
+        }
+        if (((e.charCode || e.keyCode) == 90) && (e.ctrlKey || e.metaKey)) {
+            if (e.shiftKey ? runStack(redoStack, undoStack) : runStack(undoStack, redoStack)) {
+                this.forceUpdate()
                 storeLocally()
             }
             e.stopPropagation()

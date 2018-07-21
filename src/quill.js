@@ -1,6 +1,9 @@
 import Blockly from "node-blockly/browser"
 import blocks from './createBlocks'
 
+export const undoStack = []
+export const redoStack = []
+
 const defaultGameSettings = {
     showInventory: true,
     dropItems: true,
@@ -56,6 +59,24 @@ class LocData {
         this.commands = workspace.getTopBlocks().map(block => this.packBlockArgs(block))
         this.recomputeUses(workspace)
         collectGarbage()
+    }
+
+    removeConnection(direction) {
+        const curr_direction = this.directions[direction]
+        const undo = () => this.directions[direction] = curr_direction
+        const redo = () => delete this.directions[direction]
+        undoStack.push([undo, redo])
+        redo()
+    }
+
+    setConnection(direction, where) {
+        const curr_direction = this.direction[direction]
+        const undo = curr_direction
+            ? (() => this.direction[direction] = curr_direction)
+            : (() => delete this.direction[direction])
+        const redo = () => this.direction[direciton] = where
+        undoStack.push([undo, redo])
+        redo()
     }
 
     clearUsed = () => {
@@ -152,6 +173,8 @@ class Locations {
         this.clear()
         const defaultLoc = this.addLocation("Začetek", "", 150, 10)
         this.addSpecialLocations()
+        undoStack.length = 0
+        redoStack.length = 0
         this.startLocation = defaultLoc.locId
     }
 
@@ -168,7 +191,10 @@ class Locations {
     addLocation = (name=null, description="", x=0, y=0, locId=null) => {
         const newName = getUniqueName(name || "Nova lokacija", this.values().map(it => it.title))
         const newLoc = new LocData(newName, description, x, y, locId)
-        this[newLoc.locId] = newLoc
+        const redo = () => this[newLoc.locId] = newLoc
+        const undo = () => delete this[newLoc.locId]
+        undoStack.push([undo, redo])
+        redo()
         return newLoc
     }
 
@@ -176,9 +202,13 @@ class Locations {
         this.values().forEach( loc =>  {
             Object.entries(loc.directions)
                 .filter( ([dir, where]) => where == location )
-                .forEach( ([dir, where]) => delete loc.directions[dir] )
+                .forEach( ([dir, where]) => loc.removeConnection(dir) )
         })
-        delete this[location]
+        const oldLocation = this[location]
+        const redo = () => delete this[location]
+        const undo = () => this[location] = oldLocation
+        undoStack.push([undo, redo])
+        redo()
     }
 
     checkRemoveLocation = (locId) => {

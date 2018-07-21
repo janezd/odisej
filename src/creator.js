@@ -7,14 +7,13 @@ import BlocklyDrawer from 'react-blockly-drawer'
 import blocks from './createBlocks'
 import { refreshDropdowns } from './createBlocks'
 import { locations, items, flags, variables,
-         gameSettings, storeLocally, resetData, saveGame, loadGame } from './quill'
+         gameSettings, storeLocally, resetData, saveGame, loadGame, undoStack, redoStack } from './quill'
 import GameMap from './map'
 
 Blockly.BlockSvg.START_HAT = true
 // Blockly.Flyout.prototype.autoClose = false
 
 window.React = React
-
 
 class BlocklyDrawerWithNameCheck extends BlocklyDrawer {
     onResize() {
