@@ -1,26 +1,36 @@
 import Blockly from "node-blockly/browser"
-import blocks from './createBlocks'
+import blocks, {refreshDropdowns} from './createBlocks'
 
 
 export const Undo = {
     undoStack: [],
     redoStack: [],
 
-    push: (undo, redo, stack=null) => (stack || Undo.undoStack).push([undo, redo]),
-    putMark: (stack=null) => Undo.push(null, null, stack),
+    push: (undo, redo, data=null) => Undo.undoStack.push([undo, redo, data]),
+    merge: (redo, data=null) => {
+        const last = Undo.undoStack[Undo.undoStack.length - 1]
+        last[1] = redo
+        last[2] = data
+    },
+    putMark: (stack=null) => (stack || Undo.undoStack).push([null, null]),
     undo: () => Undo.roll(Undo.undoStack, Undo.redoStack),
     redo: () => Undo.roll(Undo.redoStack, Undo.undoStack),
     reset: () => Undo.undoStack.length = Undo.redoStack.length = 0,
+    lastData: () => (Undo.undoStack.length && Undo.undoStack[Undo.undoStack.length - 1][2]) || null,
 
     roll: (fromStack, toStack) => {
         if (!fromStack.length)
             return false
         Undo.putMark(toStack)
+        // Skip empty undos
+        while (fromStack.length && !fromStack[fromStack.length - 1][0]) {
+            fromStack.pop()
+        }
         while (fromStack.length) {
             const [action, opposite] = fromStack.pop()
             if (!action)
                 return true
-            Undo.push(opposite, action, toStack)
+            toStack.push([opposite, action])
             action()
         }
     }
@@ -76,29 +86,93 @@ class LocData {
         this.clearUsed()
     }
 
-    updateFromWorkspace = workspace => {
-        this.workspace = Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(workspace))
-        this.commands = workspace.getTopBlocks().map(block => this.packBlockArgs(block))
-        this.recomputeUses(workspace)
-        collectGarbage()
-    }
-
     removeConnection(direction) {
         const curr_direction = this.directions[direction]
-        const undo = () => this.directions[direction] = curr_direction
-        const redo = () => delete this.directions[direction]
-        Undo.push(undo, redo)
-        redo()
+        if (curr_direction) {
+            const undo = () => this.directions[direction] = curr_direction
+            const redo = () => delete this.directions[direction]
+            Undo.push(undo, redo)
+            redo()
+        }
     }
 
     setConnection(direction, where) {
-        const curr_direction = this.direction[direction]
-        const undo = curr_direction
-            ? (() => this.direction[direction] = curr_direction)
-            : (() => delete this.direction[direction])
-        const redo = () => this.direction[direciton] = where
-        Undo.push(undo, redo)
-        redo()
+        const curr_direction = this.directions[direction]
+        if (curr_direction != where) {
+            const undo = curr_direction
+                ? (() => this.directions[direction] = curr_direction)
+                : (() => delete this.directions[direction])
+            const redo = () => this.directions[direction] = where
+            Undo.push(undo, redo)
+            redo()
+        }
+    }
+
+    setTitle = (newTitle) => {
+        const oldTitle = this.title
+        if (newTitle != oldTitle) {
+            const undo = () => { this.title = oldTitle; refreshDropdowns(this.locId, oldTitle) }
+            const redo = () => { this.title = newTitle; refreshDropdowns(this.locId, newTitle) }
+            Undo.push(undo, redo)
+            redo()
+        }
+    }
+
+    setDescription = (newDescription) => {
+        const oldDescription = this.description
+        if (newDescription != oldDescription) {
+            const undo = () => this.description = oldDescription
+            const redo = () => this.description = newDescription
+            Undo.push(undo, redo)
+            redo()
+        }
+    }
+
+    setImage = (newImage) => {
+        const oldImage = this.image
+        if (newImage != oldImage) {
+            const undo = () => this.image = oldImage
+            const redo = () => this.image = newImage
+            Undo.push(undo, redo)
+            redo()
+        }
+    }
+
+    setWorkspace = (workspace, mergeIfPossible=false) => {
+        const newWorkspaceAsString = Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(workspace))
+        const oldWorkspaceAsString = this.workspace
+        if (newWorkspaceAsString != oldWorkspaceAsString) {
+            const recomputeCommandsAndUses = (ws) => {
+                this.commands = ws.getTopBlocks().map(block => this.packBlockArgs(block))
+                this.recomputeUses(ws)
+            }
+            const recompute = () => {
+                const ws = new Blockly.Workspace({toolbox: blocks})
+                Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(this.workspace), ws)
+                recomputeCommandsAndUses(ws)
+                ws.clear()
+            }
+
+            const undo = () => {
+                this.workspace = oldWorkspaceAsString
+                recompute()
+            }
+            const redo = () => {
+                this.workspace = newWorkspaceAsString
+                recompute()
+            }
+
+            if (mergeIfPossible && (Undo.lastData() == oldWorkspaceAsString)) {
+                Undo.merge(redo.bind(this), newWorkspaceAsString)
+            }
+            else {
+                Undo.push(undo.bind(this), redo.bind(this), newWorkspaceAsString)
+            }
+
+            this.workspace = newWorkspaceAsString
+            recomputeCommandsAndUses(workspace)
+            collectGarbage()
+        }
     }
 
     clearUsed = () => {
@@ -230,6 +304,7 @@ class Locations {
         const undo = () => this[location] = oldLocation
         Undo.push(undo, redo)
         redo()
+        collectGarbage()
     }
 
     checkRemoveLocation = (locId) => {
@@ -249,8 +324,15 @@ class Locations {
         return true
     }
 
-    renameLocation = (location, newName) =>
-        this[location].title == newName ? newName : this[location].title = getUniqueName(newName, this.values())
+    setStartLocation = (locId) => {
+        const oldStartLocation = this.startLocation
+        if (locId != oldStartLocation) {
+            const undo = () => this.startLocation = oldStartLocation
+            const redo = () => this.startLocation = locId
+            Undo.push(undo.bind(this), redo.bind(this))
+            redo()
+        }
+    }
 
     pack = () => ({locations: this.entries(), startLocation: this.startLocation})
 
@@ -282,13 +364,47 @@ class NameModel {
     values() { return Object.values(this).filter(value => typeof value == "string") }
     entries() { return Object.entries(this).filter(([key, value]) => typeof value == "string") }
 
-    reset()                 { this.clear() }
-    add(name=null)          { const itemId = randomId(); this[itemId] = name || "stvar"; return itemId }
-    rename(itemId, newName) { this[itemId] = newName }
-    remove(itemId)          { delete this[itemId] }
-    clear(allowed)          { this.keys().forEach(key => { if (!allowed || !allowed[key]) delete this[key] })}
+    add(name=null) {
+        const itemId = randomId()
+        const undo = () => { delete this[itemId] }
+        const redo = () => this[itemId] = name || "stvar"
+        Undo.push(undo, redo)
+        redo()
+        return itemId
+    }
 
-    pack()                  { return this.entries() }
+    rename(itemId, newName) {
+        const oldName = this[itemId]
+        if (newName != oldName) {
+            const undo = () => this[itemId] = oldName
+            const redo = () => this[itemId] = newName
+            Undo.push(undo, redo)
+            redo()
+        }
+    }
+
+    remove(itemId) {
+        const itemName = this[itemId]
+        if (itemName) {
+            const undo = () => this[itemId] = itemName
+            const redo = () => { delete this[itemId] }
+            Undo.push(undo, redo)
+            redo()
+        }
+    }
+
+    clear(allowed) {
+        this.keys().forEach(key =>
+            { if (!allowed || !allowed[key]) this.remove(key) })
+    }
+
+    reset() {
+        this.clear()
+    }
+
+    pack() {
+        return this.entries()
+    }
     unpack(data) {
         this.reset()
         data.forEach(([key, value]) => this[key] = value)

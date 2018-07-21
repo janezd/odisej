@@ -7,7 +7,7 @@ import BlocklyDrawer from 'react-blockly-drawer'
 import blocks from './createBlocks'
 import { refreshDropdowns } from './createBlocks'
 import { locations, items, flags, variables,
-         gameSettings, storeLocally, resetData, saveGame, loadGame, undoStack, redoStack } from './quill'
+         gameSettings, storeLocally, resetData, saveGame, loadGame, Undo } from './quill'
 import GameMap from './map'
 
 Blockly.BlockSvg.START_HAT = true
@@ -135,10 +135,19 @@ class LocationEditor extends React.Component {
     // TODO Blocks in the flyouts don't refresh. Discover how the are constructed
     handleTitleBlur = () => refreshDropdowns(this.props.location, locations[this.props.location].title)
     handleTitleKeyPress = e => { if (e.charCode == 13) { e.preventDefault(); e.stopPropagation(); e.target.blur() } }
+    handleTitleChange = e => { this.location.setTitle(e.target.value); this.forceUpdate() }
+    handleDescriptionChange = e => { this.location.setDescription(e.target.value); this.forceUpdate() }
 
-    handleTitleChange = e => { this.location.title = e.target.value; this.forceUpdate() }
-    handleDescriptionChange = e => { this.location.description = e.target.value; this.forceUpdate() }
-    handleWorkspaceChange = () => this.location.updateFromWorkspace(Blockly.getMainWorkspace())
+    handleWorkspaceChange = () => {
+        /* Listener remains active after the dialog is closed and may be triggered by, for instance,
+           undo/redo, which uses workspaces to refresh some data.
+           **This may have also caused overwriteing of some location's block -- this bug was never fixed
+             but disappeared by itself.**
+        */
+        if (this.location) {
+            this.location.setWorkspace(Blockly.getMainWorkspace(), true)
+        }
+    }
 
     uploadImage = (control) => {
         const reader = new FileReader()
@@ -190,7 +199,7 @@ class LocationEditor extends React.Component {
             else if (this.props.isInitial)
                 return <Label bsStyle="default">Začetna lokacija</Label>
             else
-                return <Label onClick={() => this.props.setStartLocation(loc)} bsStyle="success">Nastavi kot začetno</Label>
+                return <Label onClick={() => locations.setStartLocation(loc)} bsStyle="success">Nastavi kot začetno</Label>
         }
 
         const deleteButton = () => {
@@ -273,20 +282,21 @@ export default class Creator extends React.Component {
         this.openSettingsEditor = this.openSettingsEditor.bind()
     }
 
-    editLocation = (locId, selectTitle=false) => this.setState({editing: locId, selectTitle})
+    editLocation = (locId, selectTitle=false) => { Undo.putMark(); this.setState({editing: locId, selectTitle}) }
     closeEditor = () => this.setState({editing: null}, storeLocally)
 
     openSettingsEditor = () => this.setState({editSettings: true})
     closeSettingsEditor = () => { this.setState({editSettings: false}, storeLocally) }
 
     setStartLocation = (location) => {
-        locations.startLocation = location.locId
+        Undo.putMark()
+        locations.setStartLocation(location.locId)
         this.setState(this.state)
         storeLocally()
     }
 
     setLocationImage = (location, image, width, height) => {
-        locations[location].image = [image || "", width, height]
+        locations[location].setImage([image || "", width, height])
         this.setState(this.state)
         storeLocally()
     }
@@ -354,7 +364,6 @@ export default class Creator extends React.Component {
                 onTitleSelectionChange={() => this.setState({selectTitle: false})}
                 handleClose={this.closeEditor}
                 setLocationImage={this.setLocationImage}
-                setStartLocation={this.setStartLocation}
             />
             <SettingsEditor show={this.state.editSettings} closeHandler={this.closeSettingsEditor}/>
             <GameMap onEditLocation={this.editLocation} onAsInitial={this.setStartLocation}/>
