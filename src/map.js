@@ -1,5 +1,5 @@
 import React from "react"
-import { locations, storeLocally, undoStack, redoStack } from './quill'
+import { locations, storeLocally, Undo } from './quill'
 
 import { MenuItem, Popover} from "react-bootstrap"
 
@@ -55,9 +55,9 @@ class Node extends React.Component {
             const location = locations[this.props.locId]
             const {xDiff, yDiff} = this.travelled
             console.log("up")
-            undoStack.push(
-                [() => { location.x += xDiff; location.y += yDiff },
-                 () => { location.x -= xDiff; location.y -= yDiff }])
+            Undo.push(
+                () => { location.x += xDiff; location.y += yDiff },
+                () => { location.x -= xDiff; location.y -= yDiff })
             storeLocally()
         }
     }
@@ -67,7 +67,7 @@ class Node extends React.Component {
         const yDiff = this.coords.y - e.pageY
         if (this.didntMove && (xDiff ** 2 + yDiff ** 2 > 50)) {
             this.didntMove = false
-            undoStack.push([null, null])
+            Undo.putMark()
         }
         if (!this.didntMove) {
             this.coords.x = e.pageX
@@ -174,7 +174,7 @@ class Node extends React.Component {
 class Connections extends React.Component {
     onRemoveConnection = (conn, direction) => {
         const {src, dir, dest, backDir} = conn.props
-        undoStack.push([null, null])
+        Undo.putMark()
         if (direction != -1)
             locations[src].removeConnection(dir)
         if (backDir && (direction != 1)) {
@@ -491,7 +491,7 @@ export default class GameMap extends React.Component {
         const opposite = {n: 's', ne: 'sw', nw: 'se', e: 'w', w: 'e', s: 'n', se: 'nw', sw: 'ne'}
 
         const srcLoc = locations[node.props.locId]
-        undoStack.push([null, null])
+        Undo.putMark()
         if ((x0 - e.clientX) ** 2 + (y0 - e.clientY) ** 2 > 100) {
             const dest = this.currentlyHovered
             const destLoc = dest && locations[dest.props.locId] || this.newLocation(e)
@@ -519,7 +519,7 @@ export default class GameMap extends React.Component {
     }
 
     newLocation = (e) => {
-        undoStack.push([null, null])
+        Undo.putMark()
         const newLoc = locations.addLocation()
         newLoc.x = e.clientX - this.offsetX - 56
         newLoc.y = e.clientY - this.offsetY - 56
@@ -531,7 +531,7 @@ export default class GameMap extends React.Component {
     shouldComponentUpdate = (nextProps, nextState) => true
 
     removeLocation = locId => {
-        undoStack.push([null, null])
+        Undo.putMark()
         const { selectedLocations } = this.state
         selectedLocations.delete(locId)
         locations.removeLocation(locId)
@@ -540,24 +540,11 @@ export default class GameMap extends React.Component {
     }
 
     handleKeyDown = e => {
-        const runStack = (fromStack, toStack) => {
-            if (!fromStack.length)
-                return false
-            toStack.push([null, null])
-            while (fromStack.length) {
-                const [action, opposite] = fromStack.pop()
-                if (!action)
-                    return true
-                toStack.push([opposite, action])
-                action()
-            }
-        }
-
         if ((e.keyCode == 8) || (e.keyCode == 46)) {
             const { selectedLocations } = this.state
             if (selectedLocations.size // prevent putting this onto undo stack
                 && locations.checkRemoveLocations(selectedLocations)) {
-                undoStack.push([null, null])
+                Undo.putMark()
                 selectedLocations.forEach(locations.removeLocation)
                 selectedLocations.clear()
                 this.setState({selectedLocations})
@@ -566,7 +553,7 @@ export default class GameMap extends React.Component {
             e.stopPropagation()
         }
         if (((e.charCode || e.keyCode) == 90) && (e.ctrlKey || e.metaKey)) {
-            if (e.shiftKey ? runStack(redoStack, undoStack) : runStack(undoStack, redoStack)) {
+            if (e.shiftKey ? Undo.redo() : Undo.undo()) {
                 this.forceUpdate()
                 storeLocally()
             }

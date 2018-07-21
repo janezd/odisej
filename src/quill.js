@@ -1,8 +1,30 @@
 import Blockly from "node-blockly/browser"
 import blocks from './createBlocks'
 
-export const undoStack = []
-export const redoStack = []
+
+export const Undo = {
+    undoStack: [],
+    redoStack: [],
+
+    push: (undo, redo, stack=null) => (stack || Undo.undoStack).push([undo, redo]),
+    putMark: (stack=null) => Undo.push(null, null, stack),
+    undo: () => Undo.roll(Undo.undoStack, Undo.redoStack),
+    redo: () => Undo.roll(Undo.redoStack, Undo.undoStack),
+    reset: () => Undo.undoStack.length = Undo.redoStack.length = 0,
+
+    roll: (fromStack, toStack) => {
+        if (!fromStack.length)
+            return false
+        Undo.putMark(toStack)
+        while (fromStack.length) {
+            const [action, opposite] = fromStack.pop()
+            if (!action)
+                return true
+            Undo.push(opposite, action, toStack)
+            action()
+        }
+    }
+}
 
 const defaultGameSettings = {
     showInventory: true,
@@ -65,7 +87,7 @@ class LocData {
         const curr_direction = this.directions[direction]
         const undo = () => this.directions[direction] = curr_direction
         const redo = () => delete this.directions[direction]
-        undoStack.push([undo, redo])
+        Undo.push(undo, redo)
         redo()
     }
 
@@ -75,7 +97,7 @@ class LocData {
             ? (() => this.direction[direction] = curr_direction)
             : (() => delete this.direction[direction])
         const redo = () => this.direction[direciton] = where
-        undoStack.push([undo, redo])
+        Undo.push(undo, redo)
         redo()
     }
 
@@ -173,8 +195,7 @@ class Locations {
         this.clear()
         const defaultLoc = this.addLocation("Začetek", "", 150, 10)
         this.addSpecialLocations()
-        undoStack.length = 0
-        redoStack.length = 0
+        Undo.reset()
         this.startLocation = defaultLoc.locId
     }
 
@@ -193,7 +214,7 @@ class Locations {
         const newLoc = new LocData(newName, description, x, y, locId)
         const redo = () => this[newLoc.locId] = newLoc
         const undo = () => delete this[newLoc.locId]
-        undoStack.push([undo, redo])
+        Undo.push(undo, redo)
         redo()
         return newLoc
     }
@@ -207,7 +228,7 @@ class Locations {
         const oldLocation = this[location]
         const redo = () => delete this[location]
         const undo = () => this[location] = oldLocation
-        undoStack.push([undo, redo])
+        Undo.push(undo, redo)
         redo()
     }
 
@@ -285,6 +306,7 @@ export function resetData() {
     flags.reset()
     locations.reset()
     Object.assign(gameSettings, defaultGameSettings)
+    Undo.reset()
 }
 
 function collectGarbage() {
@@ -358,6 +380,7 @@ export function restoreLocally(json) {
         migrateAddUsedSets()
         migrateImages()
         collectGarbage()
+        Undo.reset()
     //}
     //catch (e) {}
 }
