@@ -187,6 +187,13 @@ class LocationEditor extends React.Component {
         }
     }
 
+    handleEscape() {
+        const locId = this.props.location
+        const location = locations[locId]
+        if (location.title.startsWith("Nova lokacija") && !location.description && !location.workspace)
+            locations.removeLocation(locId)
+    }
+
     render() {
         const loc = locations[this.props.location]
         if (!loc) return null;
@@ -220,6 +227,7 @@ class LocationEditor extends React.Component {
 
         return <Modal dialogClassName="location-editor" show={true}
                       onHide={this.handleClose} onKeyPress={this.handleKeyPress}
+                      onEscapeKeyDown={() => this.handleEscape()}
                       enforceFocus={false}>
             <Modal.Header closeButton>
                 <Modal.Title>
