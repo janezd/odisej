@@ -199,7 +199,7 @@ class LocationEditor extends React.Component {
             else if (this.props.isInitial)
                 return <Label bsStyle="default">Začetna lokacija</Label>
             else
-                return <Label onClick={() => locations.setStartLocation(loc)} bsStyle="success">Nastavi kot začetno</Label>
+                return <Label onClick={() => this.props.setStartLocation(loc)} bsStyle="success">Nastavi kot začetno</Label>
         }
 
         const deleteButton = () => {
@@ -288,8 +288,10 @@ export default class Creator extends React.Component {
     openSettingsEditor = () => this.setState({editSettings: true})
     closeSettingsEditor = () => { this.setState({editSettings: false}, storeLocally) }
 
-    setStartLocation = (location) => {
-        Undo.putMark()
+    setStartLocation = (location, noUndoMark=false) => {
+        if (!noUndoMark) {
+            Undo.putMark()
+        }
         locations.setStartLocation(location.locId)
         this.setState(this.state)
         storeLocally()
@@ -364,6 +366,7 @@ export default class Creator extends React.Component {
                 onTitleSelectionChange={() => this.setState({selectTitle: false})}
                 handleClose={this.closeEditor}
                 setLocationImage={this.setLocationImage}
+                setStartLocation={locId => this.setStartLocation(locId, false)}
             />
             <SettingsEditor show={this.state.editSettings} closeHandler={this.closeSettingsEditor}/>
             <GameMap onEditLocation={this.editLocation} onAsInitial={this.setStartLocation}/>
