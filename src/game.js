@@ -210,6 +210,7 @@ export default class Game extends React.Component {
             modal: ""
         }
         this.allowReexecute = false
+        this.activeTimeouts = new Set()
 
         this.systemCommands = {}
         if (gameSettings.showInventory == INV_OPTIONS.SHOW_BUTTON)
@@ -322,18 +323,43 @@ export default class Game extends React.Component {
     print = (msg, then) =>
         this.setState({printed: this.state.printed.concat([msg])}, then)
 
+    setGuardedTimeout(f, ms) {
+        let done = false
+        const callAndClear = () => {
+            done = true
+            f()
+            this.activeTimeouts.delete(id)
+        }
+        const id = setTimeout(callAndClear, ms)
+        if (!done) {
+            this.activeTimeouts.add(id)
+        }
+    }
+
+    clearGuardedTimeouts() {
+        this.activeTimeouts.forEach(clearTimeout)
+        this.activeTimeouts.clear()
+    }
+
     delay = (ms, then) =>
         this.setState({showCommands: false},
-            () => setTimeout(
+            () => this.setGuardedTimeout(
                 () => this.setState({showCommands: true}, then),
                 ms
             )
         )
 
+    endGame = (then) => {
+        this.clearGuardedTimeouts()
+        return this.setState({gameEnded: true}, then)
+    }
+
     resetGame = (then) => {
-        const reset = () =>
+        const reset = () => {
+            this.clearGuardedTimeouts()
             this.setState({modal: "", ...this.prepareInitialState()},
                 () => this.autoExecuteOnStart(then))
+        }
 
         if (this.state.gameEnded) {
             reset()
@@ -455,7 +481,7 @@ export default class Game extends React.Component {
             case 'print': return this.printBlock(block.msg, then)
             case 'delay': return this.delay(1000 * parseInt(block.constant), then)
 
-            case 'reset': return this.setState({gameEnded: true}, then)
+            case 'reset': return this.endGame(then)
             case 'allow_reexecute': this.allowReexecute = true; return then && then()
 
             case 'pick': return setItem(ITEM_CARRIED)
@@ -475,8 +501,13 @@ export default class Game extends React.Component {
             case 'add_var': return setVariable(variables[name] + variables[block.variable2])
             case 'sub_var': return setVariable(variables[name] - variables[block.variable2])
 
-            case 'set_timer': setTimeout(() => this.executeSequence(block.statements), 1000 * parseFloat(block.time)); return then && then()
-            default: console.log(`Unrecognized block type: ${block.block}`); then && then()
+            case 'set_timer':
+                this.setGuardedTimeout(() => this.executeSequence(block.statements), 1000 * parseFloat(block.time))
+                return then && then()
+
+            default:
+                console.log(`Unrecognized block type: ${block.block}`)
+                return then && then()
         }
     }
 
