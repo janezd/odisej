@@ -476,8 +476,12 @@ export function storeLocally() {
 export function restoreLocally(json) {
     const migrated = obj => Array.isArray(obj) ? obj : Object.entries(obj)
     // TODO: Enable try-except, alert if something is there, but can't load it.
-    //try {
-        json = json || localStorage.odisej
+    try {
+        if (!json) {
+            json = localStorage.odisej
+            if (!json)
+                return
+        }
         const obj = JSON.parse(json)
 
         locations.unpack({locations: migrated(obj.locations.locations), startLocation: obj.locations.startLocation})
@@ -497,8 +501,10 @@ export function restoreLocally(json) {
         migrateImages()
         collectGarbage()
         Undo.reset()
-    //}
-    //catch (e) {}
+    }
+    catch (e) {
+        alert("Napaka pri branju podatkov.")
+    }
 }
 
 
