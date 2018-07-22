@@ -302,6 +302,8 @@ appendBlock('Ukazi', 'set_timer', {
 })
 
 createCondition('Pogoji', 'hasnt_executed', "se ta ukaz še ni izvajal")
+createStatement("Ukazi", "allow_reexecute", "dovoli ponovitev ukaza")
+
 createCondition('Stvari', 'does_have', "ima igralec", "ITEM")
 createCondition('Stvari', 'doesnt_have', "igralec nima", "ITEM")
 createCondition('Stvari', 'can_carry_more', "lahko nosi še kaj")
@@ -344,8 +346,7 @@ createStatement("Zastavice", "set_flag", "postavi", "FLAG")
 createStatement("Zastavice", "clear_flag", "pobriši", "FLAG")
 createStatement("Ukazi", "print", "izpiši", "MSG")
 createStatement("Ukazi", "delay", "počakaj", "CONSTANT", row => row.appendField("s"), "1")
-createStatement("Ukazi", "allow_reexecute", "dovoli ponovitev ukaza")
-createStatement("Ukazi", "reset", "ponovno začni igro")
+createStatement("Ukazi", "reset", "konec igre")
 
 
 function createVarStatement(block_name, statement, fieldName, relation=null, fieldName2=null, other=null) {
