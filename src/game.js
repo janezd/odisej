@@ -2,7 +2,7 @@ import React from "react"
 import { Panel, Button, Media, Modal, Label, FormControl, ControlLabel, DropdownButton, MenuItem, Navbar,
     ButtonToolbar, ButtonGroup, Image } from 'react-bootstrap'
 import blocks from "./createBlocks"
-import { locations, items, flags, variables, gameSettings } from './quill'
+import { locations, items, flags, variables, gameSettings, INV_OPTIONS } from './quill'
 import { systemCommandsSettings } from './creator'
 
 const ITEM_CARRIED = -1
@@ -212,7 +212,7 @@ export default class Game extends React.Component {
         this.allowReexecute = false
 
         this.systemCommands = {}
-        if (gameSettings.showInventory)
+        if (gameSettings.showInventory == INV_OPTIONS.SHOW_BUTTON)
             this.systemCommands["Kaj imam?"] = () => this.printInventory()
     }
 
@@ -484,23 +484,26 @@ export default class Game extends React.Component {
     hideGameState = () => this.setState({showState: false})
     setGameState = state => this.setState(state)
 
-    printInventory = () => {
+    getInventoryList = () => {
         const inventory = Object.entries(this.state.items)
             .filter(([id, value]) => value == ITEM_CARRIED)
-        const itemList = inventory.length
-            ? <span>{
-                  inventory.map(([id, place], i) => {
-                      const itemName = items[id]
-                      return <span key={`item${i}`}>{i ? ", " : ""}{itemName}
-                          <DropItemLink itemId={id}
-                                        itemState={this.state.items}
-                                        onClick={() => this.moveItem(id, this.state.location, `Odloži ${itemName}`)}/>
+        return inventory.length
+            ?  <span>{
+                inventory.map(([id, place], i) => {
+                    const itemName = items[id]
+                    return <span key={`item${i}`}>{i ? ", " : ""}{itemName}
+                        <DropItemLink itemId={id}
+                                      itemState={this.state.items}
+                                      onClick={() => this.moveItem(id, this.state.location, `Odloži ${itemName}`)}/>
                       </span>
-                  })
-              }</span>
-            : "Nič."
+                })}
+               </span>
+            : ""
+    }
+
+    printInventory = () => {
         this.print(<b>&gt; Kaj imam?</b>,
-            () => this.print(itemList))
+            () => this.print(this.getInventoryList() || "Nič."))
     }
 
     printBlock = (msg, then) => {
@@ -598,6 +601,12 @@ export default class Game extends React.Component {
         const [directions, commands] = this.getCommandList()
         const ifNotCommand = f => this.state.currentCommand ? null : f
         const buttonClass =  this.state.currentCommand ? " disabled" : ""
+
+        const inventoryList = gameSettings.showInventory == INV_OPTIONS.SHOW_ALWAYS ? this.getInventoryList() : ""
+        const inventoryLine = inventoryList == ""
+            ? ""
+            : <p style={{clear: "both", paddingTop: 12}}>Imam { inventoryList }.</p>
+
         return (
             <div>
                 {this.state.modal}
@@ -625,6 +634,7 @@ export default class Game extends React.Component {
                             <Messages messages={this.state.printed}/>
                             <Commands show={this.state.showCommands && !this.state.gameEnded}
                                       directions={directions} commands={commands} systemCommands={this.systemCommands} />
+                            { inventoryLine }
                         </Media.Body>
                     </Media>
                 </Panel>
@@ -632,3 +642,6 @@ export default class Game extends React.Component {
         )
     }
 }
+
+
+

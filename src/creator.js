@@ -1,5 +1,6 @@
 import React from "react"
-import { Modal, FormGroup, FormControl, ControlLabel, Input, Label, Button, Checkbox, Navbar, ButtonToolbar, Media, ButtonGroup } from 'react-bootstrap'
+import { Modal, FormGroup, FormControl, ControlLabel, Input, Label, Button, Checkbox, Navbar, ButtonToolbar, Media, ButtonGroup,
+Radio} from 'react-bootstrap'
 
 import Blockly from 'node-blockly/browser'
 import BlocklyDrawer from 'react-blockly-drawer'
@@ -7,7 +8,7 @@ import BlocklyDrawer from 'react-blockly-drawer'
 import blocks from './createBlocks'
 import { refreshDropdowns } from './createBlocks'
 import { locations, items, flags, variables,
-         gameSettings, storeLocally, resetData, saveGame, loadGame, Undo } from './quill'
+         gameSettings, storeLocally, resetData, saveGame, loadGame, Undo, INV_OPTIONS } from './quill'
 import GameMap from './map'
 
 Blockly.BlockSvg.START_HAT = true
@@ -26,11 +27,8 @@ class BlocklyDrawerWithNameCheck extends BlocklyDrawer {
 }
 
 
-export const systemCommandsSettings = {
-    showInventory: "Ukaz 'Kaj imam?'",
-    dropItems: "Možnost odlaganja stvari (prek 'Kaj imam?')",
-    takeItems: "Ukazi za jemanje stvari z lokacij"
-}
+const inventoryOptions = ["Ne kaži", "Pokaži gumb 'Kaj imam?'", "Vedno kaži seznam stvari"]
+
 
 class SettingsEditor extends React.Component {
     constructor(props) {
@@ -51,6 +49,8 @@ class SettingsEditor extends React.Component {
         this.props.closeHandler()
     }
 
+    setInventoryOption = i => this.setState({showInventory: i})
+
     render() {
         if (!this.props.show) return null
         return <Modal dialogClassName="location-editor" show={true} onHide={this.onHide} enforceFocus={true}>
@@ -66,14 +66,25 @@ class SettingsEditor extends React.Component {
                                  value={this.state.gameTitle}
                                  onChange={this.changeGameTitle}
                                  placeholder="Odisej"/>
+                    <ControlLabel>Prikaz inventarja</ControlLabel>
+                    { inventoryOptions.map((option, i) =>
+                        <Radio key={i}
+                               name="inventory-options"
+                               checked={this.state.showInventory==i}
+                               onChange={() => this.setState({showInventory: i})}>
+                            {option}
+                        </Radio>
+                    )}
                     <ControlLabel>Dodatni ukazi</ControlLabel>
-                    { Object.entries(systemCommandsSettings).map(([setting, name]) =>
-                        <Checkbox key={setting}
-                                  checked={this.state[setting]}
-                                  onChange={e => this.setState({[setting]: e.target.checked }) }>
-                            {name}
-                        </Checkbox>)
-                    }
+                    <Checkbox checked={this.state.dropItems && (this.state.showInventory != INV_OPTIONS.DONT_SHOW)}
+                              disabled={this.state.showInventory == INV_OPTIONS.DONT_SHOW}
+                              onChange={e => this.setState({dropItems: e.target.checked})}>
+                        Možnost odlaganja stvari (prek seznama stvari)
+                    </Checkbox>
+                    <Checkbox checked={this.state.takeItems}
+                              onChange={e => this.setState({takeItems: e.target.checked})}>
+                        Ukazi za jemanje stvari z lokacij
+                    </Checkbox>
                     <ControlLabel>Največje število stvari, ki jih igralec lahko nosi (pusti prazno, če ne želiš omejitve)</ControlLabel>
                     <FormControl id="inventory-size-limit"
                                  type="text"

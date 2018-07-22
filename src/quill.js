@@ -44,8 +44,11 @@ const defaultGameSettings = {
     gameTitle: "Odisej"
 }
 
+
+export const INV_OPTIONS = { DONT_SHOW: 0, SHOW_BUTTON: 1, SHOW_ALWAYS: 2 }
+
 export const gameSettings = {
-    showInventory: true,
+    showInventory: INV_OPTIONS.SHOW_ALWAYS,
     dropItems: true,
     takeItems: true,
     maxItems: "",
@@ -492,6 +495,9 @@ export function restoreLocally(json) {
         Object.assign(gameSettings, obj.gameSettings || {})
 
         // Migrations; remove before publishing
+        if (gameSettings.showInventory === true) {
+            gameSettings.showInventory = INV_OPTIONS.SHOW_BUTTON
+        }
         if (obj.hasOwnProperty("allLocations")) {
             locations.generalCommands.workspace = obj.allLocations.workspace
             locations.generalCommands.commands = obj.allLocations.commands
