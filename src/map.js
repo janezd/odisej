@@ -31,7 +31,7 @@ class Node extends React.Component {
     triggerContextMenu = e => {
         e.stopPropagation()
         e.preventDefault()
-        this.props.onContextMenu(e.pageX, e.pageY)
+        this.props.onContextMenu(e.clientX, e.clientY)
     }
 
     polyMouseDown = (e) => {
@@ -615,7 +615,7 @@ export default class GameMap extends React.Component {
                            onMove={this.moveLocationBy}
                            onEditLocation={this.props.onEditLocation}
                            onSelectLocation={this.selectLocation}
-                           onContextMenu={(locId, x, y) => this.setState({contextMenuLoc: locId, contextMenuCoords: [x, y]})}
+                           onContextMenu={(locId, x, y) => this.setState({contextMenuLoc: locId, contextMenuCoords: [x, y - 20]})}
                     />
                     <TempConnection line={this.state.newLine}/>
                 </g>
