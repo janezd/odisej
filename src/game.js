@@ -620,7 +620,7 @@ export default class Game extends React.Component {
                                    style={{margin: 10, boxShadow:"rgba(0, 0, 0, 0.3) 2px 2px 4px"}}/>
                         </Media.Left>
                         <Media.Body>
-                            <h1>{location.title}</h1>
+                            <h1>{location.title.replace(/\s*\[[^\[\]]*\]\s*$/, "")}</h1>
                             <p>{location.description}</p>
                             <Messages messages={this.state.printed}/>
                             <Commands show={this.state.showCommands && !this.state.gameEnded}
