@@ -110,6 +110,26 @@ class Node extends React.Component {
         }
 
         return <g transform={`translate(${loc.x} ${loc.y})`}>
+                    { isSpecial ? "" :
+                        <g pointerEvents="all">{
+                            [{direction: "nw", x: 12.982, y:0.138,   width: 16, height:42, transform:"matrix(0.7071 0.7071 -0.7071 0.7071 20.9821 -8.6909)"},
+                                {direction: "w",             y: 31.479, width: 16, height: 42},
+                                {direction: "sw", x:  0.137, y: 75.665, width: 42, height: 16, transform: "matrix(0.7071 0.7071 -0.7071 0.7071 65.3066 9.669)"},
+                                {direction: "s",  x: 31.479, y: 88.647, width: 42, height: 16},
+                                {direction: "se", x: 75.666, y: 62.821, width: 16, height: 42, transform: "matrix(0.7071 0.7071 -0.7071 0.7071 83.6654 -34.6555)"},
+                                {direction: "e",  x: 88.647, y: 31.479, width: 16, height: 42},
+                                {direction: "ne", x: 62.821, y: 12.982, width: 42, height: 16, transform: "matrix(0.7071 0.7071 -0.7071 0.7071 39.3425 -53.0154)"},
+                                {direction: "n",  x: 31.471,            width: 42, height: 16}
+                            ].map(({direction, x, y, width, height, transform}) =>
+                                <rect key={direction}
+                                      className="loc-dir-rect"
+                                      x={x} y={y} width={width} height={height} transform={transform} fill="none"
+                                      rx={8} ry={8}
+                                      onMouseDown={(e) => {this.props.onNewLine(this, direction, e)}}
+                                      onMouseEnter={() => insideCb(this, direction) }
+                                      onMouseLeave={() => insideCb(null) }
+                                      style={loc.directions[direction] ? {} : {cursor: direction + '-resize'}} />)}
+                        </g>}
                     <text x="52" y="115" textAnchor="middle" fontFamily="sans-serif" style={{userSelect: 'none', cursor: 'text'}}
                           onClick={this.props.onEditLocation}>
                         {loc.title}
@@ -151,24 +171,6 @@ class Node extends React.Component {
                             </g>
                         </g>
                     </g>
-            { isSpecial ? "" :
-                    <g pointerEvents="all">{
-                        [{direction: "nw", x: 12.982, y:5.138,   width: 16, height:31.689, transform:"matrix(0.7071 0.7071 -0.7071 0.7071 20.9821 -8.6909)"},
-                         {direction: "w",             y: 36.479, width: 16, height: 31.688},
-                         {direction: "sw", x:  5.137, y: 75.665, width: 31.689, height: 16, transform: "matrix(0.7071 0.7071 -0.7071 0.7071 65.3066 9.669)"},
-                         {direction: "s",  x: 36.479, y: 88.647, width: 31.688, height: 16},
-                         {direction: "se", x: 75.666, y: 67.821, width: 16, height: 31.689, transform: "matrix(0.7071 0.7071 -0.7071 0.7071 83.6654 -34.6555)"},
-                         {direction: "e",  x: 88.647, y: 36.479, width: 16, height: 31.688},
-                         {direction: "ne", x: 67.821, y: 12.982, width: 31.689, height: 16, transform: "matrix(0.7071 0.7071 -0.7071 0.7071 39.3425 -53.0154)"},
-                         {direction: "n",  x: 36.471,            width: 31.706, height: 16}
-                        ].map(({direction, x, y, width, height, transform}) =>
-                            <rect key={direction}
-                                  x={x} y={y} width={width} height={height} transform={transform} fill="none"
-                                  onMouseDown={(e) => {this.props.onNewLine(this, direction, e)}}
-                                  onMouseEnter={() => insideCb(this, direction) }
-                                  onMouseLeave={() => insideCb(null) }
-                                  style={loc.directions[direction] ? {} : {cursor: direction + '-resize'}} />)}
-                    </g>}
         </g>
     }
 }
