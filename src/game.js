@@ -366,7 +366,7 @@ export default class Game extends React.Component {
         } else {
             this.setState({
                 modal:
-                    <Modal.Dialog show={true}>
+                    <Modal show={true}>
                         <Modal.Header>
                             <Modal.Title>Začni znova</Modal.Title>
                         </Modal.Header>
@@ -381,7 +381,7 @@ export default class Game extends React.Component {
                                 Ne
                             </Button>
                         </Modal.Footer>
-                    </Modal.Dialog>
+                    </Modal>
             })
         }
     }
