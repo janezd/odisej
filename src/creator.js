@@ -301,8 +301,21 @@ export default class Creator extends React.Component {
         this.openSettingsEditor = this.openSettingsEditor.bind()
     }
 
-    editLocation = (locId, selectTitle=false) => { Undo.putMark(); this.setState({editing: locId, selectTitle}) }
-    closeEditor = () => this.setState({editing: null}, storeLocally)
+    warnOnLeavePage = e => {
+        const confirmationMessage = "Res želiš zapustiti stran in izgubiti vse spremembe?";
+        (e || window.event).returnValue = confirmationMessage //Gecko + IE
+        return confirmationMessage //Gecko + Webkit, Safari, Chrome etc.
+    }
+
+    editLocation = (locId, selectTitle=false) => {
+        Undo.putMark()
+        this.setState({editing: locId, selectTitle})
+        window.addEventListener("beforeunload", this.warnOnLeavePage)
+    }
+    closeEditor = () => {
+        this.setState({editing: null}, storeLocally)
+        window.removeEventListener("beforeunload", this.warnOnLeavePage)
+    }
 
     openSettingsEditor = () => this.setState({editSettings: true})
     closeSettingsEditor = () => { this.setState({editSettings: false}, storeLocally) }
