@@ -191,13 +191,6 @@ class LocationEditor extends React.Component {
         this.props.handleClose()
     }
 
-    handleKeyPress = e => {
-        if (e.charCode == 13) {
-            e.stopPropagation()
-            this.handleClose()
-        }
-    }
-
     handleEscape() {
         const locId = this.props.location
         const location = locations[locId]
@@ -237,7 +230,7 @@ class LocationEditor extends React.Component {
         }
 
         return <Modal dialogClassName="location-editor" show={true}
-                      onHide={this.handleClose} onKeyPress={this.handleKeyPress}
+                      onHide={this.handleClose}
                       onEscapeKeyDown={() => this.handleEscape()}
                       enforceFocus={false}>
             <Modal.Header closeButton>
