@@ -534,7 +534,8 @@ export default class Game extends React.Component {
 
     printInventory = () => {
         this.print(<b>&gt; Kaj imam?</b>,
-            () => this.print(this.getInventoryList() || "Nič."))
+            () => this.print(this.getInventoryList() || "Nič.",
+                () => this.autoExecuteBlocks("after_command")))
     }
 
     printBlock = (msg, then) => {
