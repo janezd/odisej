@@ -556,9 +556,24 @@ export default class Game extends React.Component {
         const directions = {}
         const commands = {}
 
-        Object.entries(location.directions)
-            .forEach(([dir, location]) => directions[dir] = () => this.moveTo(location))
+        const addCommand = command => {
+            const shown = this.checkConditionList(command.show, true, command.name)
+            const callback = () => this.executeCommand(command)
+            const dir = dirmap[command.name]
+            if (dir) {
+                if (shown) directions[dir] = callback
+                else delete directions[dir]
+            } else {
+                if (shown) commands[command.name] = callback
+                else delete commands[command.name]
+            }
+        }
 
+        // Commands are here ordered by increasing priorities.
+        // Commands with higher priority can also make those with lower disappear
+        // if they don't meed the visibility criteria
+
+        // Commands provided by the system (take items)
         if (gameSettings.takeItems) {
             Object.entries(this.state.items)
                 .filter(([id, location]) => location == this.state.location)
@@ -567,20 +582,21 @@ export default class Game extends React.Component {
                     commands[name] = () => this.moveItem(id, ITEM_CARRIED, name)
                 })
         }
-        locations.generalCommands.commands.concat(location.commands)
+
+        // Commands on all locations
+        locations.generalCommands.commands
             .filter(command => command.block == 'command')
-            .forEach(command => {
-                const shown = this.checkConditionList(command.show, true, command.name)
-                const callback = () => this.executeCommand(command)
-                const dir = dirmap[command.name]
-                if (dir) {
-                    if (shown) directions[dir] = callback
-                    else delete directions[dir]
-                } else {
-                    if (shown) commands[command.name] = callback
-                    else delete commands[command.name]
-                }
-            })
+            .forEach(addCommand)
+
+        // Directions
+        Object.entries(location.directions)
+            .forEach(([dir, location]) => directions[dir] = () => this.moveTo(location))
+
+
+        // Commands on this location
+        location.commands
+            .filter(command => command.block == 'command')
+            .forEach(addCommand)
 
         return [directions, commands]
     }
