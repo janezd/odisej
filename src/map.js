@@ -7,6 +7,7 @@ const D=30
 
 
 const questionPng="data:image/.png;base64,iVBORw0KGgoAAAANSUhEUgAAAGkAAABpCAYAAAA5gg06AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAfxJREFUeNrs289RAjEYhvEVPXi0BO1AK9AStAK1A0rACiwBO5AOxAqwg6UDuHrSMC4z6CgQ/oREfs/MO14k4Pf4ZZPs0qqQPS0lIAkkkQSSQBJJIAkkkQSSSAJJIIkkkASSSAJJIIkkkEQSSAJJJIEkkEQSSCIJeXJU+Oc/CTkPuZrzO8MmfbrTimmHDEI+IjIK6S4Qig3QaYr9sWZemg7EhrtnsAE5P3OntHkLmuZRidfnZYuCdNQGaCcQNF1UnORahMPMp7nnkOME7zV5j/dcl+k5b2avE/933zpx2H7ReiEXIQdNbkLGEa8/bYIIYq4pnT/GuIocx0Y3gpji1gvGGpUuKdfpLuY0oLfEAqRocj1g7c0U93Kmu37jdcExUgzjHItxUOhUOPvzqfo65f7JZIPajRh3MsaZK006HlfY0HaULe0GOFZQ/R+uXaUIWuUgdlS5bZGEU4Ly76ARQXmzSgfVBKWjU61269wiISF1pKCukqXf1O6FoJIfjoy5pvRD7knazapuWR5KnjL25THjPkl581b6H1Dys+BPS3bIuAJ00vwleMyUp6N2wN48YOJLZCSBJJJAEkgiCSThOyWfOMTcfhhSDdMdSSAJJJEEkkASSSAJJJEEkkgCSSCJJJAEkkgCSSQpAUkgiSSQBJJIAkkgiSSQtI98CjAAIS1L8fleihUAAAAASUVORK5CYII="
+const allLocsPng="data:image/.png;base64,iVBORw0KGgoAAAANSUhEUgAAAGkAAABpCAYAAAA5gg06AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA79JREFUeNrsnOuN00AQgBd0/3EHuIMzFZzpICW4hFABpoLQgUUFgQocKghU4KMCHxUEW7KPxUq8r1mHnL9PGuUiXbzJzO7Ow+NVCgAAAAAAAAAAAAAAAAAAAABgRaQRr12g3jCSTqpOTp3kEa6fD9duIl3/xVN20g5K7KWOMMZeu/44RorqzWyGmX06I5nwFnq6ILthFcOEbJjJpxmpBMerDGP1q3iLWf76nZ1BYbqkQmO2luM1w+peLVsHZY1SCo17cpRV+qvUw0DjNhTqLxpPI602SDh5SEhuU3iM16w9kNh5Ks2X2mO8TIGX4nyceeYxDhGeR7QV4iMqxzH2mOZ8iSbWNpTgh+RCchdFuiS3JX4oXj1NKrl12U4LzGDelo7CyW0RaXWumsxh5tskt7ZGP+KH4iWdW4GApMUP+WEbMjcCPg4/FMAxQMkpfmgZUkv/VHuWnI6oWAbbQmzuWMVoFbfLRbFJRivHwGODWuWxKcSOK8N0z2iHOuMluq2F8k3bI34ockJout3QGlZcbD+USP/+VxG3pd6JP2ryS/v7RydPAdffBmxX7zs5CEyURHt90BJnqTGeuVsgfJ6btaOx+tff2nvTD/zcyb1HAvrJUnnJxBBvtd+yeDR4p65LNpmBU0aFftfej0b9MHzetpRzUP8WY0cjjGM/aEYhChOSVrl1/eyH79Uu8N3yl7SSlnTQN5sTvSYQxUiAkTAS/CfcQuAwlxB/VPbNi31u9U0Lva+a+9yakZ60JPbnxCiPM58rlFt3af//XwZjzSXeY670xiKPe1FGOmhGeJpUGnyTYNeyUDLkSu/U+ZKUPim+XrhGPnm9n1Qnboos4uwztXwdDUluzEdY0uF3r77jyNRY0m9rpeJe0tUwKb/RVhvdQVcgd1S8zYPL9NkJ7/U2TSXJxC/y5MSC2PTelWc+Z1ONr1FvODZdrJf6wQtld2uBQCIAWyXPdaDa3nMikPDMtWxv0KUBESGBREDC2iiZPm6XxzAJJAQTVtdb1S4PNBNICCSsPgp1PRqAQCIwYfVt+HBtjiGQ8ExYQ05FKZR7NxKBhEfCGjrTXQ9+IpDwdOwhZwuVitO5oiasEuf9JMqv2XHVgYRLwip13l2llj++bRUJq+TJkZnyb2tO12ikvYeyJBx57WGgcs1BRC5YAorhByvFw8/Pq8rmcX5JZZkmRq04df+ivziqZQ7EKGfCe6oNFpw7ijqPsHrxOwJlojpyQlnhd2TYRPQNqaI+BwAAAAAAAAAAAAAAAAAAACDCHwEGAAaabKJNr9UrAAAAAElFTkSuQmCC"
 
 const Nodes = props =>
     locations.keys().map(locId => <Node
@@ -93,10 +94,8 @@ class Node extends React.Component {
         let offx = 0
         let offy = 0
         if (!imgSrc) {
-            if (!isSpecial) {
-                imgSrc = questionPng
-                imgWidth = imgHeight = 105
-            }
+            imgSrc = isSpecial ? allLocsPng : questionPng
+            imgWidth = imgHeight = 105
         }
         else if (imgWidth < imgHeight) {
             imgHeight *= 105 / imgWidth
@@ -112,19 +111,19 @@ class Node extends React.Component {
         return <g transform={`translate(${loc.x} ${loc.y})`}>
                     { isSpecial ? "" :
                         <g pointerEvents="all">{
-                            [{direction: "nw", x: 12.982, y:0.138,   width: 16, height:42, transform:"matrix(0.7071 0.7071 -0.7071 0.7071 20.9821 -8.6909)"},
-                                {direction: "w",             y: 31.479, width: 16, height: 42},
-                                {direction: "sw", x:  0.137, y: 75.665, width: 42, height: 16, transform: "matrix(0.7071 0.7071 -0.7071 0.7071 65.3066 9.669)"},
-                                {direction: "s",  x: 31.479, y: 88.647, width: 42, height: 16},
-                                {direction: "se", x: 75.666, y: 62.821, width: 16, height: 42, transform: "matrix(0.7071 0.7071 -0.7071 0.7071 83.6654 -34.6555)"},
-                                {direction: "e",  x: 88.647, y: 31.479, width: 16, height: 42},
-                                {direction: "ne", x: 62.821, y: 12.982, width: 42, height: 16, transform: "matrix(0.7071 0.7071 -0.7071 0.7071 39.3425 -53.0154)"},
-                                {direction: "n",  x: 31.471,            width: 42, height: 16}
+                            [{direction: "nw", x: 12.982, y:3.138,   width: 10, height:36, transform:"matrix(0.7071 0.7071 -0.7071 0.7071 20.9821 -8.6909)"},
+                                {direction: "w",  x: 0,      y: 34.479, width: 10, height: 36},
+                                {direction: "sw", x:  3.137, y: 81.665, width: 36, height: 10, transform: "matrix(0.7071 0.7071 -0.7071 0.7071 65.3066 9.669)"},
+                                {direction: "s",  x: 34.479, y: 94.647, width: 36, height: 10},
+                                {direction: "se", x: 81.666, y: 67.821, width: 10, height: 36, transform: "matrix(0.7071 0.7071 -0.7071 0.7071 83.6654 -34.6555)"},
+                                {direction: "e",  x: 94.647, y: 34.479, width: 10, height: 36},
+                                {direction: "ne", x: 65.821, y: 12.982, width: 36, height: 10, transform: "matrix(0.7071 0.7071 -0.7071 0.7071 39.3425 -53.0154)"},
+                                {direction: "n",  x: 34.471, y: 0,      width: 36, height: 10}
                             ].map(({direction, x, y, width, height, transform}) =>
                                 <rect key={direction}
                                       className="loc-dir-rect"
                                       x={x} y={y} width={width} height={height} transform={transform} fill="none"
-                                      rx={8} ry={8}
+                                      rx={4} ry={4}
                                       onMouseDown={(e) => {this.props.onNewLine(this, direction, e)}}
                                       onMouseEnter={() => insideCb(this, direction) }
                                       onMouseLeave={() => insideCb(null) }
@@ -148,7 +147,7 @@ class Node extends React.Component {
                         <polygon
                             stroke={this.props.selected ? "blue" : "transparent"}
                             strokeWidth={6}
-                            fill={ isSpecial ? "#D0FFD0" : "#FFFFFF" }
+                            fill="white"
                             points="36.761,89.896 14.751,67.887 14.751,36.761 36.761,14.751 67.887,14.751 89.896,36.761 89.896,67.887 67.887,89.896"
                         />
                         <clipPath id="hexagon-clip">
