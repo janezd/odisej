@@ -24,7 +24,12 @@ class BlocklyDrawerWithNameCheck extends BlocklyDrawer {
         this.content.style.left = '0px';
         this.content.style.top = '0px';
         this.content.style.width = '100%';
-        this.content.style.height = this.wrapper.offsetHeight + 'px';
+        this.content.style.height =
+            (document.getElementsByClassName("modal-content")[0].getBoundingClientRect().height
+             - document.getElementsByClassName("modal-header")[0].offsetHeight
+             - document.getElementsByClassName("loc-description")[0].offsetHeight)
+             - 30 // padding
+            + 'px'
         this.content.style.position = "relative"
     }
 }
@@ -266,6 +271,7 @@ class LocationEditor extends React.Component {
             </Modal.Header>
             <Modal.Body>
                 <FormControl componentClass="textarea"
+                             className="loc-description"
                              placeholder={_("Location description ...")}
                              defaultValue={loc.description}
                              readOnly={locations.isSpecial(loc)}
