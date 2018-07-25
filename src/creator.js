@@ -9,7 +9,7 @@ import _ from '../translations/translator'
 import { LanguageSelector } from '../translations/translator'
 
 import blocks from './createBlocks'
-import { refreshDropdowns } from './createBlocks'
+import { refreshDropdowns, createBlocks } from './createBlocks'
 import { locations, items, flags, variables,
          gameSettings, storeLocally, resetData, saveGame, loadGame, Undo, INV_OPTIONS } from './quill'
 import GameMap from './map'
@@ -351,7 +351,10 @@ export default class Creator extends React.Component {
                 </Modal.Dialog>})
     }
 
-    resetLanguage = () => this.forceUpdate()
+    resetLanguage = () => {
+        createBlocks()
+        this.forceUpdate()
+    }
 
     render = () =>
         <div>
