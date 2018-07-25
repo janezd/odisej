@@ -1,6 +1,8 @@
 import Blockly from "node-blockly/browser"
 import blocks, {refreshDropdowns} from './createBlocks'
 
+import _ from '../translations/translator'
+
 
 export const Undo = {
     undoStack: [],
@@ -36,24 +38,19 @@ export const Undo = {
     }
 }
 
-const defaultGameSettings = {
-    showInventory: true,
-    dropItems: true,
-    takeItems: true,
-    maxItems: "",
-    gameTitle: "Odisej"
-}
-
-
 export const INV_OPTIONS = { DONT_SHOW: 0, SHOW_BUTTON: 1, SHOW_ALWAYS: 2 }
 
-export const gameSettings = {
+const defaultGameSettings = {
     showInventory: INV_OPTIONS.SHOW_ALWAYS,
     dropItems: true,
     takeItems: true,
     maxItems: "",
-    gameTitle: "Odisej"
+    gameTitle: _("Odyssey")
 }
+
+export const gameSettings = {}
+Object.assign(gameSettings, defaultGameSettings)
+
 
 function getUniqueName(name, names) {
     name = name.trim()
@@ -270,7 +267,7 @@ class Locations {
 
     reset = () => {
         this.clear()
-        const defaultLoc = this.addLocation("Začetek", "", 150, 10)
+        const defaultLoc = this.addLocation(_("Start@@DefaultLocations"), "", 150, 10)
         this.addSpecialLocations()
         Undo.reset()
         this.startLocation = defaultLoc.locId
@@ -279,15 +276,15 @@ class Locations {
     addSpecialLocations= () => {
         if (this.generalCommands == undefined)
             this.addLocation(
-                "Na vseh lokacijah",
-                "Tu vnesi ukaze, ki so možni na vseh lokacijah",
+                _("All locations@@DefaultLocations"),
+                _("Here you can define commands available or executed on all locations"),
                 10, 10, this.GENERAL_COMMANDS_ID)
     }
 
     get generalCommands() { return this[this.GENERAL_COMMANDS_ID] }
 
     addLocation = (name=null, description="", x=0, y=0, locId=null) => {
-        const newName = getUniqueName(name || "Nova lokacija", this.values().map(it => it.title))
+        const newName = getUniqueName(name || _("New location"), this.values().map(it => it.title))
         const newLoc = new LocData(newName, description, x, y, locId)
         const redo = () => this[newLoc.locId] = newLoc
         const undo = () => delete this[newLoc.locId]
@@ -370,7 +367,7 @@ class NameModel {
     add(name=null) {
         const itemId = randomId()
         const undo = () => { delete this[itemId] }
-        const redo = () => this[itemId] = name || "stvar"
+        const redo = () => this[itemId] = name || _("item")
         Undo.push(undo, redo)
         redo()
         return itemId
@@ -509,15 +506,15 @@ export function restoreLocally(json) {
         Undo.reset()
     }
     catch (e) {
-        alert("Napaka pri branju podatkov.")
+        alert(_("An error occurred while reading the data."))
     }
 }
 
 
 export function saveGame() {
     const blob = new Blob([localStorage.odisej], { type: 'text/plain' })
-    const anchor = document.createElement('a');
-    anchor.download = "odisej.json";
+    const anchor = document.createElement('a')
+    anchor.download = _("odyssey.json")
     anchor.href = (window.webkitURL || window.URL).createObjectURL(blob)
     anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':')
     anchor.click()

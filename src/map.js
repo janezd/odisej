@@ -1,7 +1,8 @@
 import React from "react"
-import { locations, storeLocally, Undo } from './quill'
-
 import { MenuItem, Popover} from "react-bootstrap"
+
+import _ from '../translations/translator'
+import { locations, storeLocally, Undo } from './quill'
 
 const D=30
 
@@ -343,7 +344,7 @@ class NodeContextMenu extends React.Component {
 
         let location, title, editable, removable, removeLocation, asInitial
         if (locId instanceof Set) {
-            title = `(${locId.size} lokacij)`
+            title = _("(multiple locations)")
             editable = false
             asInitial = false
             removable = locations.checkRemoveLocations(locId)
@@ -369,15 +370,15 @@ class NodeContextMenu extends React.Component {
                 <ul className="dropdown-menu open" style={{display: "block"}}>
                     <MenuItem disabled={!editable}
                               onClick={() => this.props.onEditLocation(locId)}>
-                        Spremeni
+                        {_("Edit@@NodeContextMenu")}
                     </MenuItem>
                     <MenuItem disabled={!asInitial}
                               onClick={() => this.props.onAsInitial(location)}>
-                        Nastavi kot začetno
+                        {_("Set as Start Location")}
                     </MenuItem>
                     <MenuItem disabled={!removable}
                               onClick={removeLocation}>
-                        Pobriši
+                        {_("Remove@@NodeContextMenu")}
                     </MenuItem>
                 </ul>
             </Popover>

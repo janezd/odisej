@@ -2,6 +2,10 @@ import React from "react"
 import { Panel, Button, Media, Modal, Label, FormControl, ControlLabel, DropdownButton, MenuItem, Navbar,
     ButtonToolbar, ButtonGroup, Image } from 'react-bootstrap'
 import blocks from "./createBlocks"
+
+import _ from '../translations/translator'
+import { LanguageSelector } from '../translations/translator'
+
 import { locations, items, flags, variables, gameSettings, INV_OPTIONS } from './quill'
 import { systemCommandsSettings } from './creator'
 
@@ -70,12 +74,12 @@ class GameState extends React.Component {
         return <Modal show={true} onHide={this.props.handleClose}>
             <Modal.Header closeButton>
                 <Modal.Title>
-                    Stanje igre
+                    {_("Game State")}
                 </Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <dl className="dl-horizontal">
-                    <dt>Trenutna lokacija:</dt>
+                    <dt>{_("Current location")}</dt>
                     <dd>
                         <DropdownButton id="current-location"
                                         bsSize="xsmall"
@@ -90,19 +94,19 @@ class GameState extends React.Component {
                     </dd>
 
 
-                    <dt>Zastavice:</dt>
-                    <dd><AdderRemover title="Postavi zastavico"
+                    <dt>{_("Flags:")}</dt>
+                    <dd><AdderRemover title={_("Set flag")}
                                       model={flags}
                                       selector={id => state.flags[id]}
                                       changer={this.changeFlag} /></dd>
 
-                    <dt>Igralec ima:</dt>
-                    <dd><AdderRemover title="Vzemi stvar"
+                    <dt>{_("Player has:")}</dt>
+                    <dd><AdderRemover title={_("Take item")}
                                       model={items}
                                       selector={id => state.items[id] == ITEM_CARRIED}
                                       changer={this.takeDropItem}/></dd>
 
-                    <dt>Spremenljivke:</dt>
+                    <dt>{_("Variables:")}</dt>
                     <dd>{[...Object.entries(state.variables)]
                         .map(([id, value]) => <span key={id}>
                                 {variables[id]}&nbsp;=&nbsp;
@@ -126,8 +130,8 @@ class GameState extends React.Component {
                             </span>
                         </span>)
                     }</dd>
-                    <dt>Obiskane lokacije:</dt>
-                    <dd><AdderRemover title="Označi kot obiskano"
+                    <dt>{_("Visited locations:")}</dt>
+                    <dd><AdderRemover title={_("Mark as visited")}
                                       model={locations}
                                       getName={loc => locations[loc].title}
                                       selector={loc => state.nVisits[loc]}
@@ -142,7 +146,8 @@ class GameState extends React.Component {
 
 const Compass = ({directions}) => {
     const Direction = ({dir}) => {
-        const dirmap = {"n": "S", "ne": "SV", "e": "V", "se": "JV", "s": "J", "sw": "JZ", "w": "Z", "nw": "SZ"}
+        const dirmap = {"n": _("N"), "ne": _("NE"), "e": _("E"), "se": _("SE"),
+                        "s": _("S"), "sw": _("SW"), "w": _("W"), "nw": _("NW")}
         const command = directions[dir]
         if (command)
             return <td><Button style={{width: 60}} onClick={command}>{dirmap[dir]}</Button></td>
@@ -174,7 +179,7 @@ const Compass = ({directions}) => {
 
 const DropItemLink = ({itemState, itemId, onClick}) =>
     gameSettings.dropItems && itemState[itemId] == ITEM_CARRIED
-        ? <span>&nbsp;(<a onClick={onClick}>odloži</a>)</span>
+        ? <span>&nbsp;(<a onClick={onClick}>{_("drop@@InventoryList")}</a>)</span>
         : null
 
 const Messages = ({messages}) =>
@@ -211,10 +216,6 @@ export default class Game extends React.Component {
         }
         this.allowReexecute = false
         this.activeTimeouts = new Set()
-
-        this.systemCommands = {}
-        if (gameSettings.showInventory == INV_OPTIONS.SHOW_BUTTON)
-            this.systemCommands["Kaj imam?"] = () => this.printInventory()
     }
 
     prepareInitialState = () => {
@@ -241,8 +242,8 @@ export default class Game extends React.Component {
         const blob = new Blob(
             [JSON.stringify({location, items, flags, variables, nVisits, executed, printed, gameEnded})],
             { type: 'text/plain' })
-        const anchor = document.createElement('a');
-        anchor.download = "stanje-igre.json";
+        const anchor = document.createElement('a')
+        anchor.download = _("game-state.json")
         anchor.href = (window.webkitURL || window.URL).createObjectURL(blob)
         anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':')
         anchor.click()
@@ -368,17 +369,17 @@ export default class Game extends React.Component {
                 modal:
                     <Modal show={true}>
                         <Modal.Header>
-                            <Modal.Title>Začni znova</Modal.Title>
+                            <Modal.Title>{_("New Game")}</Modal.Title>
                         </Modal.Header>
                         <Modal.Body>
-                            Želiš res začeti od začetka?
+                            {_("Do you really want to end this game?")}
                         </Modal.Body>
                         <Modal.Footer>
                             <Button onClick={reset}>
-                                Da
+                                {_("Yes")}
                             </Button>
                             <Button onClick={() => this.setState({modal: ""}, then)}>
-                                Ne
+                                {_("No")}
                             </Button>
                         </Modal.Footer>
                     </Modal>
@@ -461,7 +462,7 @@ export default class Game extends React.Component {
 
     moveItemOrComplain = (item, location, then) => {
         if ((location == ITEM_CARRIED) && !this.canCarryMore()) {
-            this.print("Toliko pa ne morem nositi.", then)
+            this.print(_("I can't carry so many things"), then)
         } else {
             this.state.items[item] = location
             this.setState({items: this.state.items}, then)
@@ -525,7 +526,7 @@ export default class Game extends React.Component {
                     return <span key={`item${i}`}>{i ? ", " : ""}{itemName}
                         <DropItemLink itemId={id}
                                       itemState={this.state.items}
-                                      onClick={() => this.moveItem(id, this.state.location, `Odloži ${itemName}`)}/>
+                                      onClick={() => this.moveItem(id, this.state.location, _("Drop@@InventoryList") + " " + itemName)}/>
                       </span>
                 })}
                </span>
@@ -533,8 +534,8 @@ export default class Game extends React.Component {
     }
 
     printInventory = () => {
-        this.print(<b>&gt; Kaj imam?</b>,
-            () => this.print(this.getInventoryList() || "Nič.",
+        this.print(<b>&gt; {_("What do I have?")}</b>,
+            () => this.print(this.getInventoryList() || _("Nothing."),
                 () => this.autoExecuteBlocks("after_command")))
     }
 
@@ -551,7 +552,8 @@ export default class Game extends React.Component {
         )
 
     getCommandList = () => {
-        const dirmap = {"S": "n", "SV": "ne", "V": "e", "JV": "se", "J": "s", "JZ": "sw", "Z": "w", "SZ": "nw"}
+        const dirmap = {[_("N")]: "n", [_("NE")]: "ne", [_("E")]: "e", [_("SE")]: "se",
+                        [_("S")]: "s", [_("SW")]: "sw", [_("W")]: "w", [_("NW")]: "nw"}
         const location = locations[this.state.location]
         const directions = {}
         const commands = {}
@@ -578,7 +580,7 @@ export default class Game extends React.Component {
             Object.entries(this.state.items)
                 .filter(([id, location]) => location == this.state.location)
                 .forEach(([id, location]) => {
-                    const name = `Vzemi ${items[id]}`
+                    const name = _("Take@@AutoCommands") + " " + items[id]
                     commands[name] = () => this.moveItem(id, ITEM_CARRIED, name)
                 })
         }
@@ -598,12 +600,19 @@ export default class Game extends React.Component {
             .filter(command => command.block == 'command')
             .forEach(addCommand)
 
-        return [directions, commands]
+
+        const systemCommands = {}
+        if (gameSettings.showInventory == INV_OPTIONS.SHOW_BUTTON)
+            systemCommands[_("Inventory")] = () => this.printInventory()
+
+        return [directions, commands, systemCommands]
     }
 
     buttonToolbar() {
         const ifAllowed = f => this.state.currentCommand ? null : f
         const buttonClass =  this.state.currentCommand ? " disabled" : ""
+        const resetLanguage = () => this.forceUpdate()
+
         return <span>
             <FormControl id="stateUpload" style={{display: "none"}} type="file" accept=".json"
                          onChange={ifAllowed(e => this.loadState(e.target))}/>
@@ -611,34 +620,37 @@ export default class Game extends React.Component {
                 <ButtonGroup>
                     <Label className={buttonClass}
                            onClick={ifAllowed(this.saveState)}>
-                        Shrani
+                        {_("Save")}
                     </Label>
                     <ControlLabel htmlFor="stateUpload"
                                   className={"no-round-left" + buttonClass}>
-                        <Label>Naloži</Label>
+                        <Label>
+                            {_("Load")}
+                        </Label>
                     </ControlLabel>
                 </ButtonGroup>
                 <ButtonGroup>
                     <Label className={buttonClass}
                            style={this.state.gameEnded ? {backgroundColor: "greenyellow"} : {}}
                            onClick={ifAllowed(() => this.resetGame())}>
-                        Začni znova
+                        {_("New Game")}
                     </Label>
                 </ButtonGroup>
                 { this.props.debug ?
                     <span>
-                                    <ButtonGroup>
-                                        <Label onClick={this.showGameState}>
-                                            Stanje igre
-                                        </Label>
-                                    </ButtonGroup>
-                                    <ButtonGroup>
-                                        <Label className={buttonClass} onClick={ifAllowed(this.props.switchToCreate)}>
-                                            Ustvari
-                                        </Label>
-                                    </ButtonGroup>
-                                </span>
+                        <ButtonGroup>
+                            <Label onClick={this.showGameState}>
+                                {_("Game State")}
+                            </Label>
+                        </ButtonGroup>
+                        <ButtonGroup>
+                            <Label className={buttonClass} onClick={ifAllowed(this.props.switchToCreate)}>
+                                {_("Edit Game")}
+                            </Label>
+                        </ButtonGroup>
+                    </span>
                     : "" }
+                <LanguageSelector resetGUI={resetLanguage}/>
             </ButtonToolbar>
         </span>
 
@@ -646,14 +658,14 @@ export default class Game extends React.Component {
 
     render() {
         const location = locations[this.state.location]
-        const [directions, commands] = this.getCommandList()
+        const [directions, commands, systemCommands] = this.getCommandList()
         const ifNotCommand = f => this.state.currentCommand ? null : f
         const buttonClass =  this.state.currentCommand ? " disabled" : ""
 
         const inventoryList = gameSettings.showInventory == INV_OPTIONS.SHOW_ALWAYS ? this.getInventoryList() : ""
         const inventoryLine = inventoryList == ""
             ? ""
-            : <p style={{clear: "both", paddingTop: 12}}>Imam { inventoryList }.</p>
+            : <p style={{clear: "both", paddingTop: 12}}>{_("I have") + " " + inventoryList }.</p>
 
         return (
             <div>
@@ -681,7 +693,7 @@ export default class Game extends React.Component {
                             <p>{location.description}</p>
                             <Messages messages={this.state.printed}/>
                             <Commands show={this.state.showCommands && !this.state.gameEnded}
-                                      directions={directions} commands={commands} systemCommands={this.systemCommands} />
+                                      directions={directions} commands={commands} systemCommands={systemCommands} />
                             { inventoryLine }
                         </Media.Body>
                     </Media>

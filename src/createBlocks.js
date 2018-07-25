@@ -1,7 +1,7 @@
 import Blockly from 'node-blockly/browser'
 
+import _ from '../translations/translator'
 import { locations, items, variables, flags } from './quill'
-
 
 const blocks = []
 
@@ -86,7 +86,7 @@ class FieldItems extends Blockly.FieldDropdown {
                 return [[flyOutMsg, "ADD"]]
             const options = [...nameModel.entries().map(([id, name]) => [name, id]).sort(), [addMsg, "ADD"]]
             if (options.length > 1) {
-                options.push(["Preimenuj...", "RENAME"])
+                options.push([_("Rename ..."), "RENAME"])
             }
             return options
         })
@@ -99,7 +99,7 @@ class FieldItems extends Blockly.FieldDropdown {
         const model = this.nameModel
         const self = this
         if (id == "ADD") {
-            Blockly.prompt("Ime:", "", (name) => {
+            Blockly.prompt(_("Name:"), "", (name) => {
                 const newItemId = model.add(name)
                 self.setValue(`${newItemId}`)
             })
@@ -109,7 +109,7 @@ class FieldItems extends Blockly.FieldDropdown {
             if (curId == "ADD")
                 return
             const curName = this.getText()
-            Blockly.prompt(`Novo ime za ${curName}:`, curName, (newName) => {
+            Blockly.prompt(_(`New name for ${curName}:`), curName, (newName) => {
                 model.rename(curId, newName)
                 refreshDropdowns(curId, newName)
             })
@@ -134,25 +134,25 @@ function createField(fieldName, placeholder=null) {
                 .map(([id, loc]) => [loc.title, id])
                 .sort()
         )
-    if (fieldName.startsWith("ITEM")) return new FieldItems(items, "Stvar ...", "Nova stvar ...")
-    if (fieldName.startsWith("VARIABLE")) return new FieldItems(variables, "Spremenljivka ...", "Nova spremenljivka ...")
-    if (fieldName.startsWith("FLAG")) return new FieldItems(flags, "Zastavica ...", "Nova zastavica ...")
-    return new Blockly.FieldTextInput(placeholder || "besedilo")
+    if (fieldName.startsWith("ITEM")) return new FieldItems(items, _("Item ..."), _("New item ..."))
+    if (fieldName.startsWith("VARIABLE")) return new FieldItems(variables, _("Variable ..."), _("New variable ..."))
+    if (fieldName.startsWith("FLAG")) return new FieldItems(flags, _("Flag ..."), _("New flag ..."))
+    return new Blockly.FieldTextInput(placeholder || _("text"))
 }
 
 
-appendBlock('Ukazi', 'command', {
+appendBlock(_('Commands'), 'command', {
     init() {
         this.appendDummyInput()
-            .appendField("Ukaz")
-            .appendField(new Blockly.FieldTextInput("ime"), "NAME")
+            .appendField(_("Command"))
+            .appendField(new Blockly.FieldTextInput(_("name")), "NAME")
         const showInput = this.appendValueInput('SHOW0')
-            .appendField('pokaži, če')
+            .appendField(_('show if'))
             .setCheck('Boolean')
         this.conditions = [showInput]
         this.setColour(36)
-        this.setNextStatement(true, 'Akcija')
-        this.setOnChange(() => cleanUp(this, "SHOW", "pokaži, če", "in hkrati"))
+        this.setNextStatement(true)
+        this.setOnChange(() => cleanUp(this, "SHOW", _("show if"), _("and")))
     },
 
     mutationToDom() {
@@ -162,12 +162,12 @@ appendBlock('Ukazi', 'command', {
     },
 
     domToMutation(xml) {
-        mutate(this, xml, "SHOW", "pokaži, če", "in hkrati")
+        mutate(this, xml, "SHOW", _("show if"), _("and"))
     }
 })
 
 function createTopBlock(block_name, name, other=null) {
-    appendBlock("Ukazi", block_name, {
+    appendBlock(_("Commands"), block_name, {
         init() {
           this.appendDummyInput().appendField(name)
           this.setColour(36)
@@ -176,16 +176,16 @@ function createTopBlock(block_name, name, other=null) {
     })
 }
 
-createTopBlock('on_entry', 'Ob vstopu')
-createTopBlock('on_exit', 'Ob izstopu')
-createTopBlock('after_command', 'Po vsakem ukazu')
+createTopBlock('on_entry', _('On entry'))
+createTopBlock('on_exit', _('On exit'))
+createTopBlock('after_command', _('After every command'))
 
 
 const postCondition = (otherConnection) =>
     (otherConnection.sourceBlock_.type == 'if') || (otherConnection.sourceBlock_.type == 'elif')
 
 function createIfElif(block_name, field_name, prevCheck) {
-    appendBlock('Pogoji', block_name, {
+    appendBlock(_('Conditions'), block_name, {
         init() {
             const condition = this.appendValueInput('ALLOW0')
                 .appendField(field_name)
@@ -193,7 +193,7 @@ function createIfElif(block_name, field_name, prevCheck) {
             this.conditions = [condition]
 
             this.appendStatementInput('STATEMENTS')
-                .appendField('izvedi')
+                .appendField(_('do'))
             this.setColour(36)
             this.setPreviousStatement(true)
             if (prevCheck) {
@@ -204,11 +204,11 @@ function createIfElif(block_name, field_name, prevCheck) {
         },
 
         onChange() {
-            cleanUp(this, "ALLOW", field_name, "in hkrati", "STATEMENTS")
+            cleanUp(this, "ALLOW", field_name, _("and"), "STATEMENTS")
         },
 
         domToMutation(xml) {
-            mutate(this, xml, "ALLOW", field_name, "in hkrati", "STATEMENTS")
+            mutate(this, xml, "ALLOW", field_name, _("and"), "STATEMENTS")
         },
 
         mutationToDom() {
@@ -219,13 +219,13 @@ function createIfElif(block_name, field_name, prevCheck) {
     })
 }
 
-createIfElif('if', 'če', false)
-createIfElif('elif', 'sicer če', true)
+createIfElif('if', _('if'), false)
+createIfElif('elif', _('else if'), true)
 
-appendBlock('Pogoji', 'else', {
+appendBlock(_('Conditions'), 'else', {
     init() {
         this.appendStatementInput('STATEMENTS')
-            .appendField('sicer')
+            .appendField(_('else'))
         this.setColour(36)
         this.setPreviousStatement(true)
         this.previousConnection.checkType_ = postCondition
@@ -252,20 +252,20 @@ function createCondition(category, block_name, condField, fieldName, other=null,
     })
 }
 
-appendBlock("Pogoji", "not", {
+appendBlock(_("Conditions"), "not", {
     init() {
         this.appendValueInput("NOT")
-            .appendField("ni res, da")
+            .appendField(_("not"))
             .setCheck("Boolean")
         this.setOutput(true, "Boolean")
         this.setColour(246)
     }
 })
 
-appendBlock("Pogoji", "disjunction", {
+appendBlock(_("Conditions"), "disjunction", {
     init() {
         const condition = this.appendValueInput('ALLOW0')
-            .appendField("drži nekaj od tega")
+            .appendField(_("any of the following"))
             .setCheck(['Boolean'])
         this.conditions = [condition]
         this.setOutput(true, "Boolean")
@@ -274,11 +274,11 @@ appendBlock("Pogoji", "disjunction", {
     },
 
     onChange() {
-        cleanUp(this, "ALLOW", "drži nekaj od tega", "ali", null, true)
+        cleanUp(this, "ALLOW", _("any of the following"), _("or"), null, true)
     },
 
     domToMutation(xml) {
-        mutate(this, xml, "ALLOW", "drži nekaj od tega", "ali", null, true)
+        mutate(this, xml, "ALLOW", _("any of the following"), _("or"), null, true)
     },
 
     mutationToDom() {
@@ -288,12 +288,12 @@ appendBlock("Pogoji", "disjunction", {
     }
 })
 
-appendBlock('Ukazi', 'set_timer', {
+appendBlock(_('Commands'), 'set_timer', {
     init() {
         this.appendDummyInput()
-            .appendField("čez")
+            .appendField(_("after"))
             .appendField(new Blockly.FieldTextInput("5"), "TIME")
-            .appendField("sekund")
+            .appendField(_("seconds"))
         this.appendStatementInput('STATEMENTS')
         this.setColour(36)
         this.setPreviousStatement(true)
@@ -301,20 +301,20 @@ appendBlock('Ukazi', 'set_timer', {
     }
 })
 
-createCondition('Pogoji', 'hasnt_executed', "se ta ukaz še ni izvajal")
-createStatement("Ukazi", "allow_reexecute", "dovoli ponovitev ukaza")
+createCondition(_("Conditions"), 'hasnt_executed', _("this command hasn't ran before"))
+createStatement(_("Commands"), "allow_reexecute", _("allow running this command again"))
 
-createCondition('Stvari', 'does_have', "ima igralec", "ITEM")
-createCondition('Stvari', 'doesnt_have', "igralec nima", "ITEM")
-createCondition('Stvari', 'can_carry_more', "lahko nosi še kaj")
-createCondition('Pogoji', 'has_visited', "je igralec obiskal", "LOCATION")
-createCondition('Pogoji', 'is_at', "je igralec na", "LOCATION")
-createCondition('Stvari', 'item_is_at', "je", "ITEM", row => row.appendField("na").appendField(createField('LOCATION'), "LOCATION"))
-createCondition('Stvari', 'item_exists', "", "ITEM", row => row.appendField("obstaja"))
-createCondition('Stvari', 'item_is_here', "je", "ITEM", row => row.appendField("tukaj"))
-createCondition('Zastavice', 'flag_set', "", "FLAG", row => row.appendField("je postavljena"))
-createCondition('Zastavice', 'flag_clear', "", "FLAG", row => row.appendField("ni postavljena"))
-createCondition('Pogoji', 'random', "žreb od 0 do 100 je manjši od", "CONSTANT", null, "50")
+createCondition(_("Items"), 'does_have', _("player has"), "ITEM")
+createCondition(_("Items"), 'doesnt_have', _("player doesn't have"), "ITEM")
+createCondition(_("Items"), 'can_carry_more', _("can carry more"))
+createCondition(_("Conditions"), 'has_visited', _("player visited"), "LOCATION")
+createCondition(_("Conditions"), 'is_at', _("player is at"), "LOCATION")
+createCondition(_("Items"), 'item_is_at', _("item@@item_is_at"), "ITEM", row => row.appendField(_("is at@@item_is_at")).appendField(createField('LOCATION'), "LOCATION"))
+createCondition(_("Items"), 'item_exists', _("item@@item_exists"), "ITEM", row => row.appendField(_("exists@@item_exists")))
+createCondition(_("Items"), 'item_is_here', _("item@@item_is_here"), "ITEM", row => row.appendField(_("is here@@item_is_here")))
+createCondition(_("Flags"), 'flag_set', _("flag"), "FLAG", row => row.appendField(_("is set")))
+createCondition(_("Flags"), 'flag_clear', _("flag"), "FLAG", row => row.appendField("is not set"))
+createCondition(_("Conditions"), 'random', _("random number from 0 to 100 is below"), "CONSTANT", null, "50")
 
 function createStatement(category, block_name, statement, fieldName=null, other=null, placeholder=null) {
     appendBlock(category, block_name, {
@@ -336,21 +336,21 @@ function createStatement(category, block_name, statement, fieldName=null, other=
 }
 
 
-createStatement("Ukazi", "go", "pojdi na", "LOCATION")
-createStatement("Stvari", "pick", "vzemi", "ITEM")
-createStatement("Stvari", "drop", "spusti", "ITEM")
-createStatement("Stvari", "item_at", "postavi", "ITEM",
-    row => row.appendField("na").appendField(createField("LOCATION"), "LOCATION"))
-createStatement("Stvari", "destroy", "uniči", "ITEM")
-createStatement("Zastavice", "set_flag", "postavi", "FLAG")
-createStatement("Zastavice", "clear_flag", "pobriši", "FLAG")
-createStatement("Ukazi", "print", "izpiši", "MSG")
-createStatement("Ukazi", "delay", "počakaj", "CONSTANT", row => row.appendField("s"), "1")
-createStatement("Ukazi", "reset", "konec igre")
+createStatement(_("Commands"), "go", _("go to"), "LOCATION")
+createStatement(_("Items"), "pick", _("get"), "ITEM")
+createStatement(_("Items"), "drop", _("drop"), "ITEM")
+createStatement(_("Items"), "item_at", _("put"), "ITEM",
+    row => row.appendField(_("to@@item_at")).appendField(createField("LOCATION"), "LOCATION"))
+createStatement(_("Items"), "destroy", _("destroy"), "ITEM")
+createStatement(_("Flags"), "set_flag", _("set"), "FLAG")
+createStatement(_("Flags"), "clear_flag", _("clear"), "FLAG")
+createStatement(_("Commands"), "print", _("print"), "MSG")
+createStatement(_("Commands"), "delay", _("wait"), "CONSTANT", row => row.appendField("s"), "1")
+createStatement(_("Commands"), "reset", _("end of game"))
 
 
 function createVarStatement(block_name, statement, fieldName, relation=null, fieldName2=null, other=null) {
-    appendBlock("Spremenljivke", block_name, {
+    appendBlock(_("Variables"), block_name, {
         init() {
             this.setInputsInline(false)
             var t = this.appendDummyInput()
@@ -377,30 +377,30 @@ function createVarStatement(block_name, statement, fieldName, relation=null, fie
     })
 }
 
-createVarStatement("set_const", "postavi", "VARIABLE", "na", "CONSTANT")
-createVarStatement("increase", "povečaj", "VARIABLE")
-createVarStatement("decrease", "zmanjšaj", "VARIABLE")
-createVarStatement("add_const", "povečaj", "VARIABLE", "za", "CONSTANT")
-createVarStatement("sub_const", "zmanjšaj", "VARIABLE", "za", "CONSTANT")
-createVarStatement("set_var", "postavi", "VARIABLE", "na", "VARIABLE2")
-createVarStatement("add_var", "povečaj", "VARIABLE", "za", "VARIABLE2")
-createVarStatement("sub_var", "zmanjšaj", "VARIABLE", "za", "VARIABLE2")
+createVarStatement("set_const", _("set"), "VARIABLE", _("to"), "CONSTANT")
+createVarStatement("increase", _("increase"), "VARIABLE")
+createVarStatement("decrease", _("decrease"), "VARIABLE")
+createVarStatement("add_const", _("increase"), "VARIABLE", _("by"), "CONSTANT")
+createVarStatement("sub_const", _("decrease"), "VARIABLE", _("by"), "CONSTANT")
+createVarStatement("set_var", _("set"), "VARIABLE", _("to"), "VARIABLE2")
+createVarStatement("add_var", _("increase"), "VARIABLE", _("by"), "VARIABLE2")
+createVarStatement("sub_var", _("decrease"), "VARIABLE", _("by"), "VARIABLE2")
 
 const _operators = [["=", "EQ"], ["≠", "NE"], ["<", "LT"], [">", "GT"], ["≤", "LE"], ["≥", "GE"]]
 
-createCondition('Spremenljivke', 'compare_const', "", "VARIABLE",
-    (_, block) => block.appendDummyInput().setAlign(Blockly.ALIGN_RIGHT)
+createCondition(_('Variables'), 'compare_const', "", "VARIABLE",
+    (row, block) => block.appendDummyInput().setAlign(Blockly.ALIGN_RIGHT)
         .appendField(new Blockly.FieldDropdown(_operators), "OPERATOR")
-        .appendField(new Blockly.FieldTextInput('vrednost'), "CONSTANT"),
-    "Spremenljivke")
+        .appendField(new Blockly.FieldTextInput(_('value')), "CONSTANT"),
+    _("Variables"))
 
 
-createCondition('Spremenljivke', 'compare_var', "", "VARIABLE",
-    (_, block) => block.appendDummyInput()
+createCondition(_('Variables'), 'compare_var', "", "VARIABLE",
+    (row, block) => block.appendDummyInput()
         .appendField(new Blockly.FieldDropdown(_operators), "OPERATOR")
         .appendField(createField("VARIABLE2"), "VARIABLE2"),
-    "Spremenljivke")
+    _("Variables"))
 
-createTopBlock('on_start', 'Ob začetku igre')
+createTopBlock('on_start', _('When game starts'))
 
 export default blocks

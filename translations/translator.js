@@ -1,0 +1,42 @@
+import React from "react"
+
+import {translations as slovenian} from '../translations/slovenian'
+
+
+let translations = null
+
+const languages = {
+    "Slovenščina": [slovenian, "data:image/.png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAQCAYAAAB3AH1ZAAAAAXNSR0IArs4c6QAAAAlwSFlzAAALEwAACxMBAJqcGAAAAVlpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IlhNUCBDb3JlIDUuNC4wIj4KICAgPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICAgICAgPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIKICAgICAgICAgICAgeG1sbnM6dGlmZj0iaHR0cDovL25zLmFkb2JlLmNvbS90aWZmLzEuMC8iPgogICAgICAgICA8dGlmZjpPcmllbnRhdGlvbj4xPC90aWZmOk9yaWVudGF0aW9uPgogICAgICA8L3JkZjpEZXNjcmlwdGlvbj4KICAgPC9yZGY6UkRGPgo8L3g6eG1wbWV0YT4KTMInWQAAAalJREFUSA21VD1PwmAQfq59Axj8AAkLm4sDA3HXn+A/cHDRzYHEVQc3RxMHZ43O/gd3VxONMRpJMPELULB8tK93LW0K1gFbL2k4nve9e+6eu5Y0GyJsHCWKuJQApH7L8V+E43zKccKQhhBrxhrNAV5eu+5hYT6NfE6BDIKnjIg2lMRXJlLHcO4IX2JlBONmNdt6b/uBU17zc6N3t+51t9kZv5bI/5ERaIcV4C5hO/h6trFZnYOhDFiPLVbFk0oUSHI8dHz2Hognyc20Cav+gWJOY2W1BDIJF+c1vH6aSBezcAYjM4vQdTJIra+1QxFSi8FPF6cHYLI+yCa0Gz1sVAWXcynAHzy7MU0tLEtiz3gCyKaAq9YUDnfamMk/MZXG0T6fVzIoF4CORTwmPyL+Ly1WatJWYMQNEm9GnYnKdxacHnBbzqCQ4v2wWYPkmnc5CUtvIwW4qCyDkmUctmpwVTZjSW7fsGV1Yl0G3Y84Fncs7wjzynchybmHeUjPupsVxjxfpPa1Cfs/b8ZCFPqx4mMHK0eVYieJk4D0dCB0nDx/juU1S/i9mrCUb/LH7rqhb2pRAAAAAElFTkSuQmCC"],
+    "English": [null, "data:image/.png;base64,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"]
+}
+
+export default function _(x) {
+    const translation = translations && translations[x]
+    if (!translation && (translation != "")) {
+        const end = x.indexOf("@@")
+        if (end == -1) {
+            return x
+        }
+        else {
+            return x.slice(0, end)
+                }
+    }
+    else {
+        return translation
+    }
+}
+
+function setLanguage(language, resetGUI) {
+    translations = languages[language][0]
+    localStorage.lastLanguage = language
+    resetGUI && resetGUI()
+}
+
+export const LanguageSelector = props =>
+    Object.entries(languages).map(([name, [language, icon]]) =>
+        <img key={name} style={{paddingLeft: "8px"}}
+             src={icon} title={name}
+             onClick={() => setLanguage(name, props.resetGUI)} />
+    )
+
+setLanguage(localStorage.lastLanguage || "English")

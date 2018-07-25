@@ -5,6 +5,9 @@ Radio} from 'react-bootstrap'
 import Blockly from 'node-blockly/browser'
 import BlocklyDrawer from 'react-blockly-drawer'
 
+import _ from '../translations/translator'
+import { LanguageSelector } from '../translations/translator'
+
 import blocks from './createBlocks'
 import { refreshDropdowns } from './createBlocks'
 import { locations, items, flags, variables,
@@ -25,9 +28,6 @@ class BlocklyDrawerWithNameCheck extends BlocklyDrawer {
         this.content.style.position = "relative"
     }
 }
-
-
-const inventoryOptions = ["Ne kaži", "Pokaži gumb 'Kaj imam?'", "Vedno kaži seznam stvari"]
 
 
 class SettingsEditor extends React.Component {
@@ -55,19 +55,19 @@ class SettingsEditor extends React.Component {
         if (!this.props.show) return null
         return <Modal dialogClassName="location-editor" show={true} onHide={this.onHide} enforceFocus={true}>
             <Modal.Header closeButton>
-                <Modal.Title>Nastavitve igre</Modal.Title>
+                <Modal.Title>{_("Game Settings")}</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <FormGroup>
-                    <ControlLabel>Ime igre</ControlLabel>
+                    <ControlLabel>{_("Game Title")}</ControlLabel>
                     <FormControl id="game-title"
                                  type="text"
                                  bsSize="large"
                                  value={this.state.gameTitle}
                                  onChange={this.changeGameTitle}
-                                 placeholder="Odisej"/>
-                    <ControlLabel>Prikaz inventarja</ControlLabel>
-                    { inventoryOptions.map((option, i) =>
+                                 placeholder={_("Odyssey")}/>
+                    <ControlLabel>{_("Show Inventory")}</ControlLabel>
+                    { [_("Don't show"), _("Show button 'Inventory'"), _("Always show a list of items")].map((option, i) =>
                         <Radio key={i}
                                name="inventory-options"
                                checked={this.state.showInventory==i}
@@ -75,22 +75,22 @@ class SettingsEditor extends React.Component {
                             {option}
                         </Radio>
                     )}
-                    <ControlLabel>Dodatni ukazi</ControlLabel>
+                    <ControlLabel>{_("Extra commands")}</ControlLabel>
                     <Checkbox checked={this.state.dropItems && (this.state.showInventory != INV_OPTIONS.DONT_SHOW)}
                               disabled={this.state.showInventory == INV_OPTIONS.DONT_SHOW}
                               onChange={e => this.setState({dropItems: e.target.checked})}>
-                        Možnost odlaganja stvari (prek seznama stvari)
+                        {_("Dropping of items using a button in the inventory list")}
                     </Checkbox>
                     <Checkbox checked={this.state.takeItems}
                               onChange={e => this.setState({takeItems: e.target.checked})}>
-                        Ukazi za jemanje stvari z lokacij
+                        {_("Commands for taking items at locations")}
                     </Checkbox>
-                    <ControlLabel>Največje število stvari, ki jih igralec lahko nosi (pusti prazno, če ne želiš omejitve)</ControlLabel>
+                    <ControlLabel>{_("Maximal number of carried items (leave empty for no limit)")}</ControlLabel>
                     <FormControl id="inventory-size-limit"
                                  type="text"
                                  value={this.state.maxItems}
                                  onChange={this.changeMaxItems}
-                                 placeholder="neomejeno"/>
+                                 placeholder={_("unlimited")}/>
                 </FormGroup>
             </Modal.Body>
         </Modal>
@@ -112,10 +112,10 @@ function LocImage(props) {
             <div style={{display: "block"}}>
                 { uploadControl }
                 <ControlLabel htmlFor="fileUpload">
-                    <Label bsStyle="success">Zamenjaj</Label>
+                    <Label bsStyle="success">{_("Change@@LocImage")}</Label>
                 </ControlLabel>
                 &nbsp;
-                <Label onClick={props.removeCallback} bsStyle="danger">Odstrani</Label>
+                <Label onClick={props.removeCallback} bsStyle="danger">{_("Remove@@LocImage")}</Label>
             </div>
         </div>
     }
@@ -125,7 +125,7 @@ function LocImage(props) {
             <ControlLabel htmlFor="fileUpload">
                 <div style={{height: 100, width: 100, border: "thin solid",
                     verticalAlignment: "center", textAlign: "center" }}>
-                    <Label bsStyle="success">Dodaj sliko</Label>
+                    <Label bsStyle="success">{_("Add picture")}</Label>
                 </div>
             </ControlLabel>
         </div>
@@ -194,7 +194,7 @@ class LocationEditor extends React.Component {
     handleEscape() {
         const locId = this.props.location
         const location = locations[locId]
-        if (location.title.startsWith("Nova lokacija") && !location.description && !location.workspace)
+        if (location.title.startsWith(_("New location")) && !location.description && !location.workspace)
             locations.removeLocation(locId)
     }
 
@@ -208,9 +208,9 @@ class LocationEditor extends React.Component {
             if (isSpecial)
                 return ""
             else if (this.props.isInitial)
-                return <Label bsStyle="default">Začetna lokacija</Label>
+                return <Label bsStyle="default">{_("Start Location")}</Label>
             else
-                return <Label onClick={() => this.props.setStartLocation(loc)} bsStyle="success">Nastavi kot začetno</Label>
+                return <Label onClick={() => this.props.setStartLocation(loc)} bsStyle="success">{_("Set as Start Location")}</Label>
         }
 
         const deleteButton = () => {
@@ -218,7 +218,7 @@ class LocationEditor extends React.Component {
             if (canRemove === false)
                 return ""
             if (canRemove === true)
-                return <Label onClick={this.removeLocation} bsStyle="danger">Pobriši lokacijo</Label>
+                return <Label onClick={this.removeLocation} bsStyle="danger">{_("Remove Location")}</Label>
             let usedStr = canRemove.join(", ")
             let tooltip
             if (usedStr.length > 200) {
@@ -226,7 +226,7 @@ class LocationEditor extends React.Component {
                 tooltip = canRemove.join("<br/>")
             }
             else { tooltip = "" }
-            return <p tooltip={tooltip}><small>Uporabljena na {usedStr}</small></p>
+            return <p tooltip={tooltip}><small>{_("Used at") + " " + usedStr}</small></p>
         }
 
         return <Modal dialogClassName="location-editor" show={true}
@@ -252,7 +252,7 @@ class LocationEditor extends React.Component {
                                          onKeyPress={this.handleTitleKeyPress}
                                          onChange={this.handleTitleChange}
                                          onBlur={this.handleTitleBlur}
-                                         placeholder="Vnesi ime lokacije ..."
+                                         placeholder={_("Location name ...")}
                                          inputRef={ e => {
                                              if (e && this.props.selectTitle) {
                                                  e.select()
@@ -266,7 +266,7 @@ class LocationEditor extends React.Component {
             </Modal.Header>
             <Modal.Body>
                 <FormControl componentClass="textarea"
-                             placeholder="Opis lokacije ..."
+                             placeholder={_("Location description ...")}
                              defaultValue={loc.description}
                              readOnly={locations.isSpecial(loc)}
                              onChange={this.handleDescriptionChange} />
@@ -295,7 +295,7 @@ export default class Creator extends React.Component {
     }
 
     warnOnLeavePage = e => {
-        const confirmationMessage = "Res želiš zapustiti stran in izgubiti vse spremembe?";
+        const confirmationMessage = _("Leave the page and lose your changes?");
         (e || window.event).returnValue = confirmationMessage //Gecko + IE
         return confirmationMessage //Gecko + Webkit, Safari, Chrome etc.
     }
@@ -332,24 +332,26 @@ export default class Creator extends React.Component {
         this.setState({modal:
                 <Modal.Dialog>
                     <Modal.Header>
-                        <Modal.Title>Pobriši igro</Modal.Title>
+                        <Modal.Title>{_("Delete Game")}</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
-                        Pobrišem igro?
+                        {_("Delete the game?")}
                     </Modal.Body>
                     <Modal.Footer>
                         <Button onClick={() => { saveGame(); resetData(); this.setState({modal: ""})}}>
-                            Shrani in pobriši
+                        {_("Save and Delete")}
                         </Button>
                         <Button onClick={() => { resetData(); this.setState({modal: ""})}}>
-                            Pobriši brez milosti
+                        {_("Delete without Saving")}
                         </Button>
                         <Button onClick={() => this.setState({modal: ""})}>
-                            Ups, ne
+                        {_("Oh, no, don't!")}
                         </Button>
                     </Modal.Footer>
                 </Modal.Dialog>})
     }
+
+    resetLanguage = () => this.forceUpdate()
 
     render = () =>
         <div>
@@ -357,7 +359,7 @@ export default class Creator extends React.Component {
             <Navbar>
                 <Navbar.Header>
                     <Navbar.Brand>
-                        Odisej
+                        {_("Odyssey")}
                     </Navbar.Brand>
                 </Navbar.Header>
                 <Navbar.Form pullRight>
@@ -368,19 +370,20 @@ export default class Creator extends React.Component {
                                  style={{display: "none"}}/>
                     <ButtonToolbar className="with-labels">
                         <ButtonGroup>
-                            <Label onClick={() => this.props.switchToPlay(true)}>Preskusi</Label>
-                            <Label onClick={() => this.props.switchToPlay(false)}>Igraj</Label>
+                            <Label onClick={() => this.props.switchToPlay(true)}>{_("Test")}</Label>
+                            <Label onClick={() => this.props.switchToPlay(false)}>{_("Play")}</Label>
                         </ButtonGroup>
                         <ButtonGroup>
-                            <Label onClick={saveGame}>Shrani igro</Label>
+                            <Label onClick={saveGame}>{_("Save Game")}</Label>
                             <ControlLabel htmlFor="gameUpload" className="no-round-right no-round-left">
-                                <Label>Naloži igro</Label>
+                                <Label>{_("Load Game")}</Label>
                             </ControlLabel>
-                            <Label onClick={this.resetData}>Pobriši igro</Label>
+                            <Label onClick={this.resetData}>{_("Delete Game")}</Label>
                         </ButtonGroup>
                         <ButtonGroup>
-                            <Label onClick={this.openSettingsEditor}>Nastavitve igre</Label>
+                            <Label onClick={this.openSettingsEditor}>{_("Game Settings")}</Label>
                         </ButtonGroup>
+                        <LanguageSelector resetGUI={this.resetLanguage}/>
                     </ButtonToolbar>
                 </Navbar.Form>
             </Navbar>
