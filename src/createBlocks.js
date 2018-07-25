@@ -314,7 +314,7 @@ createCondition('Stvari', 'item_exists', "", "ITEM", row => row.appendField("obs
 createCondition('Stvari', 'item_is_here', "je", "ITEM", row => row.appendField("tukaj"))
 createCondition('Zastavice', 'flag_set', "", "FLAG", row => row.appendField("je postavljena"))
 createCondition('Zastavice', 'flag_clear', "", "FLAG", row => row.appendField("ni postavljena"))
-createCondition('Pogoji', 'random', "žreb od 0 do 100 je večji od", "CONSTANT", null, "50")
+createCondition('Pogoji', 'random', "žreb od 0 do 100 je manjši od", "CONSTANT", null, "50")
 
 function createStatement(category, block_name, statement, fieldName=null, other=null, placeholder=null) {
     appendBlock(category, block_name, {

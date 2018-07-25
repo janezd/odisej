@@ -296,7 +296,7 @@ export default class Game extends React.Component {
                 case 'compare_const': return comp(condition.operator, this.state.variables[condition.variable], parseInt(condition.constant))
                 case 'compare_var': return comp(condition.operator, this.state.variables[condition.variable], this.state.variables[condition.variable2])
 
-                case 'random': return 100 * Math.random() > parseInt(condition.constant)
+                case 'random': return 100 * Math.random() < parseInt(condition.constant)
             }
         }
 
