@@ -141,6 +141,86 @@ function createField(fieldName, placeholder=null) {
 }
 
 
+function createCondition(category, block_name, condField, fieldName, other=null, placeholder=null) {
+    appendBlock(category, block_name, {
+        init() {
+            this.setInputsInline(false)
+            const row = this.appendDummyInput()
+                .appendField(condField)
+            if (fieldName) {
+                row.appendField(createField(fieldName, placeholder), fieldName)
+            }
+            if (other != null) {
+                other(row, this)
+            }
+            this.setOutput(true, "Boolean")
+            this.setColour(246)
+        },
+    })
+}
+
+
+function createStatement(category, block_name, statement, fieldName=null, other=null, placeholder=null) {
+    appendBlock(category, block_name, {
+      init() {
+          this.setInputsInline(false)
+          const row = this.appendDummyInput()
+          row.appendField(statement)
+          if (fieldName) {
+              row.appendField(createField(fieldName, placeholder), fieldName)
+          }
+          if (other != null) {
+              other(row, this)
+          }
+          this.setPreviousStatement(true)
+          this.setNextStatement(true)
+          this.setColour(186)
+      }
+    })
+}
+
+
+function createVarStatement(block_name, statement, fieldName, relation=null, fieldName2=null, other=null) {
+    appendBlock(_("Variables"), block_name, {
+        init() {
+            this.setInputsInline(false)
+            var t = this.appendDummyInput()
+                .setAlign(Blockly.ALIGN_RIGHT)
+                .appendField(statement)
+                .appendField(createField(fieldName), fieldName)
+            if (fieldName2 != null) {
+                t = this.appendDummyInput()
+                    .setAlign(Blockly.ALIGN_RIGHT)
+            }
+            if (relation != null) {
+                t.appendField(relation)
+            }
+            if (fieldName2 != null) {
+                t.appendField(createField(fieldName2, "vrednost"), fieldName2)
+            }
+            if (other != null) {
+                other(this)
+            }
+            this.setPreviousStatement(true)
+            this.setNextStatement(true)
+            this.setColour(186)
+        }
+    })
+}
+
+
+// Commands
+
+function createTopBlock(block_name, name, other=null) {
+    appendBlock(_("Commands"), block_name, {
+        init() {
+            this.appendDummyInput().appendField(name)
+            this.setColour(36)
+            this.setNextStatement(true)
+        }
+    })
+}
+
 appendBlock(_('Commands'), 'command', {
     init() {
         this.appendDummyInput()
@@ -166,19 +246,35 @@ appendBlock(_('Commands'), 'command', {
     }
 })
 
-function createTopBlock(block_name, name, other=null) {
-    appendBlock(_("Commands"), block_name, {
-        init() {
-          this.appendDummyInput().appendField(name)
-          this.setColour(36)
-          this.setNextStatement(true)
-        }
-    })
-}
+createCondition(_("Commands"), 'hasnt_executed', _("this command hasn't ran before"))
+
+createStatement(_("Commands"), "print", _("print"), "MSG")
+createStatement(_("Commands"), "go", _("go to"), "LOCATION")
+createStatement(_("Commands"), "delay", _("wait"), "CONSTANT", row => row.appendField("s"), "1")
+createStatement(_("Commands"), "reset", _("end of game"))
+
+appendBlock(_('Commands'), 'set_timer', {
+    init() {
+        this.appendDummyInput()
+            .appendField(_("after"))
+            .appendField(new Blockly.FieldTextInput("5"), "TIME")
+            .appendField(_("seconds"))
+        this.appendStatementInput('STATEMENTS')
+        this.setColour(186)
+        this.setPreviousStatement(true)
+        this.setNextStatement(true)
+    }
+})
+
+createStatement(_("Commands"), "allow_reexecute", _("allow running this command again"))
 
 createTopBlock('on_entry', _('On entry'))
 createTopBlock('on_exit', _('On exit'))
 createTopBlock('after_command', _('After every command'))
+createTopBlock('on_start', _('When game starts'))
+
+
+// Conditions
 
 
 const postCondition = (otherConnection) =>
@@ -233,34 +329,7 @@ appendBlock(_('Conditions'), 'else', {
     }
 })
 
-
-function createCondition(category, block_name, condField, fieldName, other=null, placeholder=null) {
-    appendBlock(category, block_name, {
-      init() {
-          this.setInputsInline(false)
-          const row = this.appendDummyInput()
-            .appendField(condField)
-          if (fieldName) {
-              row.appendField(createField(fieldName, placeholder), fieldName)
-          }
-          if (other != null) {
-              other(row, this)
-          }
-          this.setOutput(true, "Boolean")
-          this.setColour(246)
-      },
-    })
-}
-
-appendBlock(_("Conditions"), "not", {
-    init() {
-        this.appendValueInput("NOT")
-            .appendField(_("not"))
-            .setCheck("Boolean")
-        this.setOutput(true, "Boolean")
-        this.setColour(246)
-    }
-})
+createCondition(_("Conditions"), 'random', _("random number from 0 to 100 is below"), "CONSTANT", null, "50")
 
 appendBlock(_("Conditions"), "disjunction", {
     init() {
@@ -288,94 +357,45 @@ appendBlock(_("Conditions"), "disjunction", {
     }
 })
 
-appendBlock(_('Commands'), 'set_timer', {
+appendBlock(_("Conditions"), "not", {
     init() {
-        this.appendDummyInput()
-            .appendField(_("after"))
-            .appendField(new Blockly.FieldTextInput("5"), "TIME")
-            .appendField(_("seconds"))
-        this.appendStatementInput('STATEMENTS')
-        this.setColour(36)
-        this.setPreviousStatement(true)
-        this.setNextStatement(true)
+        this.appendValueInput("NOT")
+            .appendField(_("not"))
+            .setCheck("Boolean")
+        this.setOutput(true, "Boolean")
+        this.setColour(246)
     }
 })
 
-createCondition(_("Conditions"), 'hasnt_executed', _("this command hasn't ran before"))
-createStatement(_("Commands"), "allow_reexecute", _("allow running this command again"))
+createCondition(_("Conditions"), 'has_visited', _("player visited"), "LOCATION")
+createCondition(_("Conditions"), 'is_at', _("player is at"), "LOCATION")
+
+
+// Items
 
 createCondition(_("Items"), 'does_have', _("player has"), "ITEM")
 createCondition(_("Items"), 'doesnt_have', _("player doesn't have"), "ITEM")
-createCondition(_("Items"), 'can_carry_more', _("can carry more"))
-createCondition(_("Conditions"), 'has_visited', _("player visited"), "LOCATION")
-createCondition(_("Conditions"), 'is_at', _("player is at"), "LOCATION")
-createCondition(_("Items"), 'item_is_at', _("item@@item_is_at"), "ITEM", row => row.appendField(_("is at@@item_is_at")).appendField(createField('LOCATION'), "LOCATION"))
-createCondition(_("Items"), 'item_exists', _("item@@item_exists"), "ITEM", row => row.appendField(_("exists@@item_exists")))
-createCondition(_("Items"), 'item_is_here', _("item@@item_is_here"), "ITEM", row => row.appendField(_("is here@@item_is_here")))
-createCondition(_("Flags"), 'flag_set', _("flag"), "FLAG", row => row.appendField(_("is set")))
-createCondition(_("Flags"), 'flag_clear', _("flag"), "FLAG", row => row.appendField("is not set"))
-createCondition(_("Conditions"), 'random', _("random number from 0 to 100 is below"), "CONSTANT", null, "50")
-
-function createStatement(category, block_name, statement, fieldName=null, other=null, placeholder=null) {
-    appendBlock(category, block_name, {
-      init() {
-          this.setInputsInline(false)
-          const row = this.appendDummyInput()
-          row.appendField(statement)
-          if (fieldName) {
-              row.appendField(createField(fieldName, placeholder), fieldName)
-          }
-          if (other != null) {
-              other(row, this)
-          }
-          this.setPreviousStatement(true)
-          this.setNextStatement(true)
-          this.setColour(186)
-      }
-    })
-}
-
-
-createStatement(_("Commands"), "go", _("go to"), "LOCATION")
 createStatement(_("Items"), "pick", _("get"), "ITEM")
 createStatement(_("Items"), "drop", _("drop"), "ITEM")
+createStatement(_("Items"), "destroy", _("destroy"), "ITEM")
 createStatement(_("Items"), "item_at", _("put"), "ITEM",
     row => row.appendField(_("to@@item_at")).appendField(createField("LOCATION"), "LOCATION"))
-createStatement(_("Items"), "destroy", _("destroy"), "ITEM")
+
+createCondition(_("Items"), 'item_is_here', _("item@@item_is_here"), "ITEM", row => row.appendField(_("is here@@item_is_here")))
+createCondition(_("Items"), 'item_is_at', _("item@@item_is_at"), "ITEM", row => row.appendField(_("is at@@item_is_at")).appendField(createField('LOCATION'), "LOCATION"))
+createCondition(_("Items"), 'item_exists', _("item@@item_exists"), "ITEM", row => row.appendField(_("exists@@item_exists")))
+createCondition(_("Items"), 'can_carry_more', _("can carry more"))
+
+
+// Flags
+
+createCondition(_("Flags"), 'flag_set', _("flag"), "FLAG", row => row.appendField(_("is set")))
+createCondition(_("Flags"), 'flag_clear', _("flag"), "FLAG", row => row.appendField("is not set"))
 createStatement(_("Flags"), "set_flag", _("set"), "FLAG")
 createStatement(_("Flags"), "clear_flag", _("clear"), "FLAG")
-createStatement(_("Commands"), "print", _("print"), "MSG")
-createStatement(_("Commands"), "delay", _("wait"), "CONSTANT", row => row.appendField("s"), "1")
-createStatement(_("Commands"), "reset", _("end of game"))
 
 
-function createVarStatement(block_name, statement, fieldName, relation=null, fieldName2=null, other=null) {
-    appendBlock(_("Variables"), block_name, {
-        init() {
-            this.setInputsInline(false)
-            var t = this.appendDummyInput()
-                .setAlign(Blockly.ALIGN_RIGHT)
-                .appendField(statement)
-                .appendField(createField(fieldName), fieldName)
-            if (fieldName2 != null) {
-                t = this.appendDummyInput()
-                    .setAlign(Blockly.ALIGN_RIGHT)
-            }
-            if (relation != null) {
-                t.appendField(relation)
-            }
-            if (fieldName2 != null) {
-                t.appendField(createField(fieldName2, "vrednost"), fieldName2)
-            }
-            if (other != null) {
-                other(this)
-            }
-            this.setPreviousStatement(true)
-            this.setNextStatement(true)
-            this.setColour(186)
-        }
-    })
-}
+// Variables
 
 createVarStatement("set_const", _("set"), "VARIABLE", _("to"), "CONSTANT")
 createVarStatement("increase", _("increase"), "VARIABLE")
@@ -401,6 +421,5 @@ createCondition(_('Variables'), 'compare_var', "", "VARIABLE",
         .appendField(createField("VARIABLE2"), "VARIABLE2"),
     _("Variables"))
 
-createTopBlock('on_start', _('When game starts'))
 
 export default blocks
