@@ -412,4 +412,6 @@ export const translations = {
 
     // quill.js:517
     "odyssey.json": "odisej.json",
+
+    "Drop": "Odloži"
 }

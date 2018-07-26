@@ -177,8 +177,10 @@ const Compass = ({directions}) => {
 }
 
 
-const DropItemLink = ({itemState, itemId, onClick}) =>
+const DropItemLink = ({itemState, itemId, onClick, currentLocation}) =>
     gameSettings.dropItems && itemState[itemId] == ITEM_CARRIED
+        && locations.generalCommands.commands.concat(locations[currentLocation].commands)
+        .filter(command => command.block == 'command' && command.name == _("Drop") + ' ' + items[itemId]).length == 0
         ? <span>&nbsp;(<a onClick={onClick}>{_("drop@@InventoryList")}</a>)</span>
         : null
 
@@ -526,6 +528,7 @@ export default class Game extends React.Component {
                     return <span key={`item${i}`}>{i ? ", " : ""}{itemName}
                         <DropItemLink itemId={id}
                                       itemState={this.state.items}
+                                      currentLocation={this.state.location}
                                       onClick={() => this.moveItem(id, this.state.location, _("Drop@@InventoryList") + " " + itemName)}/>
                       </span>
                 })}
