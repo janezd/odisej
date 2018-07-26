@@ -216,8 +216,9 @@ function createVarStatement(block_name, statement, fieldName, relation=null, fie
 
 
 export function createBlocks() {
-    // Commands
+    blocks.length = 0
 
+    // Commands
     function createTopBlock(block_name, name, other = null) {
         appendBlock(_("Commands"), block_name, {
             init() {
