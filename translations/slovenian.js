@@ -126,7 +126,7 @@ export const translations = {
     "get": "vzemi",
 
     // createBlocks.js:379
-    "drop": "spusti",
+    "drop": "odloži",
 
     // createBlocks.js:380
     "destroy": "uniči",
