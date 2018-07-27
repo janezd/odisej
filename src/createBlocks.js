@@ -15,7 +15,8 @@ function appendBlock(category, block_name, block) {
     blocks.push({category, name: block_name, block})
 }
 
-function cleanUp(block, namePrefix, firstLine, conjunction, beforeInput=null, noFirstIfMoreLines=false) {
+function cleanUp(block, namePrefix, firstLine, conjunction, beforeInput=null,
+                 noFirstIfMoreLines=false, alignFirstRight=false) {
     const conditions = block.conditions
     const lastConnection = (conditions.length > 0) ? conditions[conditions.length - 1].connection : false
     if ((lastConnection === false)
@@ -42,7 +43,7 @@ function cleanUp(block, namePrefix, firstLine, conjunction, beforeInput=null, no
         conditions[i].name = namePrefix + i
     }
     conditions[0].fieldRow[0].setText(conditions.length == 1 || !noFirstIfMoreLines ? firstLine : "")
-    conditions[0].setAlign(Blockly.ALIGN_LEFT)
+    conditions[0].setAlign(alignFirstRight ? Blockly.ALIGN_RIGHT : Blockly.ALIGN_LEFT)
 }
 
 function mutate(block, xml, namePrefix, firstLine, conjunction, beforeInput=null, noFirstIfMoreLines=false) {
@@ -240,7 +241,7 @@ export function createBlocks() {
             this.conditions = [showInput]
             this.setColour(36)
             this.setNextStatement(true)
-            this.setOnChange(() => cleanUp(this, "SHOW", _("show if"), _("and")))
+            this.setOnChange(() => cleanUp(this, "SHOW", _("show if"), _("and"), null, false, true))
         },
 
         mutationToDom() {
