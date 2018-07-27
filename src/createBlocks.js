@@ -398,7 +398,7 @@ export function createBlocks() {
     // Flags
 
     createCondition(_("Flags"), 'flag_set', _("flag"), "FLAG", row => row.appendField(_("is set")))
-    createCondition(_("Flags"), 'flag_clear', _("flag"), "FLAG", row => row.appendField("is not set"))
+    createCondition(_("Flags"), 'flag_clear', _("flag"), "FLAG", row => row.appendField(_("is not set")))
     createStatement(_("Flags"), "set_flag", _("set"), "FLAG")
     createStatement(_("Flags"), "clear_flag", _("clear"), "FLAG")
 
