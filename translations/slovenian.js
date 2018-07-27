@@ -6,30 +6,30 @@ export const translations = {
     "Name:": "Ime: ",
 
     // createBlocks.js:143
-    "Item ...": "Stvar ...",
-
-    // createBlocks.js:143
     "New item ...": "Nova stvar ...",
 
-    // createBlocks.js:144
-    "Variable ...": "Spremenljivka ...",
+    // createBlocks.js:143
+    "Item ...": "Stvar ...",
 
     // createBlocks.js:144
     "New variable ...": "Nova spremenljivka ...",
 
-    // createBlocks.js:145
-    "Flag ...": "Zastavica ...",
+    // createBlocks.js:144
+    "Variable ...": "Spremenljivka ...",
 
     // createBlocks.js:145
     "New flag ...": "Nova zastavica ...",
 
+    // createBlocks.js:145
+    "Flag ...": "Zastavica ...",
+
     // createBlocks.js:146
     "text": "besedilo",
 
-    // createBlocks.js:190,419,423,426,430
+    // createBlocks.js:190,418,422,425,429
     "Variables": "Spremenljivke",
 
-    // createBlocks.js:223,232,257,259,260,261,262,264,277
+    // createBlocks.js:223,232,257,258,259,260,261,263,265
     "Commands": "Ukazi",
 
     // createBlocks.js:235
@@ -41,154 +41,154 @@ export const translations = {
     // createBlocks.js:238,243,253
     "show if": "pokaži, če",
 
-    // createBlocks.js:243,253,311,315
+    // createBlocks.js:243,253,310,314
     "and": "in hkrati",
 
     // createBlocks.js:257
-    "this command hasn't ran before": "se ta ukaz še ni izvajal",
-
-    // createBlocks.js:259
     "print": "izpiši",
 
-    // createBlocks.js:260
+    // createBlocks.js:258
     "go to": "pojdi na",
 
-    // createBlocks.js:261
+    // createBlocks.js:259
+    "hide this command": "skrij ta ukaz",
+
+    // createBlocks.js:260
     "wait": "počakaj",
 
-    // createBlocks.js:262
+    // createBlocks.js:261
     "end of game": "konec igre",
 
-    // createBlocks.js:267
+    // createBlocks.js:263
+    "this command wasn't used yet": "ta ukaz še ni bil uporabljen",
+
+    // createBlocks.js:268
     "after": "čez",
 
-    // createBlocks.js:269
+    // createBlocks.js:270
     "seconds": "sekund",
 
-    // createBlocks.js:277
-    "allow running this command again": "dovoli ponovno izvajanje ukaza",
-
-    // createBlocks.js:279
+    // createBlocks.js:278
     "On entry": "Ob vstopu",
 
-    // createBlocks.js:280
+    // createBlocks.js:279
     "On exit": "Ob izstopu",
 
-    // createBlocks.js:281
+    // createBlocks.js:280
     "After every command": "Po vsakem ukazu",
 
-    // createBlocks.js:282
+    // createBlocks.js:281
     "When game starts": "Ob začetku igre",
 
-    // createBlocks.js:292,329,340,342,368,378,379
+    // createBlocks.js:291,328,339,341,367,377,378
     "Conditions": "Pogoji",
 
-    // createBlocks.js:300
+    // createBlocks.js:299
     "do": "izvedi",
 
-    // createBlocks.js:326
+    // createBlocks.js:325
     "if": "če",
 
-    // createBlocks.js:327
+    // createBlocks.js:326
     "else if": "sicer če",
 
-    // createBlocks.js:332
+    // createBlocks.js:331
     "else": "sicer",
 
-    // createBlocks.js:340
-    "random number from 0 to 100 is below": "žreb od 0 do 100 je manjši od",
+    // createBlocks.js:339
+    "random number from 0 to 100 is below": "je žreb od 0 do 100 manjši od",
 
-    // createBlocks.js:345,354,358
+    // createBlocks.js:344,353,357
     "any of the following": "drži karkoli od",
 
-    // createBlocks.js:354,358
+    // createBlocks.js:353,357
     "or": "ali",
 
-    // createBlocks.js:371
+    // createBlocks.js:370
     "not": "ni res, da",
 
+    // createBlocks.js:377
+    "player visited": "je igralec že obiskal",
+
     // createBlocks.js:378
-    "player visited": "igralec je obiskal",
+    "player is at": "je igralec na",
 
-    // createBlocks.js:379
-    "player is at": "igralec je na",
-
-    // createBlocks.js:384
+    // createBlocks.js:383
     "player has": "igralec ima",
 
-    // createBlocks.js:384,385,386,387,388,389,392,393,394,395
+    // createBlocks.js:383,384,385,386,387,388,391,392,393,394
     "Items": "Stvari",
 
-    // createBlocks.js:385
+    // createBlocks.js:384
     "player doesn't have": "igralec nima",
 
-    // createBlocks.js:386
+    // createBlocks.js:385
     "get": "vzemi",
 
-    // createBlocks.js:387
+    // createBlocks.js:386
     "drop": "odloži",
 
-    // createBlocks.js:388
+    // createBlocks.js:387
     "destroy": "uniči",
 
-    // createBlocks.js:389
+    // createBlocks.js:388
     "put": "postavi",
 
-    // createBlocks.js:390
+    // createBlocks.js:389
     "to@@item_at": "na",
 
-    // createBlocks.js:392
-    "item@@item_is_here": "",
+    // createBlocks.js:391
+    "is here@@item_is_here": "tukaj",
+
+    // createBlocks.js:391
+    "item@@item_is_here": "je",
 
     // createBlocks.js:392
-    "is here@@item_is_here": "je tukaj",
+    "item@@item_is_at": "je",
+
+    // createBlocks.js:392
+    "is at@@item_is_at": "na",
 
     // createBlocks.js:393
-    "item@@item_is_at": "",
+    "item@@item_exists": "",
 
     // createBlocks.js:393
-    "is at@@item_is_at": "je na",
-
-    // createBlocks.js:394
     "exists@@item_exists": "obstaja",
 
     // createBlocks.js:394
-    "item@@item_exists": "",
+    "can carry more": "lahko igralec nosi še kaj",
 
-    // createBlocks.js:395
-    "can carry more": "lahko nosi še kaj",
-
-    // createBlocks.js:400
+    // createBlocks.js:399
     "is set": "je postavljena",
 
-    // createBlocks.js:400,401
-    "flag": "zastavica",
+    // createBlocks.js:399,400
+    "flag": "",
 
-    // createBlocks.js:400,401,402,403
+    // createBlocks.js:399,400,401,402
     "Flags": "Zastavice",
 
-    // createBlocks.js:401
+    // createBlocks.js:400
     "is not set": "ni postavljena",
 
-    // createBlocks.js:402,408,413
+    // createBlocks.js:401,407,412
     "set": "postavi",
 
-    // createBlocks.js:403
+    // createBlocks.js:402
     "clear": "pobriši",
 
-    // createBlocks.js:408,413
+    // createBlocks.js:407,412
     "to": "na",
 
-    // createBlocks.js:409,411,414
+    // createBlocks.js:408,410,413
     "increase": "povečaj",
 
-    // createBlocks.js:410,412,415
+    // createBlocks.js:409,411,414
     "decrease": "zmanjšaj",
 
-    // createBlocks.js:411,412,414,415
+    // createBlocks.js:410,411,413,414
     "by": "za",
 
-    // createBlocks.js:422
+    // createBlocks.js:421
     "value": "vrednost",
 
     // creator.js:63,393
@@ -279,7 +279,7 @@ export const translations = {
     "Load Game": "Naloži igro",
 
     // creator.js:218
-    // map.js:377
+    // map.js:376
     "Set as Start Location": "Nastavi kot začetno",
 
     // creator.js:73,371
@@ -290,7 +290,7 @@ export const translations = {
     // quill.js:287
     "New location": "Nova lokacija",
 
-    // game.js:77,646
+    // game.js:77,647
     "Game State": "Stanje igre",
 
     // game.js:82
@@ -321,16 +321,16 @@ export const translations = {
     "N": "S",
 
     // game.js:149,558
-    "NE": "SV",
-
-    // game.js:149,558
     "SE": "JV",
 
     // game.js:149,558
     "E": "V",
 
+    // game.js:149,558
+    "NE": "SV",
+
     // game.js:150,559
-    "W": "Z",
+    "NW": "SZ",
 
     // game.js:150,559
     "S": "J",
@@ -339,7 +339,7 @@ export const translations = {
     "SW": "JZ",
 
     // game.js:150,559
-    "NW": "SZ",
+    "W": "Z",
 
     // game.js:183
     "Drop": "Odloži",
@@ -350,7 +350,7 @@ export const translations = {
     // game.js:248
     "game-state.json": "stanje-igre.json",
 
-    // game.js:374,639
+    // game.js:374,640
     "New Game": "Nova igra",
 
     // game.js:377
@@ -362,7 +362,7 @@ export const translations = {
     // game.js:384
     "No": "Ne",
 
-    // game.js:467
+    // game.js:460
     "I can't carry so many things": "Toliko pa ne moremo nositi.",
 
     // game.js:532
@@ -374,31 +374,31 @@ export const translations = {
     // game.js:541
     "Nothing.": "Nič.",
 
-    // game.js:586
+    // game.js:587
     "Take@@AutoCommands": "Vzemi",
 
-    // game.js:609
+    // game.js:610
     "Inventory": "Kaj imam?",
 
-    // game.js:626
+    // game.js:627
     "Save": "Shrani",
 
-    // game.js:631
+    // game.js:632
     "Load": "Naloži",
 
-    // game.js:651
+    // game.js:652
     "Edit Game": "Ustvarjaj",
 
-    // game.js:671
+    // game.js:670
     "I have": "Imam",
 
-    // map.js:347
+    // map.js:346
     "(multiple locations)": "(več lokacij)",
 
-    // map.js:373
+    // map.js:372
     "Edit@@NodeContextMenu": "Spremeni",
 
-    // map.js:381
+    // map.js:380
     "Remove@@NodeContextMenu": "Pobriši",
 
     // quill.js:270
@@ -413,9 +413,10 @@ export const translations = {
     // quill.js:370
     "item": "stvar",
 
-    // quill.js:509
+    // quill.js:513
     "An error occurred while reading the data.": "An error occurred while reading the data.",
 
-    // quill.js:517
+    // quill.js:521
     "odyssey.json": "odisej.json",
+
 }

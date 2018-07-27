@@ -56,7 +56,6 @@ class Node extends React.Component {
         } else {
             const location = locations[this.props.locId]
             const {xDiff, yDiff} = this.travelled
-            console.log("up")
             Undo.push(
                 () => { location.x += xDiff; location.y += yDiff },
                 () => { location.x -= xDiff; location.y -= yDiff })

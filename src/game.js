@@ -216,7 +216,6 @@ export default class Game extends React.Component {
             currentCommand: null,
             modal: ""
         }
-        this.allowReexecute = false
         this.activeTimeouts = new Set()
     }
 
@@ -234,15 +233,16 @@ export default class Game extends React.Component {
             variables: _obj_from_keys(variables, 0),
             nVisits: _obj_from_keys(locations, 0),
             executed: {},
+            hidden: {},
             printed: [],
             gameEnded: false
         }
     }
 
     saveState = () => {
-        const {location, items, flags, variables, nVisits, executed, printed, gameEnded} = this.state
+        const {location, items, flags, variables, nVisits, executed, hidden, printed, gameEnded} = this.state
         const blob = new Blob(
-            [JSON.stringify({location, items, flags, variables, nVisits, executed, printed, gameEnded})],
+            [JSON.stringify({location, items, flags, variables, nVisits, executed, hidden, printed, gameEnded})],
             { type: 'text/plain' })
         const anchor = document.createElement('a')
         anchor.download = _("game-state.json")
@@ -262,9 +262,9 @@ export default class Game extends React.Component {
 
     componentDidMount = () => this.autoExecuteOnStart()
 
-    currentLocAndCommand = (commandName) => `${this.state.location}:${commandName || this.state.currentCommand}`
+    hashLocAndCommand = command => command.location + ":" + command.name
 
-    checkConditionList = (conditions, conjunctive=true, commandName=null) => {
+    checkConditionList = (conditions, conjunctive=true, command=null) => {
         const comp = (op, op1, op2) => {
             switch (op) {
                 case 'EQ': return op1 == op2
@@ -282,7 +282,7 @@ export default class Game extends React.Component {
 
                 case 'disjunction': return this.checkConditionList(condition.allow, false)
 
-                case 'hasnt_executed': return !this.state.executed[this.currentLocAndCommand(commandName)]
+                case 'hasnt_executed': return !this.state.executed[this.hashLocAndCommand(command || this.state.currentCommand)]
                 case 'is_at': return this.state.location == condition.location
                 case 'has_visited': return this.state.nVisits[condition.location]
 
@@ -414,20 +414,13 @@ export default class Game extends React.Component {
 
     executeCommand = (block, then) => {
         const endCommand = () => {
-            // This must happen after the command is ran.
-            // Allow re-execute block then can't have an immediate effect but must be taken into account here
+            // This must happen after the command is ran so that 'hasnt_executed' condition works properly
             const {executed} = this.state
-            if (this.allowReexecute) {
-                delete this.state.executed[this.currentLocAndCommand()]
-            }
-            else {
-                executed[this.currentLocAndCommand()] = true
-            }
+            executed[this.hashLocAndCommand(this.state.currentCommand)] = true
             this.setState({executed, currentCommand: null}, then)
         }
 
-        this.allowReexecute = false
-        this.setState({currentCommand: block.name},
+        this.setState({currentCommand: block},
             () => this.print(<b>&gt; {block.name}</b>,
                 () => this.executeSequence(block.next,
                     () => this.autoExecuteBlocks("after_command", endCommand)
@@ -471,6 +464,12 @@ export default class Game extends React.Component {
         }
     }
 
+    hideCommand = (then) => {
+        const {hidden, currentCommand} = this.state
+        hidden[this.hashLocAndCommand(currentCommand)] = true
+        this.setState({hidden}, then)
+    }
+
     executeBlock = (block, then) => {
         const { variables, flags, items, executed } = this.state
         const name = block.item || block.flag || block.variable
@@ -485,7 +484,6 @@ export default class Game extends React.Component {
             case 'delay': return this.delay(1000 * parseInt(block.constant), then)
 
             case 'reset': return this.endGame(then)
-            case 'allow_reexecute': this.allowReexecute = true; return then && then()
 
             case 'pick': return setItem(ITEM_CARRIED)
             case 'drop': return setItem(this.state.location)
@@ -507,6 +505,8 @@ export default class Game extends React.Component {
             case 'set_timer':
                 this.setGuardedTimeout(() => this.executeSequence(block.statements), 1000 * parseFloat(block.time))
                 return then && then()
+
+            case 'hide_command': return this.hideCommand(then)
 
             default:
                 console.log(`Unrecognized block type: ${block.block}`)
@@ -562,7 +562,8 @@ export default class Game extends React.Component {
         const commands = {}
 
         const addCommand = command => {
-            const shown = this.checkConditionList(command.show, true, command.name)
+            const shown = !this.state.hidden[this.hashLocAndCommand(command)]
+                && this.checkConditionList(command.show, true, command)
             const callback = () => this.executeCommand(command)
             const dir = dirmap[command.name]
             if (dir) {
@@ -662,8 +663,6 @@ export default class Game extends React.Component {
     render() {
         const location = locations[this.state.location]
         const [directions, commands, systemCommands] = this.getCommandList()
-        const ifNotCommand = f => this.state.currentCommand ? null : f
-        const buttonClass =  this.state.currentCommand ? " disabled" : ""
 
         const inventoryList = gameSettings.showInventory == INV_OPTIONS.SHOW_ALWAYS ? this.getInventoryList() : ""
         const inventoryLine = inventoryList == ""

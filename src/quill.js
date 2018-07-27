@@ -491,6 +491,10 @@ export function restoreLocally(json) {
         // TODO Remove '|| {}' when migrations are no longer needed
         Object.assign(gameSettings, obj.gameSettings || {})
 
+        locations.entries().forEach(([locId, location]) =>
+            location.commands.forEach(command => command.location = locId)
+        )
+
         // Migrations; remove before publishing
         if (gameSettings.showInventory === true) {
             gameSettings.showInventory = INV_OPTIONS.SHOW_BUTTON

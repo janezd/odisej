@@ -36,7 +36,7 @@ def output_phrases(fname, phrases, translations=None):
               if phrase not in phrases]
     if unused:
         outf.write("\n\n    // Unused translations\n")
-        outf.write("".join('    "{}": "{}"'.format(phrase, translation)
+        outf.write("".join('    "{}": "{}",\n'.format(phrase, translation)
                              for phrase, translation in unused))
         outf.write("\n")
 

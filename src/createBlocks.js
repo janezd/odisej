@@ -254,12 +254,13 @@ export function createBlocks() {
         }
     })
 
-    createCondition(_("Commands"), 'hasnt_executed', _("this command hasn't ran before"))
-
     createStatement(_("Commands"), "print", _("print"), "MSG")
     createStatement(_("Commands"), "go", _("go to"), "LOCATION")
+    createStatement(_("Commands"), "hide_command", _("hide this command"))
     createStatement(_("Commands"), "delay", _("wait"), "CONSTANT", row => row.appendField("s"), "1")
     createStatement(_("Commands"), "reset", _("end of game"))
+
+    createCondition(_("Commands"), 'hasnt_executed', _("this command wasn't used yet"))
 
     appendBlock(_('Commands'), 'set_timer', {
         init() {
@@ -273,8 +274,6 @@ export function createBlocks() {
             this.setNextStatement(true)
         }
     })
-
-    createStatement(_("Commands"), "allow_reexecute", _("allow running this command again"))
 
     createTopBlock('on_entry', _('On entry'))
     createTopBlock('on_exit', _('On exit'))
