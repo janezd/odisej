@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+  <html>
+    <head>
+      <title>besedilo</title>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      
+      <link rel="stylesheet" href="file:////Users/janez/.vscode/extensions/shd101wyy.markdown-preview-enhanced-0.3.5/node_modules/@shd101wyy/mume/dependencies/katex/katex.min.css">
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+
+      <style> 
+      /**
+ * prism.js Github theme based on GitHub's theme.
+ * @author Sam Clarke
+ */
+code[class*="language-"],
+pre[class*="language-"] {
+  color: #333;
+  background: none;
+  font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+  text-align: left;
+  white-space: pre;
+  word-spacing: normal;
+  word-break: normal;
+  word-wrap: normal;
+  line-height: 1.4;
+
+  -moz-tab-size: 8;
+  -o-tab-size: 8;
+  tab-size: 8;
+
+  -webkit-hyphens: none;
+  -moz-hyphens: none;
+  -ms-hyphens: none;
+  hyphens: none;
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+  padding: .8em;
+  overflow: auto;
+  /* border: 1px solid #ddd; */
+  border-radius: 3px;
+  /* background: #fff; */
+  background: #f5f5f5;
+}
+
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+  padding: .1em;
+  border-radius: .3em;
+  white-space: normal;
+  background: #f5f5f5;
+}
+
+.token.comment,
+.token.blockquote {
+  color: #969896;
+}
+
+.token.cdata {
+  color: #183691;
+}
+
+.token.doctype,
+.token.punctuation,
+.token.variable,
+.token.macro.property {
+  color: #333;
+}
+
+.token.operator,
+.token.important,
+.token.keyword,
+.token.rule,
+.token.builtin {
+  color: #a71d5d;
+}
+
+.token.string,
+.token.url,
+.token.regex,
+.token.attr-value {
+  color: #183691;
+}
+
+.token.property,
+.token.number,
+.token.boolean,
+.token.entity,
+.token.atrule,
+.token.constant,
+.token.symbol,
+.token.command,
+.token.code {
+  color: #0086b3;
+}
+
+.token.tag,
+.token.selector,
+.token.prolog {
+  color: #63a35c;
+}
+
+.token.function,
+.token.namespace,
+.token.pseudo-element,
+.token.class,
+.token.class-name,
+.token.pseudo-class,
+.token.id,
+.token.url-reference .token.variable,
+.token.attr-name {
+  color: #795da3;
+}
+
+.token.entity {
+  cursor: help;
+}
+
+.token.title,
+.token.title .token.punctuation {
+  font-weight: bold;
+  color: #1d3e81;
+}
+
+.token.list {
+  color: #ed6a43;
+}
+
+.token.inserted {
+  background-color: #eaffea;
+  color: #55a532;
+}
+
+.token.deleted {
+  background-color: #ffecec;
+  color: #bd2c00;
+}
+
+.token.bold {
+  font-weight: bold;
+}
+
+.token.italic {
+  font-style: italic;
+}
+
+
+/* JSON */
+.language-json .token.property {
+  color: #183691;
+}
+
+.language-markup .token.tag .token.punctuation {
+  color: #333;
+}
+
+/* CSS */
+code.language-css,
+.language-css .token.function {
+  color: #0086b3;
+}
+
+/* YAML */
+.language-yaml .token.atrule {
+  color: #63a35c;
+}
+
+code.language-yaml {
+  color: #183691;
+}
+
+/* Ruby */
+.language-ruby .token.function {
+  color: #333;
+}
+
+/* Markdown */
+.language-markdown .token.url {
+  color: #795da3;
+}
+
+/* Makefile */
+.language-makefile .token.symbol {
+  color: #795da3;
+}
+
+.language-makefile .token.variable {
+  color: #183691;
+}
+
+.language-makefile .token.builtin {
+  color: #0086b3;
+}
+
+/* Bash */
+.language-bash .token.keyword {
+  color: #0086b3;
+}html body{font-family:"Helvetica Neue",Helvetica,"Segoe UI",Arial,freesans,sans-serif;font-size:16px;line-height:1.6;color:#333;background-color:#fff;overflow:initial;box-sizing:border-box;word-wrap:break-word}html body>:first-child{margin-top:0}html body h1,html body h2,html body h3,html body h4,html body h5,html body h6{line-height:1.2;margin-top:1em;margin-bottom:16px;color:#000}html body h1{font-size:2.25em;font-weight:300;padding-bottom:.3em}html body h2{font-size:1.75em;font-weight:400;padding-bottom:.3em}html body h3{font-size:1.5em;font-weight:500}html body h4{font-size:1.25em;font-weight:600}html body h5{font-size:1.1em;font-weight:600}html body h6{font-size:1em;font-weight:600}html body h1,html body h2,html body h3,html body h4,html body h5{font-weight:600}html body h5{font-size:1em}html body h6{color:#5c5c5c}html body strong{color:#000}html body del{color:#5c5c5c}html body a:not([href]){color:inherit;text-decoration:none}html body a{color:#08c;text-decoration:none}html body a:hover{color:#00a3f5;text-decoration:none}html body img{max-width:100%}html body>p{margin-top:0;margin-bottom:16px;word-wrap:break-word}html body>ul,html body>ol{margin-bottom:16px}html body ul,html body ol{padding-left:2em}html body ul.no-list,html body ol.no-list{padding:0;list-style-type:none}html body ul ul,html body ul ol,html body ol ol,html body ol ul{margin-top:0;margin-bottom:0}html body li{margin-bottom:0}html body li.task-list-item{list-style:none}html body li>p{margin-top:0;margin-bottom:0}html body .task-list-item-checkbox{margin:0 .2em .25em -1.8em;vertical-align:middle}html body .task-list-item-checkbox:hover{cursor:pointer}html body blockquote{margin:16px 0;font-size:inherit;padding:0 15px;color:#5c5c5c;border-left:4px solid #d6d6d6}html body blockquote>:first-child{margin-top:0}html body blockquote>:last-child{margin-bottom:0}html body hr{height:4px;margin:32px 0;background-color:#d6d6d6;border:0 none}html body table{margin:10px 0 15px 0;border-collapse:collapse;border-spacing:0;display:block;width:100%;overflow:auto;word-break:normal;word-break:keep-all}html body table th{font-weight:bold;color:#000}html body table td,html body table th{border:1px solid #d6d6d6;padding:6px 13px}html body dl{padding:0}html body dl dt{padding:0;margin-top:16px;font-size:1em;font-style:italic;font-weight:bold}html body dl dd{padding:0 16px;margin-bottom:16px}html body code{font-family:Menlo,Monaco,Consolas,'Courier New',monospace;font-size:.85em !important;color:#000;background-color:#f0f0f0;border-radius:3px;padding:.2em 0}html body code::before,html body code::after{letter-spacing:-0.2em;content:"\00a0"}html body pre>code{padding:0;margin:0;font-size:.85em !important;word-break:normal;white-space:pre;background:transparent;border:0}html body .highlight{margin-bottom:16px}html body .highlight pre,html body pre{padding:1em;overflow:auto;font-size:.85em !important;line-height:1.45;border:#d6d6d6;border-radius:3px}html body .highlight pre{margin-bottom:0;word-break:normal}html body pre code,html body pre tt{display:inline;max-width:initial;padding:0;margin:0;overflow:initial;line-height:inherit;word-wrap:normal;background-color:transparent;border:0}html body pre code:before,html body pre tt:before,html body pre code:after,html body pre tt:after{content:normal}html body p,html body blockquote,html body ul,html body ol,html body dl,html body pre{margin-top:0;margin-bottom:16px}html body kbd{color:#000;border:1px solid #d6d6d6;border-bottom:2px solid #c7c7c7;padding:2px 4px;background-color:#f0f0f0;border-radius:3px}@media print{html body{background-color:#fff}html body h1,html body h2,html body h3,html body h4,html body h5,html body h6{color:#000;page-break-after:avoid}html body blockquote{color:#5c5c5c}html body pre{page-break-inside:avoid}html body table{display:table}html body img{display:block;max-width:100%;max-height:100%}html body pre,html body code{word-wrap:break-word;white-space:pre}}.markdown-preview{width:100%;height:100%;box-sizing:border-box}.markdown-preview .pagebreak,.markdown-preview .newpage{page-break-before:always}.markdown-preview pre.line-numbers{position:relative;padding-left:3.8em;counter-reset:linenumber}.markdown-preview pre.line-numbers>code{position:relative}.markdown-preview pre.line-numbers .line-numbers-rows{position:absolute;pointer-events:none;top:1em;font-size:100%;left:0;width:3em;letter-spacing:-1px;border-right:1px solid #999;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.markdown-preview pre.line-numbers .line-numbers-rows>span{pointer-events:none;display:block;counter-increment:linenumber}.markdown-preview pre.line-numbers .line-numbers-rows>span:before{content:counter(linenumber);color:#999;display:block;padding-right:.8em;text-align:right}.markdown-preview .mathjax-exps .MathJax_Display{text-align:center !important}.markdown-preview:not([for="preview"]) .code-chunk .btn-group{display:none}.markdown-preview:not([for="preview"]) .code-chunk .status{display:none}.markdown-preview:not([for="preview"]) .code-chunk .output-div{margin-bottom:16px}.scrollbar-style::-webkit-scrollbar{width:8px}.scrollbar-style::-webkit-scrollbar-track{border-radius:10px;background-color:transparent}.scrollbar-style::-webkit-scrollbar-thumb{border-radius:5px;background-color:rgba(150,150,150,0.66);border:4px solid rgba(150,150,150,0.66);background-clip:content-box}html body[for="html-export"]:not([data-presentation-mode]){position:relative;width:100%;height:100%;top:0;left:0;margin:0;padding:0;overflow:auto}html body[for="html-export"]:not([data-presentation-mode]) .markdown-preview{position:relative;top:0}@media screen and (min-width:914px){html body[for="html-export"]:not([data-presentation-mode]) .markdown-preview{padding:2em calc(50% - 457px)}}@media screen and (max-width:914px){html body[for="html-export"]:not([data-presentation-mode]) .markdown-preview{padding:2em}}@media screen and (max-width:450px){html body[for="html-export"]:not([data-presentation-mode]) .markdown-preview{font-size:14px !important;padding:1em}}@media print{html body[for="html-export"]:not([data-presentation-mode]) #sidebar-toc-btn{display:none}}html body[for="html-export"]:not([data-presentation-mode]) #sidebar-toc-btn{position:fixed;bottom:8px;left:8px;font-size:28px;cursor:pointer;color:inherit;z-index:99;width:32px;text-align:center;opacity:.4}html body[for="html-export"]:not([data-presentation-mode])[html-show-sidebar-toc] #sidebar-toc-btn{opacity:1}html body[for="html-export"]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc{position:fixed;top:0;left:0;width:300px;height:100%;padding:32px 0 48px 0;font-size:14px;box-shadow:0 0 4px rgba(150,150,150,0.33);box-sizing:border-box;overflow:auto;background-color:inherit}html body[for="html-export"]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar{width:8px}html body[for="html-export"]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar-track{border-radius:10px;background-color:transparent}html body[for="html-export"]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar-thumb{border-radius:5px;background-color:rgba(150,150,150,0.66);border:4px solid rgba(150,150,150,0.66);background-clip:content-box}html body[for="html-export"]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc a{text-decoration:none}html body[for="html-export"]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc ul{padding:0 1.6em;margin-top:.8em}html body[for="html-export"]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc li{margin-bottom:.8em}html body[for="html-export"]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc ul{list-style-type:none}html body[for="html-export"]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{left:300px;width:calc(100% -  300px);padding:2em calc(50% - 457px -  150px);margin:0;box-sizing:border-box}@media screen and (max-width:1274px){html body[for="html-export"]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{padding:2em}}@media screen and (max-width:450px){html body[for="html-export"]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{width:100%}}html body[for="html-export"]:not([data-presentation-mode]):not([html-show-sidebar-toc]) .markdown-preview{left:50%;transform:translateX(-50%)}html body[for="html-export"]:not([data-presentation-mode]):not([html-show-sidebar-toc]) .md-sidebar-toc{display:none}
+/* Please visit the URL below for more information: */
+/*   https://shd101wyy.github.io/markdown-preview-enhanced/#/customize-css */
+ 
+      </style>
+    </head>
+    <body for="html-export">
+      <div class="mume markdown-preview   ">
+      <h2 class="mume-header" id="zgodba-o-%C5%A1kofjelo%C5%A1kem-grbu">Zgodba o škofjeloškem grbu</h2>
+
+<p>V škofjeloškem grbu je slika črnca; zgodba pravi, naj bi rešil življenje škofu, ko je ustrelil nesrečnega medveda, ki jima je nekega (zanj prav nič lepega) dne prekrižal pot. Sestavimo preprosto igro, v kateri bo moral igralec opraviti podobno nalogo.</p>
+<h3 class="mume-header" id="scenarij-in-zemljevid">Scenarij in zemljevid</h3>
+
+<p>Če hočeš sestaviti pustolovščino, si moraš najprej izmisliti scenarij. Vsaj približno; če se boš kasneje domislil še česa, ga boš pač dopolnil.</p>
+<p>Igralec bo moral torej na škofjeloškem gradu bo moral ustreliti medveda. Če hočeš streljati, potrebuješ puško. Kako jo dobiti? Morda v zamenjavo za vino. Tega pa bo zaslužil z obiranjem grozdja.</p>
+<p>Povedano v pravo smer:</p>
+<ul>
+<li>v Čatežu (tistem ob Litiji, kjer imajo vino in ne tistem, kjer imajo le toplo vodo) bo obiral grozdje in dobil vino;</li>
+<li>v Kočevju bo dal nekemu lovcu vino in v zamenjavo dobil njegovo puško;</li>
+<li>na škofjeloškem gradu bo ustrelil medveda.</li>
+</ul>
+<p>Poleg Čateža, Kočevja in gradu bodo v igri še Škofja Loka, Kranj, Ljubljana (kjer se bo igra začela) in Ribnica.</p>
+<p>Da igralcu povzročimo nekaj dodatnih sitnosti, se bo moral, ko dobi puško, izogibati Ribnice, saj bo tam prežal policist, ki mu bo zaplenil puško in mu dal namesto nje kuhalnico. Ker Ribnica.</p>
+<p>Nato si je potrebno zamisliti zemljevid. Ta bo na koncu takšen</p>
+<img src="zemljevid-skofja.png">
+<p>Vsak kraj je predstavljen z osemkotnikom, ker so kraji običajno povezani z eno od osmih smeri (S, SV, V, JV, J, JZ, Z, SZ). Kakšne so povezave med kraji na sliki, je očitno: iz Ribnice, na primer, lahko gremo na sever v Ljubljano ali na jug v Kočevje. Iz Kočevja gremo na sever v Ribnico in severozahod v Čatež.</p>
+<p>Če iz nekega kraja vodi pot vzhodno v nek drug kraj, ni nujno, da se iz drugega kraja na zahod pride nazaj v prvi kraj. Na zemljevidu vidimo dva primera, ko to ne drži.</p>
+<ul>
+<li>Če gremo iz Ljubljane na JV, pridemo v Čatež. Če želimo iz Čateža nazaj v Ljubljano, moramo na S, na SZ. Da je tako, vidimo po tem, kje vodijo povezave iz Ljubljane in iz Čateža. (Pot na SZ bi lahko peljala celo v kak drug kraj.)</li>
+<li>Če gremo iz Kranja na JZ, pridemo v Škofjo Loko. Poti iz Škofje Loke v Kranj pa ni - razen prek Ljubljane. To vidimo po tem, da v Škofji Loki na koncu povezave ni krožca. (Čemu? Zato da nagajamo. Če mu damo v Škofji Loki le izbiro med potjo v Ljubljano in na grad, ne pa tudi v Kranj, je verjetneje, da bo šel na grad, kjer pa ga, vemo, čaka medved.)</li>
+</ul>
+<p>Ko sestaviš scenarij za igro, si lahko na papir skiciraš tudi zemljevid, saj bo hitreje. Detajle pa lahko urejaš kar na računalniku.</p>
+<h3 class="mume-header" id="risanje-zemljevida">Risanje zemljevida</h3>
+
+<p>Celoten postopek sestavljanja lahko vidiš v videu. Vseeno preberi tudi spodnji opis, da boš boljše razumel, kaj je kaj in zakaj.</p>
+<iframe width="858" height="501" src="https://www.youtube.com/embed/TGbbZNEDWK8?rel=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen=""></iframe>
+<p>Ko odpremo Odiseja, dobimo zemljevid z dvema krajema. Eden ima posebno vlogo in čudno ime, <em>Na vseh lokacijah</em>. Za zdaj ga pustimo.</p>
+<p>Drugi je <em>Začetna lokacija</em>. To je kraj, kjer se igra začne. Dvoklikni ga. Odprlo se bo okno za urejanje lokacije. V njem bomo preživeli še veliko časa (pravzaprav kar večino), a zdaj le spremeni ime kraja iz <em>Začetna lokacija</em> v Ljubljana. Zapri okno za urejanje lokacije, tako da klikneš izven njega.</p>
+<img src="zemljevid-00-ljubljana.png">
+<p>Povleci Ljubljano nekam bolj na sredo. Zdaj premakni miško nad Ljubljano, tako da se puščica spremeni v puščico navzgor, proti severu. Povleci črto navzgor, tja, kamor želiš postaviti Kranj.</p>
+<p>Ko izpustiš tipko na miški, se pojavi nova lokacija in odpre okno, v katerem spremenimo ime v Kranj. Zapri okno za urejanje.</p>
+<img src="zemljevid-03-kranj.png">
+<p>Kraja sta povezana: ker smo povezavo iz Ljubljane v Kranj pripeljali tako, da smo šli na sever, je računalnik sam dodal še povezavo iz Kranja na jug v Ljubljano.</p>
+<p>Zdaj dodajmo še Škofjo Loko. Vse je podobno kot pri Kranju, le da zdaj vlečemo iz Ljubljane proti severozahodu.</p>
+<img src="zemljevid-04-ljubljana-sz.png">
+<p>Preimenujemo v Škofjo Loko.</p>
+<p>Zdaj pa naredimo še povezavo iz Kranja v Škofjo Loko. Povezavo začnemo vleči iz jugozahodne strani Kranja in jo potegnemo v Škofjo Loko.</p>
+<img src="zemljevid-05-kr-sl.png">
+<p>Je tako, kot smo hoteli? Skoraj. Rekli smo, da nočemo povezave iz Škofje Loke v Kranj. Znebimo se je tako, da kliknemo krogec, ki je na škofjeloškem koncu te povezave. Če kliknemo na črto, pa pobrišemo obe smeri povezave.</p>
+<p>Zdaj na podoben način dodaj še ostale povezave, le škofjeloški grad za zdaj izpustimo.</p>
+<p>Še en trik: recimo, da si prišel do sem.</p>
+<img src="zemljevid-06-predzadnjo.png">
+<p>Kako povezati Ljubljano in Čatež tako, da bo povezava iz Ljubljane v Čatež vodila na JV, v obratno smer pa na S? Črto vleci od JV strani Ljubljane do S strani Čateža, namesto, da bi jo potegnil v Čatež.</p>
+<img src="zemljevid-07-zadnja.png">
+<p>Če pa si kako povezavo že potegnil in ni tam in takšna, kot bi morala biti, jo preprosto klikni, da jo pobrišeš, in potem povleci novo.</p>
+<p>Če med dvema lokacijamo povlečemo več povezav (da, tudi to je možno - zakaj ne bi iz Ljubljane prišli v Kranj, tudi če gremo proti severovzhodu?), bo na sliki malo zmede. Še pogosteje to naredimo ponesreči. Kar poklikaj odvečne povezave, pa bodo izginile.</p>
+<p>Zdaj pa še škofjeloški grad. Do njega bomo prišli tako, da bomo šli v Škofji loki <strong>gor</strong>. Na zemljevid ga dodaj tako, da dvoklikneš na mestu, kjer bi ga rad postavil. Pojavila se bo nova lokacija. Preimenuj jo v Škofjeloški grad.</p>
+<p>Ko je zemljevid narisan, ga malo uredi, tako da premakneš lokacije. Naj bo videti lepo in urejeno.</p>
+<p>Če želiš premakniti več lokacij hkrati, jih označi in premakni. Več lokacij označiš tako, da potegneš z miško prek njih. Posamične lokacije lahko dodajaš med izbrane tako, da jih klikaš z miško in zraven držiš tipko za velike črke.</p>
+<p>Z zemljevidom naše igre smo tako končali. Če bi sestavljali kaj bolj zapletenega, pa bi ga lahko sestavljali tudi postopno in vmes morda že kaj programirali in preskušali.</p>
+<h3 class="mume-header" id="opisi-lokacij-in-slike">Opisi lokacij in slike</h3>
+
+<p>Naslednji korak pri sestavljanju igre so opisi lokacij. Na začetni lokaciji je dobro povedati, kaj je pravzaprav cilj igre. V Ljubljani smo zato napisali</p>
+<blockquote>
+<p>Tvoja naloga v igri je poiskati slavo. V Ljubljani nimaš česa iskati. Pojdi raje ven, v širni svet.</p>
+</blockquote>
+<p>V Škofji Loki bomo igralca posebej povabili, naj si ogleda grad (in zamolčali medveda).</p>
+<blockquote>
+<p>Okrog lepega mesteca se dvigujejo hribi. Na najbližjem je simpatičen grad. Si ga boš ogledal?</p>
+</blockquote>
+<p>V Čatežu povejmo za vinograde, da bo imelo obiranje grozdja smisel.</p>
+<blockquote>
+<p>Od Čateža pa skoraj do Litije, vsepovsod naokrog se širijo bregovi polni vinogradov.</p>
+</blockquote>
+<p>Opisi so lahko tudi zabavni. Tale je sestavljen po zgledu prve slovenske računalniške igre, Kontrabant, iz leta 1984.</p>
+<blockquote>
+<p>V smrtnem kranju našega prešernega pesnika. Na jugozahodu vidim nekaj zanimivega.</p>
+</blockquote>
+<p>Tudi kočevski je podoben.</p>
+<blockquote>
+<p>Gottscher je znan po lovcih, ki vsak večer odhajajo na fronto. Radi pa tudi kaj popijejo, če je že treba.</p>
+</blockquote>
+<p>V Ribnici malo posvarimo pred policisti. Le tega, s čim bodo delali preglavice, še ne izdajmo.</p>
+<blockquote>
+<p>Mesto, znano po suhi robi, je danes znano po policistih, ki merijo hitrost mimoidočim vozilom. Le počasi naprej.</p>
+</blockquote>
+<p>Še škofjeloški grad je ostal. Tu nastopi medved.</p>
+<blockquote>
+<p>Grad je že lep, medved, ki se sprehaja okrog njega, pa ni videti prijazno.</p>
+</blockquote>
+<p>Seveda lahko namesto teh opisov sestaviš svoje. Pravzprav jim moraš. Bognedaj prepisovati tale besedila!</p>
+<p>Nato dodaj še slike. Lahko jih poiščeš na internetu, za svoje igre pa jih lahko rišeš tudi sam. Dodaš jih v oknu za urejanje lokacije, levo zgoraj.</p>
+<p>Pa smo: zemljevid bi moral zdaj izgledati tak kot na sliki na začetku, razen sive povezave med Škofjo Loko in gradom. Ta se bo pojavila kasneje.</p>
+<p>Zdaj pa se začne zabavni del: programiranje!</p>
+<h3 class="mume-header" id="ukazi">Ukazi</h3>
+
+<p>Na vsaki lokaciji lahko določimo ukaze, ki jih bo igralec lahko (ali pa tudi ne) izvršil. Začnimo z najpreprostejšim v naši igri: če igralec v Čatežu izbere &quot;Obiraj grozdje&quot;, bo v zahvalo dobil steklenico vina.</p>
+<p>Odpri urejanje lokacije Čatež in v delu pod opisom sestavi takšno zaporedje blokov:</p>
+<img src="ukazi-01-obiraj-grozdje.png">
+<p>Če poznaš Scratch, veš, kako gre; tole ni veliko drugače. Če ga ne, se boš pa hitro naučil, saj je preprosto.</p>
+<p>Bloke boš našel na desni strani: klikni <em>Ukazi</em> in izvleci blok <em>Ukaz</em>. Daj mu ime, Obiraj grozdje. Kar vpišeš tu, bo igralec videl na tipki, ki jo bo lahko izbral v igri.</p>
+<p>Pod blokom Ukazi sestavimo program, ki izvede ta ukaz. Izpisali bomo, da je igralec dobil steklenico cvička (za nedolžne mlade igralce: dolenjsko vino nekoliko kislejšega okusa). Tudi blok <em>Izpiši</em> najdemo med ukazi.</p>
+<p>Drugi blok poskrbi, da bo igralec tudi v resnici (no, ne čisto v resnici, le v igri) dobil to steklenico.</p>
+<p>Večina iger tega tipa se vrti okrog &quot;stvari&quot;. Včasih jih dobimo zastonj, včasih jih s čim zaslužimo, z njimi trgujemo --- včasih pa jih tudi porabimo, izgubimo ali pa nam jih vzamejo. Kako reč lahko naredimo le, če imamo ustrezno stvar (kam boš veslal brez čolna?). Stvari, ki jih imamo, nas lahko pred čim obvarujejo (če začne v igri deževati, bo igralec moker, če nima dežnika). Stvari, ki jih imamo, nam lahko celo kaj preprečijo (z blatnimi škornji nas ne spustijo v gostilno). Ker so za igro tako pomembne, jim je namenjenih veliko blokov, zbranih v zavihku <em>Stvari</em>.</p>
+<p>Iz zavihka Stvari torej izvleci blok <em>Vzemi</em> in ga dodaj k programu. V spustnem menuju v bloku izberi <em>Nova stvar</em> in vtipkaj njeno ime. V slovenščini bo najboljše, če vneseš ime z malo začetnico in v četrtem sklonu, torej &quot;<em>steklenico</em>&quot; in ne &quot;<em>steklenica</em>&quot;. V igri se bodo namreč izpisovali stavki kot &quot;<em>imaš steklenico</em>&quot; in &quot;<em>vzemi steklenico</em>&quot;; če kot ime stvari vnesemo &quot;<em>steklenica</em>&quot;, se bo izpisalo &quot;<em>imaš steklenica</em>&quot; in tako sklanjanje bodo zares cenili le Ižanci.</p>
+<p>Smo? So bloki pripravljeni?</p>
+<p>Tedaj pa le poskusimo. Preskusi igro (klikni gumb <em>Preskusi</em>), v Ljubljani izberi JV in nato Obiraj grozdje. Če je vse, kot mora biti, si dobil tole.</p>
+<img src="ukazi-02-c&#x30C;atez&#x30C;.png">
+<p>Klikni Ustvari, da se vrneš v urejanje igre.</p>
+<h3 class="mume-header" id="skrivanje-ukazov">Skrivanje ukazov</h3>
+
+<p>Zdaj je na vrsti Kočevje. Tu nekomu damo steklenico cvička in dobimo puško.</p>
+<img src="ukazi-03-koc&#x30C;evje.png">
+<p>Kaj počne blok <em>Uniči</em>, je očitno: igralcu vzame cviček. Obstaja podoben blok <em>Spusti</em>, ki pa tule ne bi bil pravi: blok <em>Spusti</em> postavi stvar na trenutno lokacijo in ker stvar leži tam, jo lahko igralec meni nič tebi nič ponovno vzame. Tega pa tule nočemo.</p>
+<p>V bloku <em>Vzemi</em> sestavimo novo stvar, puško. To že znamo.</p>
+<p>Zanimiv pa je pogoj, <em>ima igralec steklenico cvička</em>. Izvlečemo ga iz zavihka Stvari in vstavimo v blok ukazi. Tako dosežemo, da se bo ukaz <em>Ponudi cviček</em> res pokazal le, kadar igralec to lahko stori.</p>
+<p>Če si radoveden, lahko igro do sem takoj preskusiš. Sicer pa nadaljujemo z Ribnico.</p>
+<h3 class="mume-header" id="avtomatski-ukazi-in-pogoji">Avtomatski ukazi in pogoji</h3>
+
+<p>V Ribnici imamo policista, ki igralcu vzame puško in da kuhalnico. To se zgodi samo od sebe, ne da bi igralec &quot;ukazal&quot; policistu, naj ga oropa. Zgodi pa se le, če ima igralec puško. Sestaviti moramo tole.</p>
+<img src="ukazi-04-ribnica.png">
+<p>V zavihku <em>Ukazi</em> imamo poleg bloka <em>Ukaz</em> še nekaj drugih načinov proženja ukazov: Ob vstopu, Ob izstopu, Po vsakem ukazu in, čistu na dnu, Ob začetku igre. Kdaj se izvrši kateri, je najbrž očitno. Tule potrebujemo Ob vstopu, da bo policist igralca pograbil takoj, ko ga vidi.</p>
+<p>Ker mu puško vzame le, če jo ima, uporabimo blok <em>Če</em>. Najdemo ga v zavihku <em>Pogoji</em>. Zgoraj mu prinemo pogoj <em>ima igralec puško</em>. Kot vse, kar je povezano s stvarmi, ga bomo našli v zavihku <em>Stvari</em>. Ukaze, ki se izvedejo, če je pogoj izpolnjen, nanizamo v blok <em>Če</em>, znotraj vdolbine <em>izvedi</em>. Vse, kar potrebujemo tam, že poznamo: izpišemo &quot;Policist Urban ti zapleni puško in pravi, da dandanes zadošča kuhalnica.&quot; (na sliki se vidi le začetek besedila), uničimo puško in igralcu damo kuhalnico.</p>
+<h3 class="mume-header" id="premikanje-med-lokacijami">Premikanje med lokacijami</h3>
+
+<p>Kako bo prišel igralec iz Škofje Loke na grad? Z ukazom <em>Gor</em>. Ker ga ni med običajnimi smermi, ga dodamo sami. V Škofji Loki torej ustvarimo blok</p>
+<img src="ukazi-05-skofja-loka.png">
+<p>Blok <em>Pojdi</em> najdeš med <em>Ukazi</em>.</p>
+<h3 class="mume-header" id="prezgodnji-konec-igre">(Prezgodnji) konec igre</h3>
+
+<p>Če se igralec prikaže na škofjeloškem gradu brez puške, naj ga čaka tole.</p>
+<img src="ukazi-06-medved-konec.png">
+<p>&quot;Igralec nima puško&quot; ni ravno zgledna slovenščina ... a igralec tega na srečo ne bo videl. Mi bomo pa bomo že potrpeli; računalnik se pač težje nauči sklanjanja.</p>
+<p>Novost sta bloka <em>Počakaj</em> in <em>Konec igre</em>. Prvega navadno vtaknemo med kake izpise, če jih hočemo narediti bolj dramatične. Kam damo drugega, je očitno.</p>
+<p>Medved bi se lahko še malo ponorčeval iz kuhalnice: &quot;<em>Kuhalnica? Si prišel kuhat divjačinski golaž ali kaj?</em>&quot;</p>
+<img src="ukazi-07-medved-kuhalnica.png">
+<h3 class="mume-header" id="zmagoslavnej%C5%A1i-konec-igre">(Zmagoslavnejši) konec igre</h3>
+
+<p>Če se igralec prikaže s puško, mu ponudimo, naj ustreli. Ker so časi drugačni kot nekoč in so medvedi dandanes zaščiteni bolj kot medvedi, bomo kosmatinca pustili pri življenju.</p>
+<img src="ukazi-08-ustreli.png">
+<p>In streljanje bo videti tako.</p>
+<img src="ukazi-09-konec.png">
+<h3 class="mume-header" id="presku%C5%A1anje">Preskušanje</h3>
+
+<p>Ko igro končaš, boš v njej gotovo opazil še kaj napak. Še verjetneje jih bodo odkrili igralci. Pri programiranju je pač vedno tako: tudi najprevidnejši programer ne more napisati programa brez napak.</p>
+<p>Naša igra ima vsaj eno: če policist zapleni puško, lahko gre igralec ponovno obirat grozdje. Morda to hočemo, morda pa bi radi to preprečili, tako da igralec, ki zamoči na ta način, napake ne more več popraviti.</p>
+<p>Tega ni težko popraviti. Dodamo blok <em>Če</em> in prestavimo pogoj <em>se ta ukaz še ni izvedel</em> vanj. Lojze naj bo hvaležen in igralec naj dobi cviček le, če se ukaz še ni izvajal, sicer pa naj bo igralec toplo povabljen, naj se spet oglasi prihodnjo jesen.</p>
+<img src="ukazi-11-se-ni-izvajal-2.png">
+<p>Lahko pa ne zafrkavamo igralca, temveč ukaz kar skrijemo.</p>
+<img src="ukazi-10-se-ni-izvajal.png">
+<p>Še boljše je, če ga skrijemo tako:</p>
+<img src="ukazi-11-se-ni-izvajal-3.png">
+<p>Blok &quot;Skrij ta ukaz&quot; omogoča, da ukaz skrijemo le, kadar je bil uspešno izveden. Če bi obiranje grozdja zahtevalo, hm, rokavice, bi lahko naredil tako:</p>
+<img src="ukazi-11-se-ni-izvajal-4.png">
+<p>Če igralec nima rokavic, bo ukaz ostal viden. Če jih ima, dobi cviček, ukaz pa za vedno izgine. No, ne za vedno, temveč le do konca te igre.</p>
+<p>Ne spreglej scenarističnega trika: igralcu smo povedali le, da potrebuje še nekaj. Kaj, pa naj ugane sam. 😃</p>
+
+      </div>
+      
+      
+    </body>
+    
+    
+    
+    
+    
+    
+    
+  </html>
