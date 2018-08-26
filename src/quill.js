@@ -143,7 +143,7 @@ class LocData {
         const oldWorkspaceAsString = this.workspace
         if (newWorkspaceAsString != oldWorkspaceAsString) {
             const recomputeCommandsAndUses = (ws) => {
-                this.commands = ws.getTopBlocks().map(block => this.packBlockArgs(block))
+                this.commands = ws.getTopBlocks(true).map(block => this.packBlockArgs(block))
                 this.recomputeUses(ws)
             }
             const recompute = () => {
