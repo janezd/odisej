@@ -177,10 +177,8 @@ const Compass = ({directions}) => {
 }
 
 
-const DropItemLink = ({itemState, itemId, onClick, currentLocation}) =>
-    gameSettings.dropItems && itemState[itemId] == ITEM_CARRIED
-        && locations.generalCommands.commands.concat(locations[currentLocation].commands)
-        .filter(command => command.block == 'command' && command.name == _("Drop") + ' ' + items[itemId]).length == 0
+const DropItemLink = ({onClick, visibilityCheck}) =>
+    visibilityCheck()
         ? <span>&nbsp;(<a onClick={onClick}>{_("drop@@InventoryList")}</a>)</span>
         : null
 
@@ -525,11 +523,22 @@ export default class Game extends React.Component {
             ?  <span>{
                 inventory.map(([id, place], i) => {
                     const itemName = items[id]
+                    const dropName = `${_("Drop")} ${items[id]}`
+                    // Take location commands first
+                    const dropCommand = locations[this.state.location].commands.concat(locations.generalCommands.commands)
+                        .filter(command => command.block == 'command' && command.name == dropName)[0]
+
+                    const visibilityCheck = () =>
+                        gameSettings.dropItems
+                        && this.state.items[id] == ITEM_CARRIED  // don't use `place` because it can change!
+                        && (!dropCommand || this.checkConditionList(dropCommand.show, true, dropCommand))
+
+                    const onClick = dropCommand
+                        ? () => this.executeCommand(dropCommand)
+                        : () => this.moveItem(id, this.state.location, _("Drop@@InventoryList") + " " + itemName)
+
                     return <span key={`item${i}`}>{i ? ", " : ""}{itemName}
-                        <DropItemLink itemId={id}
-                                      itemState={this.state.items}
-                                      currentLocation={this.state.location}
-                                      onClick={() => this.moveItem(id, this.state.location, _("Drop@@InventoryList") + " " + itemName)}/>
+                        <DropItemLink visibilityCheck={visibilityCheck} onClick={onClick}/>
                       </span>
                 })}
                </span>
@@ -561,7 +570,13 @@ export default class Game extends React.Component {
         const directions = {}
         const commands = {}
 
+        const skipAsDropCommand = command =>
+            gameSettings.dropItems
+                && command.name.startsWith(_("Drop"))
+                && items.values().indexOf(command.name.slice(_("Drop").length + 1)) != -1
+
         const addCommand = command => {
+            if (skipAsDropCommand(command)) return
             const shown = !this.state.hidden[this.hashLocAndCommand(command)]
                 && this.checkConditionList(command.show, true, command)
             const callback = () => this.executeCommand(command)
