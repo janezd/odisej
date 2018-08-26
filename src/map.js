@@ -109,6 +109,7 @@ class Node extends React.Component {
         }
 
         return <g transform={`translate(${loc.x} ${loc.y})`}>
+            <title>{loc.description}</title>
                     { isSpecial ? "" :
                         <g pointerEvents="all">{
                             [{direction: "nw", x: 12.982, y:3.138,   width: 10, height:36, transform:"matrix(0.7071 0.7071 -0.7071 0.7071 20.9821 -8.6909)"},
