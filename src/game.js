@@ -707,7 +707,7 @@ export default class Game extends React.Component {
                         </Media.Left>
                         <Media.Body>
                             <h1>{location.title.replace(/\s*\[[^\[\]]*\]\s*$/, "")}</h1>
-                            <p>{location.description}</p>
+                            { location.description.split("\n").map(line => <p>{line}</p>) }
                             <Messages messages={this.state.printed}/>
                             <Commands show={this.state.showCommands && !this.state.gameEnded}
                                       directions={directions} commands={commands} systemCommands={systemCommands} />
