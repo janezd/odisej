@@ -144,6 +144,7 @@ class LocData {
         if (newWorkspaceAsString != oldWorkspaceAsString) {
             const recomputeCommandsAndUses = (ws) => {
                 this.commands = ws.getTopBlocks(true).map(block => this.packBlockArgs(block))
+                this.commands.forEach(cmd => cmd.cmdId = randomId())
                 this.recomputeUses(ws)
             }
             const recompute = () => {
@@ -446,6 +447,9 @@ function migrateCommandLists() {
         })
     }
     locations.values().forEach(loc => migrate(loc.commands))
+    locations.values().forEach(loc => loc.commands
+                                         .filter(cmd => !cmd.cmdId)
+                                         .forEach(cmd => cmd.cmdId = randomId()))
 }
 
 function migrateAddUsedSets() {

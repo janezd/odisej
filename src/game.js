@@ -260,8 +260,6 @@ export default class Game extends React.Component {
 
     componentDidMount = () => this.autoExecuteOnStart()
 
-    hashLocAndCommand = command => command.location + ":" + command.name
-
     checkConditionList = (conditions, conjunctive=true, command=null) => {
         const comp = (op, op1, op2) => {
             switch (op) {
@@ -280,7 +278,7 @@ export default class Game extends React.Component {
 
                 case 'disjunction': return this.checkConditionList(condition.allow, false)
 
-                case 'hasnt_executed': return !this.state.executed[this.hashLocAndCommand(command || this.state.currentCommand)]
+                case 'hasnt_executed': return !this.state.executed[(command || this.state.currentCommand).cmdId]
                 case 'is_at': return this.state.location == condition.location
                 case 'has_visited': return this.state.nVisits[condition.location]
 
@@ -414,7 +412,7 @@ export default class Game extends React.Component {
         const endCommand = () => {
             // This must happen after the command is ran so that 'hasnt_executed' condition works properly
             const {executed} = this.state
-            executed[this.hashLocAndCommand(this.state.currentCommand)] = true
+            executed[this.state.currentCommand.cmdId] = true
             this.setState({executed, currentCommand: null}, then)
         }
 
@@ -464,7 +462,7 @@ export default class Game extends React.Component {
 
     hideCommand = (then) => {
         const {hidden, currentCommand} = this.state
-        hidden[this.hashLocAndCommand(currentCommand)] = true
+        hidden[currentCommand.cmdId] = true
         this.setState({hidden}, then)
     }
 
@@ -577,7 +575,7 @@ export default class Game extends React.Component {
 
         const addCommand = command => {
             if (skipAsDropCommand(command)) return
-            const shown = !this.state.hidden[this.hashLocAndCommand(command)]
+            const shown = !this.state.hidden[command.cmdId]
                 && this.checkConditionList(command.show, true, command)
             const callback = () => this.executeCommand(command)
             const dir = dirmap[command.name]
