@@ -182,15 +182,6 @@ const DropItemLink = ({onClick, visibilityCheck}) =>
         ? <span>&nbsp;(<a onClick={onClick}>{_("drop@@InventoryList")}</a>)</span>
         : null
 
-/*
-class DropItemLink extends React.Component {
-    render = () =>
-        this.props.visibilityCheck()
-            ? <span>&nbsp;(<a onClick={this.props.onClick}>{_("drop@@InventoryList")}</a>)</span>
-            : null
-}
-*/
-
 
 const InventoryItem = ({itemId, location, itemPositions, checkConditionList, executeCommand, moveItem}) => {
     const itemName = items[itemId]
