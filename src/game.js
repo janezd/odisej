@@ -182,6 +182,49 @@ const DropItemLink = ({onClick, visibilityCheck}) =>
         ? <span>&nbsp;(<a onClick={onClick}>{_("drop@@InventoryList")}</a>)</span>
         : null
 
+/*
+class DropItemLink extends React.Component {
+    render = () =>
+        this.props.visibilityCheck()
+            ? <span>&nbsp;(<a onClick={this.props.onClick}>{_("drop@@InventoryList")}</a>)</span>
+            : null
+}
+*/
+
+
+const InventoryItem = ({itemId, location, itemPositions, checkConditionList, executeCommand, moveItem}) => {
+    const itemName = items[itemId]
+    const dropName = `${_("Drop")} ${items[itemId]}`
+    // Take location commands first
+    const dropCommand = locations[location].commands.concat(locations.generalCommands.commands)
+        .filter(command => command.block == 'command' && command.name == dropName)[0]
+
+    const visibilityCheck = () =>
+        gameSettings.dropItems
+        && itemPositions[itemId] == ITEM_CARRIED
+        && (!dropCommand || checkConditionList(dropCommand.show, true, dropCommand))
+
+    const onClick = dropCommand
+        ? () => executeCommand(dropCommand)
+        : () => moveItem(itemId, location, _("Drop@@InventoryList") + " " + itemName)
+
+    return <span>{itemName}<DropItemLink visibilityCheck={visibilityCheck} onClick={onClick}/>
+    </span>
+}
+
+const Inventory = ({inventory, location, itemPositions, checkConditionList, executeCommand, moveItem}) =>
+    inventory.length
+    ? inventory.map((id, i) => <span>
+        {i ? ", " : ""}
+        <InventoryItem
+            itemId={id} key={id}
+            location={location} itemPositions={itemPositions}
+            checkConditionList={checkConditionList} executeCommand={executeCommand} moveItem={moveItem}
+            />
+        </span>)
+    : _("Nothing.")
+
+
 const Messages = ({messages}) =>
     messages.map((it, i) => <p key={i}>{it}</p>)
 
@@ -238,10 +281,17 @@ export default class Game extends React.Component {
     }
 
     saveState = () => {
+        const replacer = (key, value) => {
+            if (value && value.type && value.type.name == "Inventory") {
+                return `Inventory ${value.props.inventory}`
+            }
+            return value
+        }
         const {location, items, flags, variables, nVisits, executed, hidden, printed, gameEnded} = this.state
-        const blob = new Blob(
-            [JSON.stringify({location, items, flags, variables, nVisits, executed, hidden, printed, gameEnded})],
-            { type: 'text/plain' })
+        const gameData = JSON.stringify(
+            {location, items, flags, variables, nVisits, executed, hidden, printed, gameEnded},
+            replacer, 2)
+        const blob = new Blob([gameData], { type: 'text/plain' })
         const anchor = document.createElement('a')
         anchor.download = _("game-state.json")
         anchor.href = (window.webkitURL || window.URL).createObjectURL(blob)
@@ -252,8 +302,30 @@ export default class Game extends React.Component {
     loadState = control => {
         const reader = new FileReader()
         reader.onload = e => {
-            this.setState(JSON.parse(e.target.result))
+            const state = JSON.parse(e.target.result)
+
+            const recreatePrinted = (element) => {
+                if (!element) {
+                    return element
+                }
+                if (typeof element === 'string') {
+                    return element.startsWith("Inventory ")
+                        ? <Inventory
+                            inventory={element.slice(10).split(',')}
+                            location={state.location}
+                            itemPositions={state.items}
+                            checkConditionList={this.checkConditionList.bind(this)}
+                            executeCommand={this.executeCommand.bind(this)}
+                            moveItem={this.moveItem.bind(this)} />
+                        : element
+                }
+                const children = element.props.children ? element.props.children.map(recreatePrinted) : []
+                return React.createElement(element.type, element.props, ...children)
+            }
+            state.printed = state.printed.map(recreatePrinted)
+            this.setState(state)
             control.value = ""
+
         }
         reader.readAsText(control.files[0])
     }
@@ -514,38 +586,20 @@ export default class Game extends React.Component {
     hideGameState = () => this.setState({showState: false})
     setGameState = state => this.setState(state)
 
-    getInventoryList = () => {
-        const inventory = Object.entries(this.state.items)
-            .filter(([id, value]) => value == ITEM_CARRIED)
-        return inventory.length
-            ?  <span>{
-                inventory.map(([id, place], i) => {
-                    const itemName = items[id]
-                    const dropName = `${_("Drop")} ${items[id]}`
-                    // Take location commands first
-                    const dropCommand = locations[this.state.location].commands.concat(locations.generalCommands.commands)
-                        .filter(command => command.block == 'command' && command.name == dropName)[0]
-
-                    const visibilityCheck = () =>
-                        gameSettings.dropItems
-                        && this.state.items[id] == ITEM_CARRIED  // don't use `place` because it can change!
-                        && (!dropCommand || this.checkConditionList(dropCommand.show, true, dropCommand))
-
-                    const onClick = dropCommand
-                        ? () => this.executeCommand(dropCommand)
-                        : () => this.moveItem(id, this.state.location, _("Drop@@InventoryList") + " " + itemName)
-
-                    return <span key={`item${i}`}>{i ? ", " : ""}{itemName}
-                        <DropItemLink visibilityCheck={visibilityCheck} onClick={onClick}/>
-                      </span>
-                })}
-               </span>
-            : ""
-    }
+    getInventoryList = () =>
+        <Inventory
+            inventory={Object.entries(this.state.items)
+                             .filter(([id, value]) => value == ITEM_CARRIED)
+                             .map(([id]) => id)}
+            location={this.state.location}
+            itemPositions={this.state.items}
+            checkConditionList={this.checkConditionList.bind(this)}
+            executeCommand={this.executeCommand.bind(this)}
+            moveItem={this.moveItem.bind(this)}/>
 
     printInventory = () => {
         this.print(<b>&gt; {_("What do I have?")}</b>,
-            () => this.print(this.getInventoryList() || _("Nothing."),
+            () => this.print(this.getInventoryList(),
                 () => this.autoExecuteBlocks("after_command")))
     }
 
