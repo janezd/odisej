@@ -358,6 +358,15 @@ class NodeContextMenu extends React.Component {
             removable = locations.checkRemoveLocation(locId) === true
             removeLocation = () => this.props.onRemoveLocation(locId)
         }
+        if (!removable) {
+            // Disabled bootstrap MenuItems still close the popup; to override this,
+            // we have to use onClick instead of onSelect, and stop propagation and focusing
+            removeLocation = (e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                e.target.blur()
+            }
+        }
 
         return <div style={{position: "fixed", top: 0, left: 0, width: "100%", height: "100%"}}
                     onClick={this.props.onHide}
