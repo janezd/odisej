@@ -722,10 +722,14 @@ export default class Game extends React.Component {
         const location = locations[this.state.location]
         const [directions, commands, systemCommands] = this.getCommandList()
 
-        const inventoryList = gameSettings.showInventory == INV_OPTIONS.SHOW_ALWAYS ? this.getInventoryList() : ""
-        const inventoryLine = inventoryList == ""
-            ? ""
-            : <p style={{clear: "both", paddingTop: 12}}>{_("I have") + " " + inventoryList }.</p>
+        let inventoryLine = null
+        if (   (gameSettings.showInventory == INV_OPTIONS.SHOW_ALWAYS)
+            && (Object.entries(this.state.items)
+                .filter(([id, value]) => value == ITEM_CARRIED)
+                .length > 0)) {
+            const inventoryList = gameSettings.showInventory == INV_OPTIONS.SHOW_ALWAYS ? this.getInventoryList() : ""
+            inventoryLine = <p style={{clear: "both", paddingTop: 12}}>{_("I have")} {inventoryList}.</p>
+        }
 
         return (
             <div>
