@@ -1,17 +1,14 @@
 import React from "react"
 import { Panel, Button, Media, Modal, Label, FormControl, ControlLabel, DropdownButton, MenuItem, Navbar,
     ButtonToolbar, ButtonGroup, Image } from 'react-bootstrap'
-import blocks from "./createBlocks"
 
 import _ from '../translations/translator'
 import { LanguageSelector } from '../translations/translator'
 
 import { locations, items, flags, variables, gameSettings, INV_OPTIONS } from './quill'
-import { systemCommandsSettings } from './creator'
 
 const ITEM_CARRIED = -1
 const ITEM_DOES_NOT_EXIST = -2
-
 
 
 const AdderRemover = (props) => (
@@ -766,6 +763,3 @@ export default class Game extends React.Component {
         )
     }
 }
-
-
-
