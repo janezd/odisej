@@ -214,10 +214,10 @@ const InventoryItem = ({itemId, location, itemPositions, checkConditionList, exe
 
 const Inventory = ({inventory, location, itemPositions, checkConditionList, executeCommand, moveItem}) =>
     inventory.length
-    ? inventory.map((id, i) => <span>
+    ? inventory.map((id, i) => <span key={id}>
         {i ? ", " : ""}
         <InventoryItem
-            itemId={id} key={id}
+            itemId={id}
             location={location} itemPositions={itemPositions}
             checkConditionList={checkConditionList} executeCommand={executeCommand} moveItem={moveItem}
             />
@@ -759,7 +759,7 @@ export default class Game extends React.Component {
                         </Media.Left>
                         <Media.Body>
                             <h1>{location.title.replace(/\s*\[[^\[\]]*\]\s*$/, "")}</h1>
-                            { location.description.split("\n").map(line => <p>{line}</p>) }
+                            { location.description.split("\n").map((line, i) => <p key={i}>{line}</p>) }
                             <Messages messages={this.state.printed}/>
                             <Commands show={this.state.showCommands && !this.state.gameEnded}
                                       directions={directions} commands={commands} systemCommands={systemCommands} />
