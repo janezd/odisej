@@ -91,7 +91,13 @@ class FieldItems extends Blockly.FieldDropdown {
         super(() => {
             if (!this || this.inFlyout)
                 return [[flyOutMsg, "ADD"]]
-            const options = [...nameModel.entries().map(([id, name]) => [name, id]).sort(), [addMsg, "ADD"]]
+            const options = [
+                ...nameModel.entries()
+                            // This is ugly, but still faster than localCompare
+                            .map(([id, name]) => [name.normalize("NFD").toLowerCase().split(/\W/).join(''), name, id])
+                            .sort()
+                            .map(([_, name, id]) => [name, id]),
+                [addMsg, "ADD"]]
             if (options.length > 1) {
                 options.push([_("Rename ..."), "RENAME"])
             }
@@ -133,13 +139,17 @@ class FieldItems extends Blockly.FieldDropdown {
 }
 
 
+const compareItems = ([name1], [name2]) => name1.localeCompare(name2, {sensitivity: "base"})
+
 function createField(fieldName, placeholder=null) {
     if (fieldName.startsWith("LOCATION"))
         return new Blockly.FieldDropdown(
             () => locations.entries()
                 .filter(([id, loc]) => !locations.isSpecial(loc))
-                .map(([id, loc]) => [loc.title, id])
+                // This is ugly, but still faster than localCompare
+                .map(([id, loc]) => [name.normalize("NFD").toLowerCase().split(/\W/).join(''), loc.title, id])
                 .sort()
+                .map(([_, title, id]) => [title, id])
         )
     if (fieldName.startsWith("ITEM")) return new FieldItems(items, _("Item ..."), _("New item ..."))
     if (fieldName.startsWith("VARIABLE")) return new FieldItems(variables, _("Variable ..."), _("New variable ..."))
