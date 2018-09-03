@@ -522,7 +522,7 @@ export function restoreLocally(json) {
 export function saveGame() {
     const blob = new Blob([localStorage.odisej], { type: 'text/plain' })
     const anchor = document.createElement('a')
-    anchor.download = _("odyssey.json")
+    anchor.download = `${gameSettings.gameTitle}.game`
     anchor.href = (window.webkitURL || window.URL).createObjectURL(blob)
     anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':')
     anchor.click()

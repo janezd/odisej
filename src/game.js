@@ -284,7 +284,7 @@ export default class Game extends React.Component {
             replacer, 2)
         const blob = new Blob([gameData], { type: 'text/plain' })
         const anchor = document.createElement('a')
-        anchor.download = _("game-state.json")
+        anchor.download = `${gameSettings.gameTitle} - ${locations[location].title}.state`
         anchor.href = (window.webkitURL || window.URL).createObjectURL(blob)
         anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':')
         anchor.click()
@@ -676,7 +676,7 @@ export default class Game extends React.Component {
         const resetLanguage = () => this.forceUpdate()
 
         return <span>
-            <FormControl id="stateUpload" style={{display: "none"}} type="file" accept=".json"
+            <FormControl id="stateUpload" style={{display: "none"}} type="file" accept=".state,.json"
                          onChange={ifAllowed(e => this.loadState(e.target))}/>
             <ButtonToolbar className="with-labels">
                 <ButtonGroup>

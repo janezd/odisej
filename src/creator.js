@@ -374,7 +374,7 @@ export default class Creator extends React.Component {
                 <Navbar.Form pullRight>
                     <FormControl id="gameUpload"
                                  type="file"
-                                 accept=".json"
+                                 accept=".game,.json"
                                  value="" onChange={e => loadGame(e.target.files[0], () => this.forceUpdate()) }
                                  style={{display: "none"}}/>
                     <ButtonToolbar className="with-labels">
