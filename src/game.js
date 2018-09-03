@@ -252,9 +252,7 @@ export default class Game extends React.Component {
         super(props)
         this.state = {
             ...this.prepareInitialState(),
-            showCommands: true,
             showState: false,
-            currentCommand: null,
             modal: ""
         }
         this.activeTimeouts = new Set()
@@ -276,7 +274,9 @@ export default class Game extends React.Component {
             executed: {},
             hidden: {},
             printed: [],
-            gameEnded: false
+            gameEnded: false,
+            showCommands: true,
+            currentCommand: null
         }
     }
 
@@ -422,7 +422,7 @@ export default class Game extends React.Component {
 
     endGame = (then) => {
         this.clearGuardedTimeouts()
-        return this.setState({gameEnded: true}, then)
+        return this.setState({gameEnded: true, currentCommand: null}, then)
     }
 
     resetGame = (then) => {
