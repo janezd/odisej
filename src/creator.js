@@ -280,7 +280,7 @@ class LocationEditor extends React.Component {
                     tools={blocks}
                     workspaceXML={loc.workspace || ""}
                     onChange={this.handleWorkspaceChange}
-                    injectOptions={{toolboxPosition: 'end', media: './'}}>
+                    injectOptions={{toolboxPosition: 'end'/*, media: './'*/}}>
                 </BlocklyDrawerWithNameCheck>
             </Modal.Body>
         </Modal>

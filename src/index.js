@@ -1,3 +1,5 @@
+import '../assets/odyssey.css'
+
 import React from 'react'
 import { render } from 'react-dom'
 import { restoreLocally } from './quill'
