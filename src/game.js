@@ -2,14 +2,19 @@ import React from "react"
 import { Panel, Button, Media, Modal, Label, FormControl, ControlLabel, DropdownButton, MenuItem, Navbar,
     ButtonToolbar, ButtonGroup, Image } from 'react-bootstrap'
 
-import _ from '../translations/translator'
-import { LanguageSelector } from '../translations/translator'
+import _, { LanguageSelector } from '../translations/translator'
 
-import { locations, items, flags, variables, gameSettings, INV_OPTIONS } from './quill'
+import { Locations, NameModel, unpackGameData, INV_OPTIONS } from './gameData'
 
 const ITEM_CARRIED = -1
 const ITEM_DOES_NOT_EXIST = -2
 
+
+const locations = new Locations()
+const items = new NameModel()
+const flags = new NameModel()
+const variables = new NameModel()
+const gameSettings = {}
 
 const AdderRemover = (props) => (
     <div>
@@ -238,6 +243,7 @@ const Commands = ({show, directions, commands, systemCommands}) =>
 export default class Game extends React.Component {
     constructor(props) {
         super(props)
+        unpackGameData(props.gameData, { locations, items, flags, variables, gameSettings })
         this.state = {
             ...this.prepareInitialState(),
             showState: false,
@@ -472,7 +478,8 @@ export default class Game extends React.Component {
         const endCommand = () => {
             // This must happen after the command is ran so that 'hasnt_executed' condition works properly
             const {executed} = this.state
-            executed[this.state.currentCommand.cmdId] = true
+            // Don't use currentCommand here since end game may have set it to null
+            executed[block.cmdId] = true
             this.setState({executed, currentCommand: null}, then)
         }
 

@@ -11,7 +11,7 @@ import { LanguageSelector } from '../translations/translator'
 import blocks from './createBlocks'
 import { refreshDropdowns, createBlocks } from './createBlocks'
 import { locations, items, flags, variables,
-         gameSettings, storeLocally, resetData, saveGame, loadGame, Undo, INV_OPTIONS } from './quill'
+         gameSettings, storeLocally, resetData, saveGame, loadGame, packGame, Undo, INV_OPTIONS } from './quill'
 import GameMap from './map'
 
 Blockly.BlockSvg.START_HAT = true
@@ -157,7 +157,7 @@ class LocationEditor extends React.Component {
     handleWorkspaceChange = () => {
         /* Listener remains active after the dialog is closed and may be triggered by, for instance,
            undo/redo, which uses workspaces to refresh some data.
-           **This may have also caused overwriteing of some location's block -- this bug was never fixed
+           **This may have also caused overwriting of some location's block -- this bug was never fixed
              but disappeared by itself.**
         */
         if (this.location) {
@@ -393,6 +393,7 @@ export default class Creator extends React.Component {
                             <ControlLabel htmlFor="gameUpload" className="no-round-right no-round-left">
                                 <Label>{_("Load Game")}</Label>
                             </ControlLabel>
+                            <Label onClick={packGame} className="no-round-right no-round-left">{_("Pack Game")}</Label>
                             <Label onClick={this.resetData}>{_("Delete Game")}</Label>
                         </ButtonGroup>
                         <ButtonGroup>

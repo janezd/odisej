@@ -1,197 +1,197 @@
 export const translations = {
-    // createBlocks.js:95
+    // createBlocks.js:102
     "Rename ...": null,
 
-    // createBlocks.js:108
+    // createBlocks.js:115
     "Name:": null,
 
-    // createBlocks.js:143
-    "New item ...": null,
-
-    // createBlocks.js:143
+    // createBlocks.js:154
     "Item ...": null,
 
-    // createBlocks.js:144
-    "New variable ...": null,
+    // createBlocks.js:154
+    "New item ...": null,
 
-    // createBlocks.js:144
+    // createBlocks.js:155
     "Variable ...": null,
 
-    // createBlocks.js:145
-    "New flag ...": null,
+    // createBlocks.js:155
+    "New variable ...": null,
 
-    // createBlocks.js:145
+    // createBlocks.js:156
     "Flag ...": null,
 
-    // createBlocks.js:146
+    // createBlocks.js:156
+    "New flag ...": null,
+
+    // createBlocks.js:157
     "text": null,
 
-    // createBlocks.js:190,418,422,425,429
+    // createBlocks.js:201,429,433,436,440
     "Variables": null,
 
-    // createBlocks.js:223,232,257,258,259,260,261,263,265
+    // createBlocks.js:234,243,268,269,270,271,272,274,276
     "Commands": null,
 
-    // createBlocks.js:235
+    // createBlocks.js:246
     "Command": null,
 
-    // createBlocks.js:236
+    // createBlocks.js:247
     "name": null,
 
-    // createBlocks.js:238,243,253
+    // createBlocks.js:249,254,264
     "show if": null,
 
-    // createBlocks.js:243,253,310,314
+    // createBlocks.js:254,264,321,325
     "and": null,
 
-    // createBlocks.js:257
+    // createBlocks.js:268
     "print": null,
 
-    // createBlocks.js:258
+    // createBlocks.js:269
     "go to": null,
 
-    // createBlocks.js:259
+    // createBlocks.js:270
     "hide this command": null,
 
-    // createBlocks.js:260
+    // createBlocks.js:271
     "wait": null,
 
-    // createBlocks.js:261
+    // createBlocks.js:272
     "end of game": null,
 
-    // createBlocks.js:263
+    // createBlocks.js:274
     "this command wasn't used yet": null,
 
-    // createBlocks.js:268
+    // createBlocks.js:279
     "after": null,
 
-    // createBlocks.js:270
+    // createBlocks.js:281
     "seconds": null,
 
-    // createBlocks.js:278
+    // createBlocks.js:289
     "On entry": null,
 
-    // createBlocks.js:279
+    // createBlocks.js:290
     "On exit": null,
 
-    // createBlocks.js:280
+    // createBlocks.js:291
     "After every command": null,
 
-    // createBlocks.js:281
+    // createBlocks.js:292
     "When game starts": null,
 
-    // createBlocks.js:291,328,339,341,367,377,378
+    // createBlocks.js:302,339,350,352,378,388,389
     "Conditions": null,
 
-    // createBlocks.js:299
+    // createBlocks.js:310
     "do": null,
 
-    // createBlocks.js:325
+    // createBlocks.js:336
     "if": null,
 
-    // createBlocks.js:326
+    // createBlocks.js:337
     "else if": null,
 
-    // createBlocks.js:331
+    // createBlocks.js:342
     "else": null,
 
-    // createBlocks.js:339
+    // createBlocks.js:350
     "random number from 0 to 100 is below": null,
 
-    // createBlocks.js:344,353,357
+    // createBlocks.js:355,364,368
     "any of the following": null,
 
-    // createBlocks.js:353,357
+    // createBlocks.js:364,368
     "or": null,
 
-    // createBlocks.js:370
+    // createBlocks.js:381
     "not": null,
 
-    // createBlocks.js:377
+    // createBlocks.js:388
     "player visited": null,
 
-    // createBlocks.js:378
+    // createBlocks.js:389
     "player is at": null,
 
-    // createBlocks.js:383
+    // createBlocks.js:394
     "player has": null,
 
-    // createBlocks.js:383,384,385,386,387,388,391,392,393,394
+    // createBlocks.js:394,395,396,397,398,399,402,403,404,405
     "Items": null,
 
-    // createBlocks.js:384
+    // createBlocks.js:395
     "player doesn't have": null,
 
-    // createBlocks.js:385
+    // createBlocks.js:396
     "get": null,
 
-    // createBlocks.js:386
+    // createBlocks.js:397
     "drop": null,
 
-    // createBlocks.js:387
+    // createBlocks.js:398
     "destroy": null,
 
-    // createBlocks.js:388
+    // createBlocks.js:399
     "put": null,
 
-    // createBlocks.js:389
+    // createBlocks.js:400
     "to@@item_at": null,
 
-    // createBlocks.js:391
+    // createBlocks.js:402
     "is here@@item_is_here": null,
 
-    // createBlocks.js:391
+    // createBlocks.js:402
     "item@@item_is_here": null,
 
-    // createBlocks.js:392
-    "item@@item_is_at": null,
-
-    // createBlocks.js:392
+    // createBlocks.js:403
     "is at@@item_is_at": null,
 
-    // createBlocks.js:393
+    // createBlocks.js:403
+    "item@@item_is_at": null,
+
+    // createBlocks.js:404
     "item@@item_exists": null,
 
-    // createBlocks.js:393
+    // createBlocks.js:404
     "exists@@item_exists": null,
 
-    // createBlocks.js:394
+    // createBlocks.js:405
     "can carry more": null,
 
-    // createBlocks.js:399
+    // createBlocks.js:410
     "is set": null,
 
-    // createBlocks.js:399,400
+    // createBlocks.js:410,411
     "flag": null,
 
-    // createBlocks.js:399,400,401,402
+    // createBlocks.js:410,411,412,413
     "Flags": null,
 
-    // createBlocks.js:400
+    // createBlocks.js:411
     "is not set": null,
 
-    // createBlocks.js:401,407,412
+    // createBlocks.js:412,418,423
     "set": null,
 
-    // createBlocks.js:402
+    // createBlocks.js:413
     "clear": null,
 
-    // createBlocks.js:407,412
+    // createBlocks.js:418,423
     "to": null,
 
-    // createBlocks.js:408,410,413
+    // createBlocks.js:419,421,424
     "increase": null,
 
-    // createBlocks.js:409,411,414
+    // createBlocks.js:420,422,425
     "decrease": null,
 
-    // createBlocks.js:410,411,413,414
+    // createBlocks.js:421,422,424,425
     "by": null,
 
-    // createBlocks.js:421
+    // createBlocks.js:432
     "value": null,
 
-    // creator.js:63,393
+    // creator.js:63,394
     "Game Settings": null,
 
     // creator.js:67
@@ -251,7 +251,7 @@ export const translations = {
     // creator.js:304
     "Leave the page and lose your changes?": null,
 
-    // creator.js:341,390
+    // creator.js:341,391
     "Delete Game": null,
 
     // creator.js:344
@@ -278,8 +278,11 @@ export const translations = {
     // creator.js:388
     "Load Game": null,
 
+    // creator.js:390
+    "Pack Game": null,
+
     // creator.js:218
-    // map.js:376
+    // map.js:386
     "Set as Start Location": null,
 
     // creator.js:73,371
@@ -287,135 +290,129 @@ export const translations = {
     "Odyssey": null,
 
     // creator.js:202
-    // quill.js:287
+    // quill.js:288
     "New location": null,
 
-    // game.js:77,647
+    // game.js:74,702
     "Game State": null,
 
-    // game.js:82
+    // game.js:79
     "Current location": null,
 
-    // game.js:97
+    // game.js:94
     "Flags:": null,
 
-    // game.js:98
+    // game.js:95
     "Set flag": null,
 
-    // game.js:103
+    // game.js:100
     "Player has:": null,
 
-    // game.js:104
+    // game.js:101
     "Take item": null,
 
-    // game.js:109
+    // game.js:106
     "Variables:": null,
 
-    // game.js:133
+    // game.js:130
     "Visited locations:": null,
 
-    // game.js:134
+    // game.js:131
     "Mark as visited": null,
 
-    // game.js:149,558
+    // game.js:146,607
     "N": null,
 
-    // game.js:149,558
+    // game.js:146,607
     "SE": null,
 
-    // game.js:149,558
+    // game.js:146,607
     "E": null,
 
-    // game.js:149,558
+    // game.js:146,607
     "NE": null,
 
-    // game.js:150,559
-    "NW": null,
-
-    // game.js:150,559
+    // game.js:147,608
     "S": null,
 
-    // game.js:150,559
-    "SW": null,
+    // game.js:147,608
+    "NW": null,
 
-    // game.js:150,559
+    // game.js:147,608
     "W": null,
 
-    // game.js:183
-    "Drop": null,
+    // game.js:147,608
+    "SW": null,
 
-    // game.js:184
+    // game.js:179
     "drop@@InventoryList": null,
 
-    // game.js:248
-    "game-state.json": null,
+    // game.js:185,615,616
+    "Drop": null,
 
-    // game.js:374,640
-    "New Game": null,
-
-    // game.js:377
-    "Do you really want to end this game?": null,
-
-    // game.js:381
-    "Yes": null,
-
-    // game.js:384
-    "No": null,
-
-    // game.js:460
-    "I can't carry so many things": null,
-
-    // game.js:532
+    // game.js:197
     "Drop@@InventoryList": null,
 
-    // game.js:540
-    "What do I have?": null,
-
-    // game.js:541
+    // game.js:213
     "Nothing.": null,
 
-    // game.js:587
+    // game.js:430,695
+    "New Game": null,
+
+    // game.js:433
+    "Do you really want to end this game?": null,
+
+    // game.js:437
+    "Yes": null,
+
+    // game.js:440
+    "No": null,
+
+    // game.js:516
+    "I can't carry so many things": null,
+
+    // game.js:589
+    "What do I have?": null,
+
+    // game.js:642
     "Take@@AutoCommands": null,
 
-    // game.js:610
+    // game.js:665
     "Inventory": null,
 
-    // game.js:627
+    // game.js:682
     "Save": null,
 
-    // game.js:632
+    // game.js:687
     "Load": null,
 
-    // game.js:652
+    // game.js:707
     "Edit Game": null,
 
-    // game.js:670
+    // game.js:728
     "I have": null,
 
-    // map.js:346
+    // map.js:347
     "(multiple locations)": null,
 
-    // map.js:372
+    // map.js:382
     "Edit@@NodeContextMenu": null,
 
-    // map.js:380
+    // map.js:390
     "Remove@@NodeContextMenu": null,
 
-    // quill.js:270
+    // quill.js:271
     "Start@@DefaultLocations": null,
 
-    // quill.js:279
+    // quill.js:280
     "All locations@@DefaultLocations": null,
 
-    // quill.js:280
+    // quill.js:281
     "Here you can define commands available or executed on all locations": null,
 
-    // quill.js:370
+    // quill.js:371
     "item": null,
 
-    // quill.js:513
+    // quill.js:517
     "An error occurred while reading the data.": null,
-
-    // quill.js:521
-    "odyssey.json": null,
 }

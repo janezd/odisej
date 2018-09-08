@@ -19,11 +19,22 @@ class App extends React.Component {
     switchToPlay = (debug) => this.setState({mode: 'play', debug})
     render() {
         switch (this.state.mode) {
-            case 'create': return <Creator switchToPlay={this.switchToPlay}/>
-            case 'play': return <Game switchToCreate={this.switchToCreate} debug={this.state.debug}/>
+            case 'create':
+                return <Creator switchToPlay={this.switchToPlay}/>
+            case 'play':
+                return <Game gameData={localStorage.odisej}
+                             switchToCreate={this.switchToCreate}
+                             debug={this.state.debug}/>
         }
     }
 }
 
-restoreLocally()
-render(<App/>, document.getElementById('react-container'))
+const container = document.getElementById('react-container')
+const game = null  // when saving a game, this is replaced with game data
+if (game) {
+    render(<Game gameData={game}/>, container)
+}
+else {
+    restoreLocally(game)
+    render(<App />, container)
+}

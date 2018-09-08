@@ -139,8 +139,6 @@ class FieldItems extends Blockly.FieldDropdown {
 }
 
 
-const compareItems = ([name1], [name2]) => name1.localeCompare(name2, {sensitivity: "base"})
-
 function createField(fieldName, placeholder=null) {
     if (fieldName.startsWith("LOCATION"))
         return new Blockly.FieldDropdown(
@@ -293,8 +291,6 @@ export function createBlocks() {
 
 
     // Conditions
-
-
     const postCondition = (otherConnection) =>
         (otherConnection.sourceBlock_.type == 'if') || (otherConnection.sourceBlock_.type == 'elif')
 

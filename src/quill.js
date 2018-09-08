@@ -1,8 +1,13 @@
 import Blockly from "node-blockly/browser"
+
 import blocks, {refreshDropdowns} from './createBlocks'
+import { LocData as GameLocData,
+         Locations as GameLocations,
+         NameModel as GameNameModel,
+         randomId,
+         unpackGameData, packGameData, defaultGameSettings } from './gameData'
 
 import _ from '../translations/translator'
-
 
 export const Undo = {
     undoStack: [],
@@ -38,18 +43,7 @@ export const Undo = {
     }
 }
 
-export const INV_OPTIONS = { DONT_SHOW: 0, SHOW_BUTTON: 1, SHOW_ALWAYS: 2 }
-
-const defaultGameSettings = {
-    showInventory: INV_OPTIONS.SHOW_ALWAYS,
-    dropItems: true,
-    takeItems: true,
-    maxItems: "",
-    gameTitle: _("Odyssey")
-}
-
-export const gameSettings = {}
-Object.assign(gameSettings, defaultGameSettings)
+Undo.reset()
 
 
 function getUniqueName(name, names) {
@@ -64,25 +58,9 @@ function getUniqueName(name, names) {
     return `${name} (${maxNum + 1})`
 }
 
-function randomId() {
-    return Array.from({length: 5}, () => Math.round(Math.random() * 2**32).toString(16).padStart(8, "0"))
-                .join("-") }
-
-class LocData {
+class LocData extends GameLocData {
     constructor(title, description, x=0, y=0, locId=null) {
-        this.locId = locId || randomId()
-
-        this.title = title
-        this.description = description
-        this.image = [null, 0, 0]
-
-        this.workspace = null
-        this.commands = []
-
-        this.x = x
-        this.y = y
-        this.directions = {}
-
+        super(title, description, x, y, locId)
         this.clearUsed()
     }
 
@@ -252,19 +230,11 @@ class LocData {
 }
 
 
-class Locations {
-    GENERAL_COMMANDS_ID = "00000000-00000000-00000000-00000000-00000001"
-
+class Locations extends GameLocations {
     constructor() {
+        super()
         this.reset()
     }
-
-    isSpecial = loc => (loc instanceof LocData ? loc.locId : loc).startsWith("00000000-00000000-00000000-00000000-0000000")
-
-    keys = () => Object.keys(this).filter(key => this[key] instanceof LocData)
-    values = () => Object.values(this).filter(value => value instanceof LocData)
-    entries = () => Object.entries(this).filter(([key, value]) => value instanceof LocData)
-    clear = () => { this.keys().forEach(key => delete this[key]) }
 
     reset = () => {
         this.clear()
@@ -275,14 +245,11 @@ class Locations {
     }
 
     addSpecialLocations= () => {
-        if (this.generalCommands == undefined)
-            this.addLocation(
-                _("All locations@@DefaultLocations"),
-                _("Here you can define commands available or executed on all locations"),
-                10, 10, this.GENERAL_COMMANDS_ID)
+        this.addLocation(
+            _("All locations@@DefaultLocations"),
+            _("Here you can define commands available or executed on all locations"),
+            10, 10, this.GENERAL_COMMANDS_ID)
     }
-
-    get generalCommands() { return this[this.GENERAL_COMMANDS_ID] }
 
     addLocation = (name=null, description="", x=0, y=0, locId=null) => {
         const newName = getUniqueName(name || _("New location"), this.values().map(it => it.title))
@@ -335,19 +302,6 @@ class Locations {
         }
     }
 
-    pack = () => ({locations: this.entries(), startLocation: this.startLocation})
-
-    unpack = ({locations, startLocation}) => {
-        this.clear()
-        locations.forEach(([id, locdata]) => {
-            const loc = new LocData()
-            Object.assign(loc, locdata)
-            this[id] = loc
-        })
-        this.startLocation = startLocation
-        this.addSpecialLocations()
-    }
-
     collectUses = (things, skipLocations=null) => {
         const collection = {}
         locations.values()
@@ -360,11 +314,7 @@ class Locations {
 }
 
 
-class NameModel {
-    keys() { return Object.keys(this).filter(key => typeof this[key] == "string") }
-    values() { return Object.values(this).filter(value => typeof value == "string") }
-    entries() { return Object.entries(this).filter(([key, value]) => typeof value == "string") }
-
+class NameModel extends GameNameModel {
     add(name=null) {
         const itemId = randomId()
         const undo = () => { delete this[itemId] }
@@ -394,21 +344,14 @@ class NameModel {
         }
     }
 
-    clear(allowed) {
-        this.keys().forEach(key =>
-            { if (!allowed || !allowed[key]) this.remove(key) })
+    clearUnused(used) {
+        this.keys()
+            .filter(key => !used[key])
+            .forEach(key => this.remove(key))
     }
 
     reset() {
         this.clear()
-    }
-
-    pack() {
-        return this.entries()
-    }
-    unpack(data) {
-        this.reset()
-        data.forEach(([key, value]) => this[key] = value)
     }
 }
 
@@ -416,6 +359,8 @@ export const items = new NameModel()
 export const variables = new NameModel()
 export const flags = new NameModel()
 export const locations = new Locations()
+export const gameSettings = {}
+Object.assign(gameSettings, defaultGameSettings)
 
 export function resetData() {
     items.reset()
@@ -427,97 +372,21 @@ export function resetData() {
 }
 
 function collectGarbage() {
-    items.clear(locations.collectUses('usedItems'))
-    flags.clear(locations.collectUses('usedFlags'))
-    variables.clear(locations.collectUses('usedVariables'))
-}
-
-
-function migrateCommandLists() {
-    function migrate(obj) {
-        if (!obj) return
-        if (Array.isArray(obj.statements))
-            obj.statements = obj.statements.reduceRight((next, block) => ({next, block}), {})
-        if (Array.isArray(obj.next))
-            obj.next = obj.next.reduceRight((next, block) => ({next, block}), {})
-        Object.entries(obj).forEach(([key, value]) => {
-            if ((["show", "allow", "next", "statements", "not"].indexOf(key) != -1) || !isNaN((0).constructor(key))) {
-                migrate(value)
-            }
-        })
-    }
-    locations.values().forEach(loc => migrate(loc.commands))
-    locations.values().forEach(loc => loc.commands
-                                         .filter(cmd => !cmd.cmdId)
-                                         .forEach(cmd => cmd.cmdId = randomId()))
-}
-
-function migrateAddUsedSets() {
-    blocks.forEach(tool => { Blockly.Blocks[tool.name] = tool.block } )
-
-    const workspace = new Blockly.Workspace({toolbox: blocks})
-    locations.values().forEach(location => {
-        Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(location.workspace), workspace)
-        location.recomputeUses(workspace)
-        workspace.clear()
-    })
-}
-
-function migrateImages() {
-    locations.values().forEach(location => {
-        if (!Array.isArray(location.image))
-            location.image = [location.image, 105, 105]
-    })
+    items.clearUnused(locations.collectUses('usedItems'))
+    flags.clearUnused(locations.collectUses('usedFlags'))
+    variables.clearUnused(locations.collectUses('usedVariables'))
 }
 
 export function storeLocally() {
-    localStorage.odisej = JSON.stringify({
-        locations: locations.pack(), items: items.pack(), flags: flags.pack(), variables: variables.pack(),
-        gameSettings
-    })
+    localStorage.odisej =
+        packGameData({locations, items, flags, variables, gameSettings})
 }
 
-export function restoreLocally(json) {
-    const migrated = obj => Array.isArray(obj) ? obj : Object.entries(obj)
-    // TODO: Enable try-except, alert if something is there, but can't load it.
-    try {
-        if (!json) {
-            json = localStorage.odisej
-            if (!json)
-                return
-        }
-        const obj = JSON.parse(json)
-
-        locations.unpack({locations: migrated(obj.locations.locations), startLocation: obj.locations.startLocation})
-        items.unpack(migrated(obj.items))
-        flags.unpack(migrated(obj.flags))
-        variables.unpack(migrated(obj.variables))
-        // TODO Remove '|| {}' when migrations are no longer needed
-        Object.assign(gameSettings, obj.gameSettings || {})
-
-        locations.entries().forEach(([locId, location]) =>
-            location.commands.forEach(command => command.location = locId)
-        )
-
-        // Migrations; remove before publishing
-        if (gameSettings.showInventory === true) {
-            gameSettings.showInventory = INV_OPTIONS.SHOW_BUTTON
-        }
-        if (obj.hasOwnProperty("allLocations")) {
-            locations.generalCommands.workspace = obj.allLocations.workspace
-            locations.generalCommands.commands = obj.allLocations.commands
-        }
-        migrateCommandLists()
-        migrateAddUsedSets()
-        migrateImages()
-        collectGarbage()
-        Undo.reset()
-    }
-    catch (e) {
-        alert(_("An error occurred while reading the data."))
-    }
+export function restoreLocally() {
+    unpackGameData(localStorage.odisej,
+        {locations, items, flags, variables, gameSettings},
+        LocData)
 }
-
 
 export function saveGame() {
     const blob = new Blob([localStorage.odisej], { type: 'text/plain' })
@@ -530,7 +399,21 @@ export function saveGame() {
 
 export function loadGame(file, then) {
     const reader = new FileReader()
-    reader.onload = json => { restoreLocally(json.target.result); then && then() }
+    reader.onload = json => {
+        localStorage.odisej = json.target.result
+        restoreLocally()
+        then && then()
+    }
     reader.readAsText(file)
 }
 
+export function packGame() {
+    const json = localStorage.odisej.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+    const game = document.documentElement.outerHTML.replace("game = null", `game = '${json}'`)
+    const blob = new Blob([game], { type: 'text/html' })
+    const anchor = document.createElement('a')
+    anchor.download = `${gameSettings.gameTitle}.html`
+    anchor.href = (window.webkitURL || window.URL).createObjectURL(blob)
+    anchor.dataset.downloadurl = ['text/html', anchor.download, anchor.href].join(':')
+    anchor.click()
+}
