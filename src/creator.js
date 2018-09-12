@@ -258,10 +258,10 @@ class LocationEditor extends React.Component {
                                          onChange={this.handleTitleChange}
                                          onBlur={this.handleTitleBlur}
                                          placeholder={_("Location name ...")}
-                                         inputRef={ e => {
-                                             if (e && this.props.selectTitle) {
-                                                 e.select()
-                                                 e.addEventListener('select', this.props.onTitleSelectionChange)
+                                         inputRef={ ref => {
+                                             if (ref && this.props.selectTitle) {
+                                                 ref.select()
+                                                 ref.addEventListener('select', this.props.onTitleSelectionChange)
                                              } }}/>
                             { setToStart() }
                             { deleteButton() }
@@ -311,6 +311,12 @@ export default class Creator extends React.Component {
         this.setState({editing: locId, selectTitle})
         window.addEventListener("beforeunload", this.warnOnLeavePage)
     }
+
+    onTitleSelectionChange = (e) => {
+        if (document.activeElement == e.target)
+            this.setState({selectTitle: false})
+    }
+
     closeEditor = () => {
         this.setState({editing: null}, storeLocally)
         window.removeEventListener("beforeunload", this.warnOnLeavePage)
@@ -400,7 +406,7 @@ export default class Creator extends React.Component {
                 location={this.state.editing}
                 isInitial={this.state.editing == locations.startLocation}
                 selectTitle={this.state.selectTitle}
-                onTitleSelectionChange={() => this.setState({selectTitle: false})}
+                onTitleSelectionChange={this.onTitleSelectionChange}
                 handleClose={this.closeEditor}
                 setLocationImage={this.setLocationImage}
                 setStartLocation={locId => this.setStartLocation(locId, false)}
