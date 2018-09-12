@@ -42,5 +42,22 @@ const creatorBundle = {
     ],
 }
 
+const gameBundle = {
+    ...commonConfig,
+    entry: ["./src/game.js"],
+    output: {
+        path: path.resolve(__dirname, "dist"),
+        filename: "gamebundle.js",
+        sourceMapFilename: 'gamebundle.map'
+    },
+    plugins: [
+        new HtmlWebpackPlugin({
+            filename: 'game.html',
+            inlineSource: '.(js|css)$',
+            template: './src/index.html'
+        }),
+        new HtmlWebpackInlineSourcePlugin(),
+    ],
+}
 
-module.exports = [creatorBundle]
+module.exports = [creatorBundle]//, gameBundle]
