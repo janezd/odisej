@@ -30,11 +30,5 @@ class App extends React.Component {
 }
 
 const container = document.getElementById('react-container')
-const game = null  // when saving a game, this is replaced with game data
-if (game) {
-    render(<Game gameData={game}/>, container)
-}
-else {
-    restoreLocally(game)
-    render(<App />, container)
-}
+restoreLocally()
+render(<App />, container)

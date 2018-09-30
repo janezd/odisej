@@ -44,7 +44,7 @@ const creatorBundle = {
 
 const gameBundle = {
     ...commonConfig,
-    entry: ["./src/game.js"],
+    entry: ["./src/play.js"],
     output: {
         path: path.resolve(__dirname, "dist"),
         filename: "gamebundle.js",
@@ -52,7 +52,7 @@ const gameBundle = {
     },
     plugins: [
         new HtmlWebpackPlugin({
-            filename: 'game.html',
+            filename: 'play.html',
             inlineSource: '.(js|css)$',
             template: './src/index.html'
         }),
@@ -60,4 +60,4 @@ const gameBundle = {
     ],
 }
 
-module.exports = [creatorBundle]//, gameBundle]
+module.exports = [creatorBundle, gameBundle]

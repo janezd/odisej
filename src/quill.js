@@ -407,13 +407,34 @@ export function loadGame(file, then) {
     reader.readAsText(file)
 }
 
-export function packGame() {
+
+function _packIntoHtml() {
     const json = localStorage.odisej.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
-    const game = document.documentElement.outerHTML.replace("game = null", `game = '${json}'`)
-    const blob = new Blob([game], { type: 'text/html' })
+    const gameHtml = gameTemplate
+        .replace("game = null", `game = '${json}'`)  // development
+        .replace("{gameData:null}", `{gameData:'${json}'}`)  // production
+    const blob = new Blob([gameHtml], { type: 'text/html' })
     const anchor = document.createElement('a')
     anchor.download = `${gameSettings.gameTitle}.html`
     anchor.href = (window.webkitURL || window.URL).createObjectURL(blob)
     anchor.dataset.downloadurl = ['text/html', anchor.download, anchor.href].join(':')
     anchor.click()
+}
+
+var gameTemplate = null
+
+export function packGame() {
+    if (gameTemplate)
+        _packIntoHtml()
+    else {
+        var httpRequest = new XMLHttpRequest()
+        httpRequest.onreadystatechange = () => {
+            if ((httpRequest.readyState === 4) && (httpRequest.status === 200)) {
+                gameTemplate = httpRequest.responseText
+                _packIntoHtml()
+            }
+        }
+        httpRequest.open('GET', 'play.html')
+        httpRequest.send()
+    }
 }
